@@ -257,14 +257,26 @@ function renderCompletedList() {
     list.innerHTML = `<p class="empty-state">No quests completed yet. Roll one above and get started!</p>`;
     return;
   }
-  list.innerHTML = completedQuests.map(q => `
+  list.innerHTML = completedQuests.map((q, i) => `
     <div class="completed-item">
       <span>${categoryEmoji(q.category)}</span>
       <span>${q.title}</span>
       <span class="completed-item-cat">${q.category}</span>
       <span class="completed-item-xp">+${q.xp} XP</span>
+      <button class="completed-item-remove" onclick="removeQuest(${i})" title="Remove quest">✕</button>
     </div>
   `).join("");
+}
+
+// ===== Remove Quest =====
+function removeQuest(index) {
+  const quest = completedQuests[index];
+  if (!quest) return;
+  userXP = Math.max(0, userXP - quest.xp);
+  completedQuests.splice(index, 1);
+  saveState();
+  updateProgress();
+  updateHeaderXP();
 }
 
 // ===== Header XP =====

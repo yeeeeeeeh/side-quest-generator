@@ -558,6 +558,25 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
   font-weight: 600;
 }
 
+.completed-item-remove {
+  background: none;
+  border: none;
+  color: var(--text-light);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  line-height: 1;
+  transition: color var(--transition), background var(--transition);
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+
+.completed-item-remove:hover {
+  color: #EF4444;
+  background: #FEE2E2;
+}
+
 /* ===== Footer ===== */
 .footer {
   background: #0C1A2E;

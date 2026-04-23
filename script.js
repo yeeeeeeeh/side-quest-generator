@@ -97,6 +97,31 @@ const leaderboardData = [
   { name: "YoungQuester",  xp: 700  },
 ];
 
+// ===== Cookies =====
+function setCookie(name, value, days) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires};path=/;SameSite=Lax`;
+}
+
+function getCookie(name) {
+  const match = document.cookie.split("; ").find(row => row.startsWith(name + "="));
+  return match ? decodeURIComponent(match.split("=")[1]) : null;
+}
+
+function saveState() {
+  setCookie("userXP", userXP, 365);
+  setCookie("completedQuests", JSON.stringify(completedQuests), 365);
+}
+
+function loadState() {
+  const xp = getCookie("userXP");
+  if (xp !== null) userXP = parseInt(xp, 10) || 0;
+  const quests = getCookie("completedQuests");
+  if (quests !== null) {
+    try { completedQuests = JSON.parse(quests); } catch (e) { completedQuests = []; }
+  }
+}
+
 // ===== State =====
 let userXP = 0;
 let completedQuests = [];
@@ -106,9 +131,11 @@ let selectedCategory = "any";
 
 // ===== Init =====
 document.addEventListener("DOMContentLoaded", () => {
+  loadState();
   rollQuest();
   renderLeaderboard();
   updateProgress();
+  updateHeaderXP();
   initPills();
 });
 
@@ -186,6 +213,7 @@ function completeQuest() {
 
   userXP += currentQuest.xp;
   completedQuests.unshift({ ...currentQuest });
+  saveState();
 
   updateProgress();
   updateHeaderXP();

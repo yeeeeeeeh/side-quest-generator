@@ -421,7 +421,7 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
 /* Corner ornaments */
 .quest-card::before,
 .quest-card::after {
-  content: '✦';
+  content: '✦' / '';
   position: absolute;
   font-size: 1.1rem;
   color: var(--border-light);
@@ -438,9 +438,9 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
 
 .quest-card-inner { padding: 40px; position: relative; z-index: 1; }
 
-/* Compass rose background decoration */
+/* Quest card inner compass background decoration */
 .quest-card-inner::after {
-  content: '';
+  content: '' / '';
   position: absolute;
   bottom: 12px;
   right: 12px;
@@ -759,7 +759,7 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
 
 .section-skull::before,
 .section-skull::after {
-  content: '';
+  content: '' / '';
   flex: 1;
   max-width: 120px;
   height: 1px;

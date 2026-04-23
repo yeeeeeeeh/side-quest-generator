@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Life XP — Level Up Your Life</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container header-inner">
+      <div class="logo">
+        <span class="logo-icon">⚔️</span>
+        <span class="logo-text">Life<span class="accent">XP</span></span>
+      </div>
+      <nav class="nav">
+        <a href="#generator" class="nav-link">Quests</a>
+        <a href="#leaderboard" class="nav-link">Leaderboard</a>
+        <a href="#how-it-works" class="nav-link">How It Works</a>
+      </nav>
+      <div class="header-xp">
+        <span class="xp-badge">
+          <span class="xp-label">Your XP</span>
+          <span class="xp-value" id="header-xp">0</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="hero-text">
+        <h1 class="hero-title">Level Up<br /><span class="accent">Your Life</span></h1>
+        <p class="hero-subtitle">
+          Real life is the ultimate RPG. Stop waiting for adventure — generate your next side quest and start earning XP today.
+        </p>
+        <a href="#generator" class="btn btn-primary">Get My Quest</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-card">
+          <div class="stat-value">150+</div>
+          <div class="stat-label">Unique Quests</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">5</div>
+          <div class="stat-label">Categories</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">3</div>
+          <div class="stat-label">Difficulty Tiers</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quest Generator -->
+  <section class="section" id="generator">
+    <div class="container">
+      <h2 class="section-title">Quest Generator</h2>
+      <p class="section-subtitle">Choose your filters and roll for your next adventure.</p>
+
+      <div class="filter-row">
+        <!-- Difficulty -->
+        <div class="filter-group">
+          <label class="filter-label">Difficulty</label>
+          <div class="pill-group" id="difficulty-pills">
+            <button class="pill active" data-value="any">Any</button>
+            <button class="pill" data-value="Easy">Easy</button>
+            <button class="pill" data-value="Medium">Medium</button>
+            <button class="pill" data-value="Hard">Hard</button>
+          </div>
+        </div>
+
+        <!-- Category -->
+        <div class="filter-group">
+          <label class="filter-label">Category</label>
+          <div class="pill-group" id="category-pills">
+            <button class="pill active" data-value="any">Any</button>
+            <button class="pill" data-value="Mental">🧠 Mental</button>
+            <button class="pill" data-value="Creative">🎨 Creative</button>
+            <button class="pill" data-value="Adventure">🗺️ Adventure</button>
+            <button class="pill" data-value="Social">🤝 Social</button>
+            <button class="pill" data-value="Physical">💪 Physical</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quest Card -->
+      <div class="quest-card" id="quest-card">
+        <div class="quest-card-inner">
+          <div class="quest-meta">
+            <span class="quest-category-badge" id="quest-category">Adventure</span>
+            <span class="quest-difficulty-badge" id="quest-difficulty">Medium</span>
+            <span class="quest-xp-badge" id="quest-xp">+150 XP</span>
+          </div>
+          <div class="quest-title-wrap">
+            <h3 class="quest-title" id="quest-title">Board a random bus and explore the last stop</h3>
+          </div>
+          <p class="quest-description" id="quest-desc">
+            Pick a bus route you've never taken. Ride it all the way to the last stop. Spend at least 20 minutes exploring the area on foot before heading back.
+          </p>
+          <div class="quest-actions">
+            <button class="btn btn-primary" onclick="rollQuest()">🎲 Roll Again</button>
+            <button class="btn btn-success" onclick="completeQuest()">✅ Quest Complete!</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Completion Flash -->
+      <div class="completion-banner hidden" id="completion-banner">
+        <span class="completion-icon">🏆</span>
+        <span class="completion-text" id="completion-text">+150 XP earned!</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="section section-alt" id="how-it-works">
+    <div class="container">
+      <h2 class="section-title">How It Works</h2>
+      <p class="section-subtitle">Three steps to your next real-world adventure.</p>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">01</div>
+          <div class="step-icon">🎲</div>
+          <h3 class="step-title">Roll Your Quest</h3>
+          <p class="step-desc">Filter by difficulty and category, then hit Roll to get a custom challenge picked just for you.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">02</div>
+          <div class="step-icon">🌍</div>
+          <h3 class="step-title">Go Do It</h3>
+          <p class="step-desc">Step away from the screen and complete your quest in the real world. No cheating — that's between you and your XP.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">03</div>
+          <div class="step-icon">⬆️</div>
+          <h3 class="step-title">Earn XP &amp; Level Up</h3>
+          <p class="step-desc">Mark it complete, earn your XP, and climb the leaderboard. The more you do, the more you grow.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- XP Progress -->
+  <section class="section" id="progress">
+    <div class="container">
+      <h2 class="section-title">Your Progress</h2>
+      <p class="section-subtitle">Track your journey from rookie to legend.</p>
+      <div class="progress-panel">
+        <div class="progress-header">
+          <div class="level-display">
+            <span class="level-label">Level</span>
+            <span class="level-value" id="current-level">1</span>
+          </div>
+          <div class="level-title-display">
+            <span class="level-title-label">Rank</span>
+            <span class="level-title-value" id="current-rank">Rookie Adventurer</span>
+          </div>
+          <div class="total-xp-display">
+            <span class="total-xp-label">Total XP</span>
+            <span class="total-xp-value" id="total-xp">0</span>
+          </div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="xp-bar" style="width: 0%"></div>
+          </div>
+          <div class="progress-bar-labels">
+            <span id="xp-current-label">0 XP</span>
+            <span id="xp-next-label">500 XP to next level</span>
+          </div>
+        </div>
+        <div class="completed-quests">
+          <h4 class="completed-title">Completed Quests</h4>
+          <div class="completed-list" id="completed-list">
+            <p class="empty-state">No quests completed yet. Roll one above and get started!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Leaderboard -->
+  <section class="section section-alt" id="leaderboard">
+    <div class="container">
+      <h2 class="section-title">Global Leaderboard</h2>
+      <p class="section-subtitle">Top adventurers who chose quests over comfort.</p>
+      <div class="leaderboard">
+        <div class="leaderboard-header">
+          <span>Rank</span>
+          <span>Player</span>
+          <span>Level</span>
+          <span>Total XP</span>
+        </div>
+        <div id="leaderboard-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-logo">
+        <span class="logo-icon">⚔️</span>
+        <span class="logo-text">Life<span class="accent">XP</span></span>
+      </div>
+      <p class="footer-tagline">Level Up Your Life — one quest at a time.</p>
+      <p class="footer-note">mylifeisboringandiwanttodoasidequestbutdontknowwhattodo.com</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

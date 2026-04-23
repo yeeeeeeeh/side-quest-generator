@@ -1,0 +1,281 @@
+// ===== Quest Data =====
+const quests = [
+  // Mental
+  { title: "Meditate for 10 minutes", desc: "Find a quiet spot, set a timer for 10 minutes, and focus only on your breathing. No music, no distractions.", category: "Mental", difficulty: "Easy", xp: 75 },
+  { title: "Write your thoughts for 20 minutes", desc: "Open a notebook or blank doc and write continuously for 20 minutes. Don't stop, don't edit — just let it flow.", category: "Mental", difficulty: "Easy", xp: 75 },
+  { title: "Learn one new fact every hour today", desc: "Set hourly reminders. Each hour, stop and look up one genuinely interesting fact about any topic. Share one with someone by day's end.", category: "Mental", difficulty: "Easy", xp: 100 },
+  { title: "Stay off your phone for 4 hours straight", desc: "No social media, no texts, no mindless scrolling. Do something analog instead. Notice how your mind reacts.", category: "Mental", difficulty: "Medium", xp: 150 },
+  { title: "Do a digital detox for 24 hours", desc: "No social media, no streaming, no non-essential apps for a full day. Use the time to be bored — that's where ideas come from.", category: "Mental", difficulty: "Hard", xp: 300 },
+  { title: "Read for 1 hour without stopping", desc: "Pick up any book you've been putting off. Read for a full uninterrupted hour. No phone, no pausing.", category: "Mental", difficulty: "Easy", xp: 100 },
+  { title: "Write a letter to your future self", desc: "Write a letter to yourself 5 years from now. Seal it and set a calendar reminder to open it.", category: "Mental", difficulty: "Medium", xp: 175 },
+  { title: "Learn to solve a Rubik's cube", desc: "Watch tutorials, practice until you can solve it from start to finish at least once. Time yourself.", category: "Mental", difficulty: "Hard", xp: 350 },
+  { title: "Spend one hour in complete silence", desc: "No music, no podcasts, no TV. Just you and your thoughts. It's harder than it sounds.", category: "Mental", difficulty: "Medium", xp: 125 },
+  { title: "Memorize a poem", desc: "Pick a poem (at least 12 lines) and memorize it completely. Recite it to at least one other person.", category: "Mental", difficulty: "Medium", xp: 200 },
+
+  // Creative
+  { title: "Draw something from memory", desc: "Without looking it up, draw your childhood bedroom from memory as accurately as possible.", category: "Creative", difficulty: "Easy", xp: 75 },
+  { title: "Write a short story in 30 minutes", desc: "Set a timer. Pick a random first sentence generator online and run with it. 300+ words. Go.", category: "Creative", difficulty: "Medium", xp: 150 },
+  { title: "Compose and record a song", desc: "Write and record a song — any genre, any length over 90 seconds. Instruments, voice, or beats. Just make it.", category: "Creative", difficulty: "Hard", xp: 400 },
+  { title: "Take 20 interesting photos today", desc: "Capture 20 photos that are genuinely interesting or beautiful to you. No food pics unless they're incredible.", category: "Creative", difficulty: "Easy", xp: 100 },
+  { title: "Teach yourself origami", desc: "Learn to fold at least 3 different origami shapes from scratch, without video (use diagrams only).", category: "Creative", difficulty: "Medium", xp: 175 },
+  { title: "Paint or draw something abstract", desc: "No references, no plan. Just colors and shapes that express something you're feeling right now.", category: "Creative", difficulty: "Easy", xp: 75 },
+  { title: "Write 10 poems in one sitting", desc: "No minimum length. One topic each. Go weird with it.", category: "Creative", difficulty: "Medium", xp: 200 },
+  { title: "Make a collage from old magazines", desc: "Find magazines or newspapers, cut them up, and create a collage that tells a story or makes a statement.", category: "Creative", difficulty: "Easy", xp: 100 },
+  { title: "Design your ideal life on paper", desc: "Spend an hour mapping out your perfect 10-year future — career, relationships, home, lifestyle. Make it specific and visual.", category: "Creative", difficulty: "Medium", xp: 150 },
+  { title: "Learn to draw one thing really well", desc: "Choose one object and draw it 10 times, each time trying to improve on the last. Compare the first and last attempt.", category: "Creative", difficulty: "Medium", xp: 175 },
+
+  // Adventure
+  { title: "Touch grass", desc: "Go outside. Walk for at least 20 minutes without a destination or podcast. Just move and observe.", category: "Adventure", difficulty: "Easy", xp: 50 },
+  { title: "Board a random bus and explore the last stop", desc: "Pick a bus route you've never taken. Ride it all the way to the last stop. Spend at least 20 minutes exploring before heading back.", category: "Adventure", difficulty: "Medium", xp: 200 },
+  { title: "Visit a part of your city you've never been to", desc: "Look at a map and pick a neighbourhood you've always passed by. Spend 2+ hours there — no phone navigation after arrival.", category: "Adventure", difficulty: "Medium", xp: 175 },
+  { title: "Camp overnight somewhere new", desc: "Find a legal camping spot and spend one night outdoors with minimal gear. No hotel fallback allowed.", category: "Adventure", difficulty: "Hard", xp: 400 },
+  { title: "Go for a sunrise walk", desc: "Wake up before the sun. Walk outside and watch the sunrise from start to finish. Bring nothing but yourself.", category: "Adventure", difficulty: "Easy", xp: 100 },
+  { title: "Explore a trail you've never hiked", desc: "Find a hiking trail you haven't done and complete it. Minimum 5km. No shortcuts.", category: "Adventure", difficulty: "Medium", xp: 200 },
+  { title: "Spend a full day outdoors", desc: "From wake-up to sunset, conduct your entire day outside. Eat outside, read outside, think outside.", category: "Adventure", difficulty: "Hard", xp: 350 },
+  { title: "Visit a local landmark you've never seen", desc: "Pick a famous or noteworthy spot in your city or region that you've always meant to visit and actually go.", category: "Adventure", difficulty: "Easy", xp: 100 },
+  { title: "Go stargazing far from city lights", desc: "Drive or travel at least 30 minutes from the nearest city center and watch the night sky for at least an hour.", category: "Adventure", difficulty: "Medium", xp: 225 },
+  { title: "Do something you're afraid of", desc: "Identify one thing that genuinely scares you (heights, water, crowds) and face it in a safe, controlled way.", category: "Adventure", difficulty: "Hard", xp: 450 },
+
+  // Social
+  { title: "Strike up a conversation with a stranger", desc: "Start a genuine conversation with someone you've never met — not just small talk. Learn something real about them.", category: "Social", difficulty: "Easy", xp: 100 },
+  { title: "Call someone you haven't spoken to in over a year", desc: "Don't text — call. Reconnect with an old friend, family member, or mentor. Have a real conversation.", category: "Social", difficulty: "Easy", xp: 100 },
+  { title: "Organize a social event for 5+ people", desc: "Plan and execute a gathering — dinner, game night, outdoor trip — for at least 5 people. You handle logistics.", category: "Social", difficulty: "Hard", xp: 350 },
+  { title: "Do something kind for a stranger anonymously", desc: "Pay for someone's coffee, leave a note on a car, or help someone out — without expecting thanks or recognition.", category: "Social", difficulty: "Easy", xp: 100 },
+  { title: "Have a 1-hour conversation with no phones", desc: "Sit down with a friend and talk for a full hour with both phones face-down and silent.", category: "Social", difficulty: "Medium", xp: 150 },
+  { title: "Volunteer for half a day", desc: "Find a local volunteer opportunity and give 4+ hours of your time. Food bank, shelter, cleanup — anything that helps.", category: "Social", difficulty: "Medium", xp: 250 },
+  { title: "Give 5 genuine compliments today", desc: "Tell 5 different people something specific and genuine you appreciate about them. No recycling the same compliment.", category: "Social", difficulty: "Easy", xp: 75 },
+  { title: "Join a club, class, or group activity", desc: "Sign up for a recurring group activity you've never tried — a sports league, book club, cooking class, dance lesson.", category: "Social", difficulty: "Hard", xp: 300 },
+  { title: "Write and send handwritten letters to 3 people", desc: "Physically write letters to 3 people who matter to you. Mail them. Real stamps, real envelopes.", category: "Social", difficulty: "Medium", xp: 200 },
+  { title: "Ask someone to teach you something they love", desc: "Find someone passionate about a skill, hobby, or topic. Ask them to teach you for at least an hour. Actually learn.", category: "Social", difficulty: "Medium", xp: 175 },
+
+  // Physical
+  { title: "Stay hydrated — drink 2L of water today", desc: "Track your water intake and make sure you hit 2 full liters before the day ends. No substitutions.", category: "Physical", difficulty: "Easy", xp: 50 },
+  { title: "Do 100 push-ups throughout the day", desc: "Spread them out however you like — sets of 10, 20, or more. Just hit 100 total by midnight.", category: "Physical", difficulty: "Medium", xp: 150 },
+  { title: "Learn how to do a backflip", desc: "Work with a coach or in a safe environment (gymnastics gym, trampoline park) to learn and land a backflip.", category: "Physical", difficulty: "Hard", xp: 500 },
+  { title: "Work out for 45 minutes", desc: "Get a full 45-minute workout in — gym, run, yoga, HIIT, whatever. No half-measures, no cheating the clock.", category: "Physical", difficulty: "Easy", xp: 100 },
+  { title: "Run your first 5K", desc: "Whether you walk-run or sprint the whole way, complete a 5K distance today. Track it on your phone.", category: "Physical", difficulty: "Medium", xp: 200 },
+  { title: "Try a completely new physical activity", desc: "Rock climbing, paddleboarding, fencing, archery, martial arts — pick something you've never done and do it.", category: "Physical", difficulty: "Medium", xp: 225 },
+  { title: "Hold a plank for 5 minutes", desc: "Not in a row, necessarily. Total plank time of 5 minutes in one session. Track every second.", category: "Physical", difficulty: "Medium", xp: 175 },
+  { title: "Go for a 10km walk or hike", desc: "Strap on your shoes and cover 10 kilometers on foot. No driving shortcuts. Track it.", category: "Physical", difficulty: "Medium", xp: 200 },
+  { title: "Do a cold shower every day for a week", desc: "Commit to ending every shower with at least 2 minutes of cold water for 7 consecutive days. No skipping.", category: "Physical", difficulty: "Hard", xp: 300 },
+  { title: "Sleep 8 hours and wake up without an alarm", desc: "Go to bed early enough to naturally wake up after 8 hours of sleep — no alarm, no snooze, no exceptions.", category: "Physical", difficulty: "Easy", xp: 100 },
+];
+
+// ===== Levels =====
+const levels = [
+  { level: 1, xp: 0,    rank: "Rookie Adventurer" },
+  { level: 2, xp: 500,  rank: "Rising Explorer" },
+  { level: 3, xp: 1200, rank: "Seasoned Wanderer" },
+  { level: 4, xp: 2500, rank: "Bold Pathfinder" },
+  { level: 5, xp: 4500, rank: "Elite Quester" },
+  { level: 6, xp: 7000, rank: "Legendary Hero" },
+];
+
+// ===== Leaderboard Data =====
+const leaderboardData = [
+  { name: "SkyWalker_X",   xp: 8420 },
+  { name: "NomadNova",     xp: 7015 },
+  { name: "QuestKing42",   xp: 5930 },
+  { name: "WanderlustJen", xp: 4780 },
+  { name: "DailyGrind99",  xp: 3900 },
+  { name: "OutdoorAlex",   xp: 3250 },
+  { name: "LevelUpLucy",   xp: 2600 },
+  { name: "XPHunter",      xp: 1850 },
+  { name: "BoldBrendan",   xp: 1200 },
+  { name: "YoungQuester",  xp: 700  },
+];
+
+// ===== State =====
+let userXP = 0;
+let completedQuests = [];
+let currentQuest = null;
+let selectedDifficulty = "any";
+let selectedCategory = "any";
+
+// ===== Init =====
+document.addEventListener("DOMContentLoaded", () => {
+  rollQuest();
+  renderLeaderboard();
+  updateProgress();
+  initPills();
+});
+
+// ===== Pill Filters =====
+function initPills() {
+  document.querySelectorAll("#difficulty-pills .pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      document.querySelectorAll("#difficulty-pills .pill").forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+      selectedDifficulty = pill.dataset.value;
+      rollQuest();
+    });
+  });
+
+  document.querySelectorAll("#category-pills .pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      document.querySelectorAll("#category-pills .pill").forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+      selectedCategory = pill.dataset.value;
+      rollQuest();
+    });
+  });
+}
+
+// ===== Roll Quest =====
+function rollQuest() {
+  const card = document.getElementById("quest-card");
+  card.classList.add("rolling");
+
+  setTimeout(() => {
+    let pool = quests.filter(q => {
+      const diffOk = selectedDifficulty === "any" || q.difficulty === selectedDifficulty;
+      const catOk  = selectedCategory  === "any" || q.category  === selectedCategory;
+      return diffOk && catOk;
+    });
+
+    if (!pool.length) pool = quests;
+
+    let pick;
+    do {
+      pick = pool[Math.floor(Math.random() * pool.length)];
+    } while (pool.length > 1 && currentQuest && pick.title === currentQuest.title);
+
+    currentQuest = pick;
+    renderQuest(pick);
+    hideCompletion();
+    card.classList.remove("rolling");
+  }, 200);
+}
+
+// ===== Render Quest =====
+function renderQuest(quest) {
+  document.getElementById("quest-category").textContent  = `${categoryEmoji(quest.category)} ${quest.category}`;
+  document.getElementById("quest-difficulty").textContent = quest.difficulty;
+  document.getElementById("quest-difficulty").className   = `quest-difficulty-badge ${quest.difficulty}`;
+  document.getElementById("quest-xp").textContent         = `+${quest.xp} XP`;
+  document.getElementById("quest-title").textContent      = quest.title;
+  document.getElementById("quest-desc").textContent       = quest.desc;
+}
+
+function categoryEmoji(cat) {
+  const map = { Mental: "🧠", Creative: "🎨", Adventure: "🗺️", Social: "🤝", Physical: "💪" };
+  return map[cat] || "⚡";
+}
+
+// ===== Complete Quest =====
+function completeQuest() {
+  if (!currentQuest) return;
+
+  const alreadyDone = completedQuests.some(q => q.title === currentQuest.title);
+  if (alreadyDone) {
+    showCompletion("You already completed this quest!", false);
+    return;
+  }
+
+  userXP += currentQuest.xp;
+  completedQuests.unshift({ ...currentQuest });
+
+  updateProgress();
+  updateHeaderXP();
+  updateLeaderboard();
+  showCompletion(`+${currentQuest.xp} XP earned! Quest complete!`, true);
+}
+
+// ===== Progress =====
+function updateProgress() {
+  const lvl = getLevel(userXP);
+  const next = levels[lvl.idx + 1];
+
+  document.getElementById("current-level").textContent = lvl.level;
+  document.getElementById("current-rank").textContent  = lvl.rank;
+  document.getElementById("total-xp").textContent      = userXP.toLocaleString();
+
+  const xpIntoLevel = userXP - lvl.xp;
+  const xpToNext    = next ? next.xp - lvl.xp : 1;
+  const pct         = next ? Math.min(100, Math.round((xpIntoLevel / xpToNext) * 100)) : 100;
+
+  document.getElementById("xp-bar").style.width = `${pct}%`;
+  document.getElementById("xp-current-label").textContent = `${xpIntoLevel.toLocaleString()} XP`;
+  document.getElementById("xp-next-label").textContent    = next
+    ? `${(next.xp - userXP).toLocaleString()} XP to Level ${next.level}`
+    : "Max Level Reached!";
+
+  renderCompletedList();
+}
+
+function getLevel(xp) {
+  let current = levels[0];
+  let idx = 0;
+  for (let i = 0; i < levels.length; i++) {
+    if (xp >= levels[i].xp) { current = levels[i]; idx = i; }
+  }
+  return { ...current, idx };
+}
+
+function renderCompletedList() {
+  const list = document.getElementById("completed-list");
+  if (!completedQuests.length) {
+    list.innerHTML = `<p class="empty-state">No quests completed yet. Roll one above and get started!</p>`;
+    return;
+  }
+  list.innerHTML = completedQuests.map(q => `
+    <div class="completed-item">
+      <span>${categoryEmoji(q.category)}</span>
+      <span>${q.title}</span>
+      <span class="completed-item-cat">${q.category}</span>
+      <span class="completed-item-xp">+${q.xp} XP</span>
+    </div>
+  `).join("");
+}
+
+// ===== Header XP =====
+function updateHeaderXP() {
+  document.getElementById("header-xp").textContent = userXP.toLocaleString();
+}
+
+// ===== Completion Banner =====
+function showCompletion(msg, success) {
+  const banner = document.getElementById("completion-banner");
+  document.getElementById("completion-text").textContent = msg;
+  banner.classList.remove("hidden");
+  if (!success) banner.style.background = "linear-gradient(135deg,#FEE2E2,#FECACA)";
+  else banner.style.background = "";
+}
+
+function hideCompletion() {
+  document.getElementById("completion-banner").classList.add("hidden");
+}
+
+// ===== Leaderboard =====
+function renderLeaderboard() {
+  updateLeaderboard();
+}
+
+function updateLeaderboard() {
+  const sorted = [...leaderboardData].sort((a, b) => b.xp - a.xp);
+
+  // Inject "You" into sorted list if you have XP
+  const you = { name: "You", xp: userXP, isYou: true };
+  if (userXP > 0) sorted.push(you);
+  sorted.sort((a, b) => b.xp - a.xp);
+
+  const list = document.getElementById("leaderboard-list");
+  list.innerHTML = sorted.map((player, i) => {
+    const rank = i + 1;
+    const lvl  = getLevel(player.xp).level;
+    const topClass = rank === 1 ? "top-1" : rank === 2 ? "top-2" : rank === 3 ? "top-3" : "";
+    const rankClass = rank === 1 ? "rank-1" : rank === 2 ? "rank-2" : rank === 3 ? "rank-3" : "rank-other";
+    const medal    = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
+    return `
+      <div class="leaderboard-row ${topClass} ${player.isYou ? "you" : ""}">
+        <span class="rank-badge ${rankClass}">${medal}</span>
+        <div class="player-info">
+          <span class="player-name">${player.isYou ? "⭐ You" : player.name}</span>
+          <span class="player-level">Level ${lvl}</span>
+        </div>
+        <span class="lb-level">${lvl}</span>
+        <span class="lb-xp">${player.xp.toLocaleString()} XP</span>
+      </div>
+    `;
+  }).join("");
+}

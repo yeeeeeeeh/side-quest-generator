@@ -71,6 +71,20 @@ const quests = [
   { title: "Sketch or journal one place you visit today", desc: "Pick one spot and spend 30 minutes writing or drawing it in detail. No photos allowed as a substitute.", category: "Travel", difficulty: "Easy", xp: 75 },
   { title: "Attend a local event or festival", desc: "Find something happening today — a market, street performance, religious ceremony, or sports event — and show up.", category: "Travel", difficulty: "Medium", xp: 175 },
   { title: "Wake up before sunrise and watch the city come alive", desc: "Set an alarm. Be outside and in position before first light. Stay until the streets are fully awake. No phone scrolling.", category: "Travel", difficulty: "Medium", xp: 150 },
+
+  // Netherlands
+  { title: "Learn 10 Dutch phrases and use them all today", desc: "Learn 10 Dutch phrases in the morning — greetings, thank-you, excuse me, directions. By end of day, use every single one in actual conversations. No clustering them all at once.", category: "Mental", difficulty: "Easy", xp: 100 },
+  { title: "Sketch a Dutch canal scene on location", desc: "Find a canal with bridges, bikes, and boats. Sit down and spend 30 minutes sketching what you see — no photos allowed as a substitute. Date and sign it.", category: "Creative", difficulty: "Easy", xp: 100 },
+  { title: "Cook a Dutch stamppot from scratch", desc: "Buy Dutch staples — potatoes, rookworst, boerenkool or zuurkool — and cook a traditional stamppot entirely from scratch. No shortcuts, no premade mash.", category: "Creative", difficulty: "Medium", xp: 175 },
+  { title: "Walk the top of a dike for an hour", desc: "Find a sea dike or river dike and walk along the crest for at least one hour. Notice the land below sea level on one side, water on the other. Think about what keeps it all in place.", category: "Adventure", difficulty: "Easy", xp: 75 },
+  { title: "Cycle between two Dutch cities", desc: "Choose two cities at least 20km apart and cycle the route using fietspaden only. No trains, no buses, no cars as backup. Track it.", category: "Adventure", difficulty: "Medium", xp: 200 },
+  { title: "Explore Hoge Veluwe on a free white bike", desc: "Get to the Hoge Veluwe National Park, borrow one of the free white bikes at the entrance, and spend at least 3 hours exploring the forests, heathlands, and sand drifts. No itinerary allowed.", category: "Adventure", difficulty: "Medium", xp: 225 },
+  { title: "Have a genuine conversation entirely in Dutch", desc: "Have a 15+ minute conversation with a Dutch person entirely in Dutch — no switching to English, even when they offer. Order, ask for directions, or just chat. Stay in it.", category: "Social", difficulty: "Hard", xp: 350 },
+  { title: "Swim in the North Sea", desc: "Get to a Dutch beach — Scheveningen, Zandvoort, or anywhere on the North Sea coast — and actually swim. Not wade in. Fully in, for at least 5 minutes. The cold is the point.", category: "Physical", difficulty: "Medium", xp: 200 },
+  { title: "Cycle 80km in a single day on Dutch fietspaden", desc: "Plan an 80km route using only Dutch cycling paths. No e-bike. Track every kilometer. Fuel yourself with stroopwafels and water from Albert Heijn.", category: "Physical", difficulty: "Hard", xp: 400 },
+  { title: "Eat raw herring from a haringkar", desc: "Find a traditional haringkar (herring cart) and eat a raw haring the Dutch way — chopped with raw onion and pickles, or held by the tail over your mouth. No ketchup. No hesitation.", category: "Travel", difficulty: "Easy", xp: 75 },
+  { title: "Take a ferry to a Wadden Island for a day", desc: "Book a TESO or Doeksen ferry to Texel, Vlieland, or Terschelling. Rent a bike on arrival and cover as much of the island as you can before the last ferry home. No overnight bag allowed.", category: "Travel", difficulty: "Medium", xp: 250 },
+  { title: "Visit a Dutch boerenmarkt and cook from what you buy", desc: "Go to a local farmers' market (boerenmarkt) and buy only things you've never cooked with before. Get home and cook a full meal from just those ingredients that evening.", category: "Travel", difficulty: "Medium", xp: 200 },
 ];
 
 // ===== Levels =====

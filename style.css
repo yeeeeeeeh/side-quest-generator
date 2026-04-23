@@ -26,6 +26,8 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 72px;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
 body {
@@ -36,6 +38,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
   overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
 a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transparent; }

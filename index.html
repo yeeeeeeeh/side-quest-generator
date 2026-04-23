@@ -52,15 +52,27 @@
 
         <!-- Category -->
         <div class="filter-group">
-          <label class="filter-label">Category</label>
-          <div class="pill-group" id="category-pills">
-            <button class="pill active" data-value="any">Any</button>
-            <button class="pill" data-value="Mental">🧠 Mental</button>
-            <button class="pill" data-value="Creative">🎨 Creative</button>
-            <button class="pill" data-value="Adventure">🗺️ Adventure</button>
-            <button class="pill" data-value="Social">🤝 Social</button>
-            <button class="pill" data-value="Physical">💪 Physical</button>
-            <button class="pill" data-value="Travel">✈️ Travel</button>
+          <label class="filter-label" for="category-select">Category</label>
+          <div class="select-wrap">
+            <select class="filter-select" id="category-select">
+              <option value="any">🌐 Any Category</option>
+              <optgroup label="Quest Types">
+                <option value="Mental">🧠 Mental</option>
+                <option value="Creative">🎨 Creative</option>
+                <option value="Adventure">🗺️ Adventure</option>
+                <option value="Social">🤝 Social</option>
+                <option value="Physical">💪 Physical</option>
+                <option value="Travel">✈️ Travel</option>
+              </optgroup>
+              <optgroup label="Destinations">
+                <option value="Cape Town">🌍 Cape Town</option>
+                <option value="Windhoek">🦁 Windhoek</option>
+                <option value="Dubai">🌆 Dubai</option>
+                <option value="South Holland">🌷 South Holland</option>
+                <option value="Amsterdam">🚲 Amsterdam</option>
+                <option value="Netherlands">🧀 Netherlands</option>
+              </optgroup>
+            </select>
           </div>
         </div>
       </div>

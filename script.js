@@ -59,6 +59,18 @@ const quests = [
   { title: "Go for a 10km walk or hike", desc: "Strap on your shoes and cover 10 kilometers on foot. No driving shortcuts. Track it.", category: "Physical", difficulty: "Medium", xp: 200 },
   { title: "Do a cold shower every day for a week", desc: "Commit to ending every shower with at least 2 minutes of cold water for 7 consecutive days. No skipping.", category: "Physical", difficulty: "Hard", xp: 300 },
   { title: "Sleep 8 hours and wake up without an alarm", desc: "Go to bed early enough to naturally wake up after 8 hours of sleep — no alarm, no snooze, no exceptions.", category: "Physical", difficulty: "Easy", xp: 100 },
+
+  // Travel
+  { title: "Eat at a local restaurant with no English menu", desc: "Find a spot where you can't read the menu. Point, ask the server's recommendation, or use a photo. Try something you'd never order at home.", category: "Travel", difficulty: "Easy", xp: 100 },
+  { title: "Get lost on purpose for two hours", desc: "Leave your phone's navigation off, pick a direction, and wander. The only rule: find your way back without GPS.", category: "Travel", difficulty: "Medium", xp: 200 },
+  { title: "Learn 10 phrases in the local language", desc: "Before your next day out, learn and practice greetings, thank-you, excuse me, where is, and how much. Use them all by end of day.", category: "Travel", difficulty: "Easy", xp: 75 },
+  { title: "Take a day trip to a nearby town you've never visited", desc: "Research and travel to a town within 2 hours. Spend at least 4 hours exploring with no pre-planned agenda.", category: "Travel", difficulty: "Medium", xp: 225 },
+  { title: "Strike up a conversation with a fellow traveler", desc: "At a hostel, café, or transport stop — introduce yourself and have a genuine 20-minute conversation. Exchange travel tips.", category: "Travel", difficulty: "Easy", xp: 100 },
+  { title: "Visit a market and cook a meal from local ingredients", desc: "Head to a local market, buy only unfamiliar produce or ingredients, and cook something edible with them that evening.", category: "Travel", difficulty: "Hard", xp: 350 },
+  { title: "Take the slow route — no planes or expressways", desc: "Get from point A to point B using only local transport: buses, ferries, regional trains. Embrace the journey.", category: "Travel", difficulty: "Hard", xp: 400 },
+  { title: "Sketch or journal one place you visit today", desc: "Pick one spot and spend 30 minutes writing or drawing it in detail. No photos allowed as a substitute.", category: "Travel", difficulty: "Easy", xp: 75 },
+  { title: "Attend a local event or festival", desc: "Find something happening today — a market, street performance, religious ceremony, or sports event — and show up.", category: "Travel", difficulty: "Medium", xp: 175 },
+  { title: "Wake up before sunrise and watch the city come alive", desc: "Set an alarm. Be outside and in position before first light. Stay until the streets are fully awake. No phone scrolling.", category: "Travel", difficulty: "Medium", xp: 150 },
 ];
 
 // ===== Levels =====
@@ -158,7 +170,7 @@ function renderQuest(quest) {
 }
 
 function categoryEmoji(cat) {
-  const map = { Mental: "🧠", Creative: "🎨", Adventure: "🗺️", Social: "🤝", Physical: "💪" };
+  const map = { Mental: "🧠", Creative: "🎨", Adventure: "🗺️", Social: "🤝", Physical: "💪", Travel: "✈️" };
   return map[cat] || "⚡";
 }
 

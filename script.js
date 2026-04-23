@@ -97,20 +97,6 @@ const levels = [
   { level: 6, xp: 7000, rank: "Legendary Hero" },
 ];
 
-// ===== Leaderboard Data =====
-const leaderboardData = [
-  { name: "SkyWalker_X",   xp: 8420 },
-  { name: "NomadNova",     xp: 7015 },
-  { name: "QuestKing42",   xp: 5930 },
-  { name: "WanderlustJen", xp: 4780 },
-  { name: "DailyGrind99",  xp: 3900 },
-  { name: "OutdoorAlex",   xp: 3250 },
-  { name: "LevelUpLucy",   xp: 2600 },
-  { name: "XPHunter",      xp: 1850 },
-  { name: "BoldBrendan",   xp: 1200 },
-  { name: "YoungQuester",  xp: 700  },
-];
-
 // ===== Cookies =====
 function setCookie(name, value, days) {
   const expires = new Date(Date.now() + days * 864e5).toUTCString();
@@ -136,6 +122,7 @@ function loadState() {
   }
 }
 
+
 // ===== State =====
 let userXP = 0;
 let completedQuests = [];
@@ -147,7 +134,6 @@ let selectedCategory = "any";
 document.addEventListener("DOMContentLoaded", () => {
   loadState();
   rollQuest();
-  renderLeaderboard();
   updateProgress();
   updateHeaderXP();
   initPills();
@@ -231,7 +217,6 @@ function completeQuest() {
 
   updateProgress();
   updateHeaderXP();
-  updateLeaderboard();
   showCompletion(`+${currentQuest.xp} XP earned! Quest complete!`, true);
 }
 
@@ -300,36 +285,3 @@ function hideCompletion() {
   document.getElementById("completion-banner").classList.add("hidden");
 }
 
-// ===== Leaderboard =====
-function renderLeaderboard() {
-  updateLeaderboard();
-}
-
-function updateLeaderboard() {
-  const sorted = [...leaderboardData].sort((a, b) => b.xp - a.xp);
-
-  // Inject "You" into sorted list if you have XP
-  const you = { name: "You", xp: userXP, isYou: true };
-  if (userXP > 0) sorted.push(you);
-  sorted.sort((a, b) => b.xp - a.xp);
-
-  const list = document.getElementById("leaderboard-list");
-  list.innerHTML = sorted.map((player, i) => {
-    const rank = i + 1;
-    const lvl  = getLevel(player.xp).level;
-    const topClass = rank === 1 ? "top-1" : rank === 2 ? "top-2" : rank === 3 ? "top-3" : "";
-    const rankClass = rank === 1 ? "rank-1" : rank === 2 ? "rank-2" : rank === 3 ? "rank-3" : "rank-other";
-    const medal    = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
-    return `
-      <div class="leaderboard-row ${topClass} ${player.isYou ? "you" : ""}">
-        <span class="rank-badge ${rankClass}">${medal}</span>
-        <div class="player-info">
-          <span class="player-name">${player.isYou ? "⭐ You" : player.name}</span>
-          <span class="player-level">Level ${lvl}</span>
-        </div>
-        <span class="lb-level">${lvl}</span>
-        <span class="lb-xp">${player.xp.toLocaleString()} XP</span>
-      </div>
-    `;
-  }).join("");
-}

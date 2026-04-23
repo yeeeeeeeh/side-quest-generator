@@ -23,16 +23,22 @@
   --transition:    0.2s ease;
 }
 
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 72px;
+}
 
 body {
   font-family: 'Inter', system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
 }
 
-a { text-decoration: none; color: inherit; }
+a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transparent; }
 
 /* ===== Layout ===== */
 .container {
@@ -70,11 +76,15 @@ a { text-decoration: none; color: inherit; }
   font-weight: 600;
   border: none;
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
 }
 
-.btn:hover { transform: translateY(-2px); }
-.btn:active { transform: translateY(0); }
+@media (hover: hover) {
+  .btn:hover { transform: translateY(-2px); }
+}
+.btn:active { transform: translateY(0) scale(0.98); }
 
 .btn-primary {
   background: var(--primary);
@@ -106,8 +116,10 @@ a { text-decoration: none; color: inherit; }
   z-index: 100;
   background: rgba(255,255,255,.85);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
   padding: 16px 0;
+  padding-top: max(16px, env(safe-area-inset-top));
 }
 
 .header-inner {
@@ -274,6 +286,8 @@ a { text-decoration: none; color: inherit; }
   font-weight: 500;
   color: var(--text-muted);
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: all var(--transition);
 }
 
@@ -616,6 +630,7 @@ a { text-decoration: none; color: inherit; }
   background: var(--text);
   color: #fff;
   padding: 48px 0;
+  padding-bottom: max(48px, calc(32px + env(safe-area-inset-bottom)));
   text-align: center;
 }
 
@@ -627,17 +642,132 @@ a { text-decoration: none; color: inherit; }
 .footer-tagline { color: rgba(255,255,255,.7); font-size: 0.95rem; }
 .footer-note { color: rgba(255,255,255,.4); font-size: 0.8rem; }
 
-/* ===== Responsive ===== */
-@media (max-width: 768px) {
+/* ===== Responsive — Mobile First ===== */
+
+/* All phones (≤ 767px) */
+@media (max-width: 767px) {
+  .container { padding: 0 20px; }
+  .section { padding: 52px 0; }
+  .section-title { font-size: 1.75rem; }
+  .section-subtitle { margin-bottom: 32px; }
+
+  /* Header */
+  .nav { display: none; }
+  .header-xp { margin-left: auto; }
+
+  /* Hero */
+  .hero { padding: 72px 0 52px; }
+  .hero-inner { flex-direction: column; text-align: center; gap: 32px; }
+  .hero-subtitle { margin: 0 auto 28px; }
+  .hero-stats { flex-direction: row; justify-content: center; flex-wrap: wrap; gap: 12px; }
+  .stat-card { min-width: 100px; padding: 16px 20px; }
+
+  /* Filters */
+  .filter-row { flex-direction: column; gap: 20px; margin-bottom: 28px; }
+  .filter-group { min-width: 0; }
+
+  /* Quest actions — full-width stacked */
+  .quest-actions { flex-direction: column; gap: 12px; }
+  .quest-actions .btn { width: 100%; justify-content: center; min-height: 52px; font-size: 1.05rem; }
+
+  /* Steps */
+  .steps-grid { grid-template-columns: 1fr; gap: 14px; }
+
+  /* Progress */
+  .progress-header { gap: 24px; }
+
+  /* Leaderboard — hide standalone Level column (player-info already shows it) */
+  .leaderboard-header,
+  .leaderboard-row {
+    grid-template-columns: 50px 1fr 100px;
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .leaderboard-header span:nth-child(3),
+  .leaderboard-row .lb-level { display: none; }
+}
+
+/* iPhone 15 and small phones (≤ 479px) */
+@media (max-width: 479px) {
+  .container { padding: 0 16px; }
+  .section { padding: 44px 0; }
+  .section-title { font-size: 1.5rem; }
+  .section-subtitle { font-size: 0.9rem; margin-bottom: 24px; }
+
+  /* Header — tighter on small screens */
+  .header { padding: 10px 0; padding-top: max(10px, env(safe-area-inset-top)); }
+  .header-inner { gap: 10px; }
+  .logo { font-size: 1.15rem; }
+  .logo-icon { font-size: 1.3rem; }
+  .xp-badge { padding: 5px 12px; gap: 6px; }
+  .xp-label { font-size: 0.7rem; }
+  .xp-value { font-size: 0.9rem; }
+
+  /* Hero — compact */
+  .hero { padding: 56px 0 40px; }
+  .hero-title { font-size: clamp(1.9rem, 8.5vw, 2.4rem); }
+  .hero-subtitle { font-size: 0.9rem; margin: 0 auto 20px; }
+  .hero-stats { gap: 8px; }
+  .stat-card { flex: 1; min-width: 0; padding: 12px 8px; }
+  .stat-value { font-size: 1.5rem; }
+  .stat-label { font-size: 0.72rem; }
+
+  /* Pills — proper touch targets */
+  .pill { padding: 10px 14px; min-height: 44px; font-size: 0.85rem; }
+
+  /* Quest card */
+  .quest-card { border-radius: var(--radius); }
+  .quest-card-inner { padding: 20px 16px; }
+  .quest-title { font-size: 1.2rem; }
+  .quest-description { font-size: 0.95rem; margin-bottom: 20px; }
+  .quest-meta { margin-bottom: 16px; }
+
+  /* Steps */
+  .step-card { padding: 22px 18px; }
+  .step-number { font-size: 2.4rem; }
+
+  /* Progress panel */
+  .progress-panel { padding: 20px 16px; }
+  .progress-header { gap: 16px 24px; flex-wrap: wrap; }
+  .level-value { font-size: 2.5rem; }
+  .level-title-value { font-size: 0.95rem; }
+  .total-xp-value { font-size: 1.25rem; }
+  .completed-item { padding: 10px 12px; font-size: 0.9rem; }
+
+  /* Leaderboard — tighter */
+  .leaderboard-header,
+  .leaderboard-row {
+    grid-template-columns: 40px 1fr 80px;
+    padding: 10px 12px;
+  }
+  .lb-xp { font-size: 0.875rem; }
+  .player-name { font-size: 0.875rem; }
+  .rank-badge { width: 30px; height: 30px; font-size: 0.85rem; }
+
+  /* Footer — home indicator safe area */
+  .footer {
+    padding-bottom: max(48px, calc(24px + env(safe-area-inset-bottom)));
+  }
+}
+
+/* Disable hover transforms on touch devices to avoid stuck states */
+@media (hover: none) {
+  .step-card:hover { transform: none; box-shadow: none; }
+  .pill:hover { border-color: var(--border); color: var(--text-muted); background: transparent; }
+  .pill.active:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .nav-link:hover { color: var(--text-muted); background: transparent; }
+}
+
+/* Medium screens — tablet (768px – 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
   .hero-inner { flex-direction: column; text-align: center; }
+  .hero-subtitle { margin: 0 auto 32px; }
   .hero-stats { flex-direction: row; justify-content: center; }
   .stat-card { min-width: 120px; padding: 16px 20px; }
-  .hero-subtitle { margin: 0 auto 32px; }
   .progress-header { gap: 24px; }
   .leaderboard-header,
   .leaderboard-row {
-    grid-template-columns: 50px 1fr 80px 100px;
+    grid-template-columns: 50px 1fr 80px 110px;
     padding: 12px 16px;
   }
-  .nav { display: none; }
 }

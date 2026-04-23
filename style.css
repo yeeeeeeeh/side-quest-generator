@@ -28,6 +28,7 @@ html {
   scroll-padding-top: 72px;
   overflow-x: hidden;
   overscroll-behavior-x: none;
+  max-width: 100%;
 }
 
 body {
@@ -39,6 +40,7 @@ body {
   -webkit-text-size-adjust: 100%;
   overflow-x: hidden;
   overscroll-behavior-x: none;
+  max-width: 100%;
 }
 
 a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transparent; }
@@ -571,7 +573,7 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
 .footer .accent { color: #7DD3FC; }
 
 .footer-tagline { color: rgba(255,255,255,.7); font-size: 0.95rem; }
-.footer-note { color: rgba(255,255,255,.4); font-size: 0.8rem; }
+.footer-note { color: rgba(255,255,255,.4); font-size: 0.8rem; overflow-wrap: break-word; word-break: break-all; }
 
 /* ===== Responsive — Mobile First ===== */
 

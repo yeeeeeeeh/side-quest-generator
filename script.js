@@ -120,7 +120,7 @@ function renderQuest(quest) {
 
 function categoryEmoji(cat) {
   const map = {
-    Mental: "🧠", Creative: "🎨", Adventure: "🗺️", Social: "🤝", Physical: "💪", Travel: "✈️",
+    Mental: "🧠", Creative: "🎨", Adventure: "🗺️", Social: "🤝", Physical: "💪", Travel: "✈️", "Small Talk with Stranger": "💬",
     "Cape Town": "🌍", "Windhoek": "🦁", "Dubai": "🌆", "Johannesburg": "🏙️", "London": "🇬🇧", "Antwerp": "💎", "Mt. Fuji": "🗻", "Izu Peninsula": "🌊", "Greater Tokyo Area": "🗼", "South Holland": "🌷", "Amsterdam": "🚲", "Netherlands": "🧀", "Utrecht": "🏰"
   };
   return map[cat] || "⚡";

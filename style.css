@@ -93,7 +93,7 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
 }
 
 .section-title {
-  font-family: 'Pirata One', 'Georgia', serif;
+  font-family: 'Cinzel', serif;
   font-size: 2.4rem;
   font-weight: 400;
   text-align: center;
@@ -249,7 +249,7 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
 }
 
 .xp-value {
-  font-family: 'Pirata One', Georgia, serif;
+  font-family: 'Cinzel', serif;
   font-size: 1.1rem;
   font-weight: 400;
   color: var(--accent-light);
@@ -280,7 +280,7 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
 }
 
 .hero-title {
-  font-family: 'Pirata One', Georgia, serif;
+  font-family: 'Cinzel', serif;
   font-size: clamp(2.5rem, 6vw, 4rem);
   font-weight: 400;
   line-height: 1.1;
@@ -315,7 +315,7 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
 }
 
 .stat-value {
-  font-family: 'Pirata One', Georgia, serif;
+  font-family: 'Cinzel', serif;
   font-size: 2rem;
   font-weight: 400;
   line-height: 1;
@@ -375,7 +375,7 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
 
 .filter-label {
   display: block;
-  font-family: 'Pirata One', Georgia, serif;
+  font-family: 'Cinzel', serif;
   font-size: 1rem;
   letter-spacing: 0.06em;
   color: var(--text-muted);
@@ -547,7 +547,7 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
 }
 
 .quest-title {
-  font-family: 'Pirata One', Georgia, serif;
+  font-family: 'Cinzel', serif;
   font-size: 1.85rem;
   font-weight: 400;
   line-height: 1.25;
@@ -593,7 +593,7 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
 
 .completion-icon { font-size: 1.5rem; }
 .completion-text {
-  font-family: 'Pirata One', Georgia, serif;
+  font-family: 'Cinzel', serif;
   font-size: 1.25rem;
   font-weight: 400;
   color: #2A4E1A;
@@ -635,7 +635,7 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
 .step-icon { font-size: 2rem; margin-bottom: 16px; }
 
 .step-title {
-  font-family: 'Pirata One', Georgia, serif;
+  font-family: 'Cinzel', serif;
   font-size: 1.2rem;
   font-weight: 400;
   margin-bottom: 10px;
@@ -680,7 +680,7 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
 }
 
 .level-value {
-  font-family: 'Pirata One', Georgia, serif;
+  font-family: 'Cinzel', serif;
   font-size: 3rem;
   font-weight: 400;
   color: var(--accent);
@@ -688,14 +688,14 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
 }
 
 .level-title-value {
-  font-family: 'Pirata One', Georgia, serif;
+  font-family: 'Cinzel', serif;
   font-size: 1.15rem;
   font-weight: 400;
   color: var(--primary-dark);
 }
 
 .total-xp-value {
-  font-family: 'Pirata One', Georgia, serif;
+  font-family: 'Cinzel', serif;
   font-size: 1.6rem;
   font-weight: 400;
   color: var(--text);
@@ -728,7 +728,7 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
 }
 
 .completed-title {
-  font-family: 'Pirata One', Georgia, serif;
+  font-family: 'Cinzel', serif;
   font-size: 1.1rem;
   font-weight: 400;
   margin-bottom: 16px;
@@ -752,7 +752,7 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
 
 .completed-item-xp {
   margin-left: auto;
-  font-family: 'Pirata One', Georgia, serif;
+  font-family: 'Cinzel', serif;
   font-size: 0.9rem;
   font-weight: 400;
   color: var(--success-dark);

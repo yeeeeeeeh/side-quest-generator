@@ -618,7 +618,7 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
 
 .todo-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   padding: 12px 16px;
   background: var(--bg);
@@ -627,12 +627,27 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
   font-size: 0.95rem;
 }
 
-.todo-title {
+.todo-item-body {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.todo-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.todo-title {
+  font-weight: 600;
+}
+
+.todo-desc {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
 }
 
 .todo-actions { display: flex; gap: 6px; flex-shrink: 0; }

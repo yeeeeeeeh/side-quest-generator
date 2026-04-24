@@ -8,7 +8,7 @@
   <title>Life XP — Your Real-Life Quest Generator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Pirata+One&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -32,137 +32,19 @@
     </div>
   </header>
 
-  <!-- Pirate Ship Banner -->
-  <div class="pirate-banner" aria-hidden="true">
-    <svg class="pirate-ship-svg" viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#1E0D05"/>
-          <stop offset="100%" stop-color="#331608"/>
-        </linearGradient>
-        <linearGradient id="sailGrad" x1="0" y1="0" x2="0.3" y2="1">
-          <stop offset="0%" stop-color="#FAF0D4"/>
-          <stop offset="100%" stop-color="#E0C880"/>
-        </linearGradient>
-        <linearGradient id="seaGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#3D2010"/>
-          <stop offset="100%" stop-color="#1E0D05"/>
-        </linearGradient>
-      </defs>
-      <!-- Sky -->
-      <rect width="760" height="200" fill="url(#skyGrad)"/>
-      <!-- Moon -->
-      <circle cx="680" cy="42" r="28" fill="#C9971A" opacity="0.65"/>
-      <circle cx="692" cy="36" r="25" fill="#1E0D05" opacity="0.95"/>
-      <!-- Stars -->
-      <circle cx="60"  cy="22" r="1.5" fill="#F5D97A" opacity="0.8"/>
-      <circle cx="145" cy="14" r="1"   fill="#F5D97A" opacity="0.7"/>
-      <circle cx="240" cy="30" r="1.5" fill="#F5D97A" opacity="0.6"/>
-      <circle cx="410" cy="18" r="1"   fill="#F5D97A" opacity="0.8"/>
-      <circle cx="520" cy="10" r="1.5" fill="#F5D97A" opacity="0.7"/>
-      <circle cx="600" cy="28" r="1"   fill="#F5D97A" opacity="0.6"/>
-      <circle cx="30"  cy="50" r="1"   fill="#F5D97A" opacity="0.7"/>
-      <circle cx="320" cy="12" r="1.5" fill="#F5D97A" opacity="0.5"/>
-      <circle cx="735" cy="55" r="1"   fill="#F5D97A" opacity="0.7"/>
-      <circle cx="180" cy="8"  r="1"   fill="#F5D97A" opacity="0.9"/>
-      <circle cx="470" cy="38" r="1"   fill="#F5D97A" opacity="0.5"/>
-      <!-- Sea -->
-      <path d="M0,148 Q95,138 190,148 Q285,158 380,148 Q475,138 570,148 Q665,158 760,148 L760,200 L0,200 Z" fill="url(#seaGrad)"/>
-      <path d="M0,162 Q95,152 190,162 Q285,172 380,162 Q475,152 570,162 Q665,172 760,162 L760,200 L0,200 Z" fill="#1E0D05" opacity="0.65"/>
-      <!-- Wave crests -->
-      <path d="M0,152 Q48,147 95,152 Q143,157 190,152"   fill="none" stroke="#C9971A" stroke-width="0.8" opacity="0.3"/>
-      <path d="M190,152 Q238,147 285,152 Q333,157 380,152" fill="none" stroke="#C9971A" stroke-width="0.8" opacity="0.3"/>
-      <path d="M380,152 Q428,147 475,152 Q523,157 570,152" fill="none" stroke="#C9971A" stroke-width="0.8" opacity="0.3"/>
-      <path d="M570,152 Q618,147 665,152 Q713,157 760,152" fill="none" stroke="#C9971A" stroke-width="0.8" opacity="0.3"/>
-      <!-- === SHIP === -->
-      <!-- Stern castle -->
-      <path d="M160,100 L160,138 L215,141 L215,103 Z" fill="#3D2010"/>
-      <rect x="166" y="109" width="18" height="13" rx="2" fill="#C9971A" opacity="0.2"/>
-      <rect x="190" y="109" width="17" height="13" rx="2" fill="#C9971A" opacity="0.2"/>
-      <path d="M160,103 Q188,95 215,103" fill="none" stroke="#C9971A" stroke-width="1.5" opacity="0.4"/>
-      <!-- Hull -->
-      <path d="M155,134 Q310,146 430,140 Q505,135 545,130 L527,152 Q390,162 235,158 L205,156 Z" fill="#5C3317"/>
-      <path d="M205,156 Q390,162 527,152 L514,166 Q375,174 215,169 Z" fill="#3D2010"/>
-      <!-- Hull planks / gun ports -->
-      <rect x="248" y="136" width="12" height="8" rx="1" fill="#2C1508" opacity="0.5"/>
-      <rect x="298" y="134" width="12" height="8" rx="1" fill="#2C1508" opacity="0.5"/>
-      <rect x="348" y="133" width="12" height="8" rx="1" fill="#2C1508" opacity="0.5"/>
-      <rect x="398" y="133" width="12" height="8" rx="1" fill="#2C1508" opacity="0.5"/>
-      <rect x="448" y="133" width="12" height="8" rx="1" fill="#2C1508" opacity="0.5"/>
-      <rect x="496" y="135" width="12" height="8" rx="1" fill="#2C1508" opacity="0.5"/>
-      <!-- Cannons protruding -->
-      <rect x="244" y="139" width="20" height="7" rx="3" fill="#2C1508"/>
-      <rect x="344" y="137" width="20" height="7" rx="3" fill="#2C1508"/>
-      <rect x="444" y="137" width="20" height="7" rx="3" fill="#2C1508"/>
-      <!-- Main mast -->
-      <rect x="340" y="12" width="7" height="128" rx="1" fill="#3D2010"/>
-      <!-- Foremast -->
-      <rect x="415" y="30" width="6" height="110" rx="1" fill="#3D2010"/>
-      <!-- Mizzenmast -->
-      <rect x="260" y="40" width="5" height="98" rx="1" fill="#3D2010"/>
-      <!-- Bowsprit -->
-      <line x1="510" y1="108" x2="600" y2="68" stroke="#3D2010" stroke-width="7" stroke-linecap="round"/>
-      <!-- === SAILS === -->
-      <!-- Main sail left -->
-      <path d="M343,18 L343,132 Q305,136 272,122 Q290,85 310,42 Z" fill="url(#sailGrad)" stroke="#B8881A" stroke-width="1.5"/>
-      <!-- Main sail right -->
-      <path d="M347,18 L347,132 Q382,136 415,122 Q397,84 378,42 Z" fill="url(#sailGrad)" stroke="#B8881A" stroke-width="1.5"/>
-      <!-- Main cross-sail -->
-      <path d="M310,42 Q345,30 378,42 L373,70 Q345,60 315,70 Z" fill="#F0D890" stroke="#B8881A" stroke-width="1.5"/>
-      <!-- Main top-sail -->
-      <path d="M324,14 Q345,5 366,14 L362,26 Q345,19 328,26 Z" fill="#F0D890" stroke="#B8881A" stroke-width="1"/>
-      <!-- Foremast sail -->
-      <path d="M419,34 L419,130 Q450,132 475,120 Q460,86 445,44 Z" fill="url(#sailGrad)" stroke="#B8881A" stroke-width="1.5"/>
-      <!-- Foremast cross-sail -->
-      <path d="M422,34 Q440,25 462,35 L458,56 Q440,48 424,56 Z" fill="#F0D890" stroke="#B8881A" stroke-width="1"/>
-      <!-- Mizzenmast sail -->
-      <path d="M263,44 L263,128 Q286,130 305,118 Q292,88 280,56 Z" fill="url(#sailGrad)" stroke="#B8881A" stroke-width="1.2"/>
-      <!-- Bowsprit sail -->
-      <path d="M418,72 L598,68 L510,108 Z" fill="#F5E6C8" stroke="#B8881A" stroke-width="1"/>
-      <!-- === JOLLY ROGER === -->
-      <path d="M347,5 L388,0 L388,16 L347,20 Z" fill="#1A0804"/>
-      <!-- Skull -->
-      <ellipse cx="367" cy="8"  rx="6"   ry="5.5" fill="#F5E3C0"/>
-      <ellipse cx="363" cy="7"  rx="1.8" ry="2"   fill="#1A0804"/>
-      <ellipse cx="371" cy="7"  rx="1.8" ry="2"   fill="#1A0804"/>
-      <path d="M364,12 L367,14 L370,12" fill="none" stroke="#F5E3C0" stroke-width="1"/>
-      <!-- Crossbones -->
-      <line x1="360" y1="17" x2="374" y2="20" stroke="#F5E3C0" stroke-width="1.8" stroke-linecap="round"/>
-      <line x1="374" y1="17" x2="360" y2="20" stroke="#F5E3C0" stroke-width="1.8" stroke-linecap="round"/>
-      <!-- === RIGGING === -->
-      <line x1="345" y1="16" x2="272" y2="56"  stroke="#8B6914" stroke-width="1" opacity="0.45"/>
-      <line x1="345" y1="16" x2="415" y2="58"  stroke="#8B6914" stroke-width="1" opacity="0.45"/>
-      <line x1="345" y1="16" x2="600" y2="68"  stroke="#8B6914" stroke-width="1" opacity="0.4"/>
-      <line x1="418" y1="32" x2="345" y2="60"  stroke="#8B6914" stroke-width="0.9" opacity="0.4"/>
-      <line x1="418" y1="32" x2="480" y2="60"  stroke="#8B6914" stroke-width="0.9" opacity="0.4"/>
-      <line x1="263" y1="42" x2="345" y2="70"  stroke="#8B6914" stroke-width="0.9" opacity="0.35"/>
-      <line x1="345" y1="60" x2="210" y2="100" stroke="#8B6914" stroke-width="0.9" opacity="0.35"/>
-      <line x1="345" y1="60" x2="162" y2="105" stroke="#8B6914" stroke-width="0.9" opacity="0.3"/>
-      <!-- Distant second ship silhouette -->
-      <rect x="680" y="110" width="3" height="38" fill="#4A2810" opacity="0.4"/>
-      <path d="M682,112 L682,138 Q695,140 705,135 Q698,124 692,112 Z" fill="#3D2010" opacity="0.35"/>
-      <path d="M650,138 Q668,143 705,139 L700,148 Q668,152 654,147 Z" fill="#3D2010" opacity="0.4"/>
-    </svg>
+  <!-- Hero Banner -->
+  <div class="hero-banner" aria-hidden="true">
+    <div class="hero-bg-image"></div>
+    <div class="hero-gradient-overlay"></div>
+    <div class="hero-content">
+      <h2 class="section-title" style="margin-top: 80px; text-shadow: 0 4px 20px rgba(0,0,0,0.8);">Quest Generator</h2>
+      <p class="section-subtitle" style="text-shadow: 0 2px 10px rgba(0,0,0,0.8);">Choose thy filters and roll for thine next adventure.</p>
+    </div>
   </div>
 
   <!-- Quest Generator -->
-  <section class="section" id="generator">
+  <section class="section" id="generator" style="padding-top: 0; margin-top: -100px; position: relative; z-index: 10;">
     <div class="container">
-      <div class="section-skull" aria-hidden="true">
-        <svg viewBox="0 0 36 30" width="22" height="18" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="18" cy="12" rx="12" ry="10" fill="#B8881A" opacity="0.7"/>
-          <ellipse cx="12.5" cy="11" rx="3" ry="3.5" fill="#2C150A" opacity="0.8"/>
-          <ellipse cx="23.5" cy="11" rx="3" ry="3.5" fill="#2C150A" opacity="0.8"/>
-          <path d="M15,17 L18,19 L21,17" fill="none" stroke="#F5E3C0" stroke-width="1" opacity="0.6"/>
-          <rect x="12" y="20" width="4" height="3.5" rx="1" fill="#F5E3C0" opacity="0.6"/>
-          <rect x="17" y="20" width="4" height="3.5" rx="1" fill="#F5E3C0" opacity="0.6"/>
-          <line x1="2"  y1="2"  x2="34" y2="28" stroke="#B8881A" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
-          <line x1="34" y1="2"  x2="2"  y2="28" stroke="#B8881A" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
-        </svg>
-      </div>
-      <h2 class="section-title">Quest Generator</h2>
-      <p class="section-subtitle">Choose thy filters and roll for thine next adventure.</p>
-
       <div class="filter-row">
         <!-- Difficulty -->
         <div class="filter-group">
@@ -223,9 +105,9 @@
           </div>
           <p class="quest-description" id="quest-desc"></p>
           <div class="quest-actions">
-            <button class="btn btn-primary" onclick="rollQuest()">🎲 Roll Again</button>
-            <button class="btn btn-pin" onclick="saveAsTodo()">📌 Save for Later</button>
-            <button class="btn btn-success" onclick="completeQuest()">✅ Quest Complete!</button>
+            <button class="btn btn-primary" onclick="rollQuest()"><span class="dice-icon">🎲</span> Roll Again</button>
+            <button class="btn btn-pin" onclick="saveAsTodo()"><span class="pin-icon">📌</span> Save for Later</button>
+            <button class="btn btn-success" onclick="completeQuest()"><span class="check-icon">✅</span> Quest Complete!</button>
           </div>
         </div>
       </div>
@@ -241,18 +123,6 @@
   <!-- How It Works -->
   <section class="section section-alt" id="how-it-works">
     <div class="container">
-      <div class="section-skull" aria-hidden="true">
-        <svg viewBox="0 0 36 30" width="22" height="18" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="18" cy="12" rx="12" ry="10" fill="#B8881A" opacity="0.7"/>
-          <ellipse cx="12.5" cy="11" rx="3" ry="3.5" fill="#2C150A" opacity="0.8"/>
-          <ellipse cx="23.5" cy="11" rx="3" ry="3.5" fill="#2C150A" opacity="0.8"/>
-          <path d="M15,17 L18,19 L21,17" fill="none" stroke="#F5E3C0" stroke-width="1" opacity="0.6"/>
-          <rect x="12" y="20" width="4" height="3.5" rx="1" fill="#F5E3C0" opacity="0.6"/>
-          <rect x="17" y="20" width="4" height="3.5" rx="1" fill="#F5E3C0" opacity="0.6"/>
-          <line x1="2"  y1="2"  x2="34" y2="28" stroke="#B8881A" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
-          <line x1="34" y1="2"  x2="2"  y2="28" stroke="#B8881A" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
-        </svg>
-      </div>
       <h2 class="section-title">How It Works</h2>
       <p class="section-subtitle">Three steps to thine next real-world adventure.</p>
       <div class="steps-grid">
@@ -281,18 +151,6 @@
   <!-- XP Progress -->
   <section class="section" id="progress">
     <div class="container">
-      <div class="section-skull" aria-hidden="true">
-        <svg viewBox="0 0 36 30" width="22" height="18" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="18" cy="12" rx="12" ry="10" fill="#B8881A" opacity="0.7"/>
-          <ellipse cx="12.5" cy="11" rx="3" ry="3.5" fill="#2C150A" opacity="0.8"/>
-          <ellipse cx="23.5" cy="11" rx="3" ry="3.5" fill="#2C150A" opacity="0.8"/>
-          <path d="M15,17 L18,19 L21,17" fill="none" stroke="#F5E3C0" stroke-width="1" opacity="0.6"/>
-          <rect x="12" y="20" width="4" height="3.5" rx="1" fill="#F5E3C0" opacity="0.6"/>
-          <rect x="17" y="20" width="4" height="3.5" rx="1" fill="#F5E3C0" opacity="0.6"/>
-          <line x1="2"  y1="2"  x2="34" y2="28" stroke="#B8881A" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
-          <line x1="34" y1="2"  x2="2"  y2="28" stroke="#B8881A" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
-        </svg>
-      </div>
       <h2 class="section-title">Your Progress</h2>
       <p class="section-subtitle">Track thy journey from landlubber to legend.</p>
       <div class="progress-panel">
@@ -344,16 +202,6 @@
       </div>
       <p class="footer-tagline">Real life is the ultimate adventure — one quest at a time.</p>
       <div class="footer-anchor" aria-hidden="true">
-        <svg viewBox="0 0 60 80" width="34" height="45" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="30" cy="13" r="10" fill="none" stroke="#C9971A" stroke-width="3"/>
-          <circle cx="30" cy="13" r="4"  fill="#C9971A" opacity="0.5"/>
-          <line x1="30" y1="23" x2="30" y2="70" stroke="#C9971A" stroke-width="3.5" stroke-linecap="round"/>
-          <line x1="12" y1="40" x2="48" y2="40" stroke="#C9971A" stroke-width="3" stroke-linecap="round"/>
-          <path d="M30,70 Q7,70 7,55" fill="none" stroke="#C9971A" stroke-width="3" stroke-linecap="round"/>
-          <path d="M30,70 Q53,70 53,55" fill="none" stroke="#C9971A" stroke-width="3" stroke-linecap="round"/>
-          <circle cx="7"  cy="55" r="3.5" fill="#C9971A" opacity="0.7"/>
-          <circle cx="53" cy="55" r="3.5" fill="#C9971A" opacity="0.7"/>
-        </svg>
       </div>
     </div>
   </footer>

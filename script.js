@@ -136,12 +136,13 @@ function completeQuest() {
     return;
   }
 
+  const oldXP = userXP;
   userXP += currentQuest.xp;
   completedQuests.unshift({ ...currentQuest });
   saveState();
 
-  updateProgress();
-  updateHeaderXP();
+  updateProgress(oldXP, userXP);
+  updateHeaderXP(oldXP, userXP);
   showCompletion(`+${currentQuest.xp} XP earned! Quest complete!`, true);
 }
 
@@ -164,13 +165,15 @@ function completeTodoQuest(index) {
   if (!quest) return;
   savedTodos.splice(index, 1);
   const alreadyDone = completedQuests.some(q => q.title === quest.title);
+  
+  const oldXP = userXP;
   if (!alreadyDone) {
     userXP += quest.xp;
     completedQuests.unshift({ ...quest });
   }
   saveState();
-  updateProgress();
-  updateHeaderXP();
+  updateProgress(oldXP, userXP);
+  updateHeaderXP(oldXP, userXP);
   renderTodoList();
   showCompletion(
     alreadyDone ? "Quest removed from saved list (already completed)." : `+${quest.xp} XP earned! Quest complete!`,
@@ -210,14 +213,36 @@ function renderTodoList() {
   `).join("");
 }
 
+function animateValue(obj, start, end, duration) {
+  let startTimestamp = null;
+  const step = (timestamp) => {
+    if (!startTimestamp) startTimestamp = timestamp;
+    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+    // easing out
+    const easeProgress = 1 - Math.pow(1 - progress, 3);
+    obj.innerHTML = Math.floor(easeProgress * (end - start) + start).toLocaleString();
+    if (progress < 1) {
+      window.requestAnimationFrame(step);
+    } else {
+      obj.innerHTML = end.toLocaleString();
+    }
+  };
+  window.requestAnimationFrame(step);
+}
+
 // ===== Progress =====
-function updateProgress() {
-  const lvl = getLevel(userXP);
+function updateProgress(oldXP = userXP, newXP = userXP) {
+  const lvl = getLevel(newXP);
   const next = levels[lvl.idx + 1];
 
   document.getElementById("current-level").textContent = lvl.level;
   document.getElementById("current-rank").textContent  = lvl.rank;
-  document.getElementById("total-xp").textContent      = userXP.toLocaleString();
+  
+  if (oldXP !== newXP) {
+    animateValue(document.getElementById("total-xp"), oldXP, newXP, 1000);
+  } else {
+    document.getElementById("total-xp").textContent = newXP.toLocaleString();
+  }
 
   const xpIntoLevel = userXP - lvl.xp;
   const xpToNext    = next ? next.xp - lvl.xp : 1;
@@ -259,8 +284,12 @@ function renderCompletedList() {
 }
 
 // ===== Header XP =====
-function updateHeaderXP() {
-  document.getElementById("header-xp").textContent = userXP.toLocaleString();
+function updateHeaderXP(oldXP = userXP, newXP = userXP) {
+  if (oldXP !== newXP) {
+    animateValue(document.getElementById("header-xp"), oldXP, newXP, 1000);
+  } else {
+    document.getElementById("header-xp").textContent = newXP.toLocaleString();
+  }
 }
 
 // ===== Completion Banner =====

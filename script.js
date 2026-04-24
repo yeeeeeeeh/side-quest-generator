@@ -84,7 +84,10 @@ function rollQuest() {
   setTimeout(() => {
     let pool = quests.filter(q => {
       const diffOk = selectedDifficulty === "any" || q.difficulty === selectedDifficulty;
-      const catOk  = selectedCategory  === "any" || q.category  === selectedCategory;
+      const excludedFromAny = ["Dubai", "Cape Town", "Windhoek"];
+      const catOk  = selectedCategory === "any"
+        ? !excludedFromAny.includes(q.category)
+        : q.category === selectedCategory;
       return diffOk && catOk;
     });
 
@@ -115,7 +118,7 @@ function renderQuest(quest) {
 function categoryEmoji(cat) {
   const map = {
     Mental: "🧠", Creative: "🎨", Adventure: "🗺️", Social: "🤝", Physical: "💪", Travel: "✈️",
-    "Cape Town": "🌍", "Windhoek": "🦁", "Dubai": "🌆", "South Holland": "🌷", "Amsterdam": "🚲", "Netherlands": "🧀"
+    "South Holland": "🌷", "Amsterdam": "🚲", "Netherlands": "🧀"
   };
   return map[cat] || "⚡";
 }

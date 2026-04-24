@@ -80,7 +80,7 @@ function initPills() {
 function pickAndApplyQuest() {
   let pool = quests.filter(q => {
     const diffOk = selectedDifficulty === "any" || q.difficulty === selectedDifficulty;
-    const excludedFromAny = ["Dubai", "Cape Town", "Windhoek"];
+    const excludedFromAny = ["Dubai", "Cape Town", "Windhoek", "Johannesburg", "London", "Antwerp", "Mt. Fuji", "Izu Peninsula", "Greater Tokyo Area"];
     const catOk  = selectedCategory === "any"
       ? !excludedFromAny.includes(q.category)
       : q.category === selectedCategory;
@@ -121,7 +121,7 @@ function renderQuest(quest) {
 function categoryEmoji(cat) {
   const map = {
     Mental: "🧠", Creative: "🎨", Adventure: "🗺️", Social: "🤝", Physical: "💪", Travel: "✈️",
-    "Cape Town": "🌍", "Windhoek": "🦁", "Dubai": "🌆", "South Holland": "🌷", "Amsterdam": "🚲", "Netherlands": "🧀"
+    "Cape Town": "🌍", "Windhoek": "🦁", "Dubai": "🌆", "Johannesburg": "🏙️", "London": "🇬🇧", "Antwerp": "💎", "Mt. Fuji": "🗻", "Izu Peninsula": "🌊", "Greater Tokyo Area": "🗼", "South Holland": "🌷", "Amsterdam": "🚲", "Netherlands": "🧀", "Utrecht": "🏰"
   };
   return map[cat] || "⚡";
 }

@@ -93,6 +93,7 @@
           </p>
           <div class="quest-actions">
             <button class="btn btn-primary" onclick="rollQuest()">🎲 Roll Again</button>
+            <button class="btn btn-pin" onclick="saveAsTodo()">📌 Save for Later</button>
             <button class="btn btn-success" onclick="completeQuest()">✅ Quest Complete!</button>
           </div>
         </div>
@@ -161,6 +162,12 @@
           <div class="progress-bar-labels">
             <span id="xp-current-label">0 XP</span>
             <span id="xp-next-label">500 XP to next level</span>
+          </div>
+        </div>
+        <div class="saved-quests">
+          <h4 class="completed-title saved-quests-title">📌 Saved Quests</h4>
+          <div class="todo-list" id="todo-list">
+            <p class="empty-state">No quests saved yet. Hit 📌 Save for Later on any quest!</p>
           </div>
         </div>
         <div class="completed-quests">

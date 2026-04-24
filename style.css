@@ -111,6 +111,16 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
   box-shadow: 0 6px 24px rgba(16,185,129,.4);
 }
 
+.btn-pin {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(249,115,22,.30);
+}
+.btn-pin:hover {
+  background: #EA6C0A;
+  box-shadow: 0 6px 24px rgba(249,115,22,.40);
+}
+
 /* ===== Accent ===== */
 .accent { color: var(--primary); }
 
@@ -600,6 +610,55 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
   border-radius: 999px;
   font-weight: 600;
 }
+
+/* ===== Saved Quests (Todo List) ===== */
+.saved-quests { margin-bottom: 32px; }
+.saved-quests-title { color: var(--accent); }
+.todo-list { display: flex; flex-direction: column; gap: 10px; }
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  border: 1.5px solid #FED7AA;
+  font-size: 0.95rem;
+}
+
+.todo-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.todo-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+.btn-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: 0.875rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--transition), background var(--transition);
+  font-family: inherit;
+}
+@media (hover: hover) { .btn-inline:hover { transform: scale(1.1); } }
+.btn-inline:active { transform: scale(0.95); }
+
+.btn-inline-success { background: #DCFCE7; color: var(--success-dark); }
+.btn-inline-success:hover { background: #BBF7D0; }
+.btn-inline-remove { background: #FEE2E2; color: #991B1B; }
+.btn-inline-remove:hover { background: #FECACA; }
 
 /* ===== Footer ===== */
 .footer {

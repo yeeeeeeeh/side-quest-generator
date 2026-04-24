@@ -80,7 +80,10 @@ function initPills() {
 function pickAndApplyQuest() {
   let pool = quests.filter(q => {
     const diffOk = selectedDifficulty === "any" || q.difficulty === selectedDifficulty;
-    const catOk  = selectedCategory  === "any" || q.category  === selectedCategory;
+    const excludedFromAny = ["Dubai", "Cape Town", "Windhoek"];
+    const catOk  = selectedCategory === "any"
+      ? !excludedFromAny.includes(q.category)
+      : q.category === selectedCategory;
     return diffOk && catOk;
   });
 

@@ -50,7 +50,7 @@ let selectedCategory = "any";
 // ===== Init =====
 document.addEventListener("DOMContentLoaded", () => {
   loadState();
-  rollQuest();
+  pickAndApplyQuest();
   updateProgress();
   updateHeaderXP();
   initPills();
@@ -77,30 +77,30 @@ function initPills() {
 }
 
 // ===== Roll Quest =====
+function pickAndApplyQuest() {
+  let pool = quests.filter(q => {
+    const diffOk = selectedDifficulty === "any" || q.difficulty === selectedDifficulty;
+    const catOk  = selectedCategory  === "any" || q.category  === selectedCategory;
+    return diffOk && catOk;
+  });
+
+  if (!pool.length) pool = quests;
+
+  let pick;
+  do {
+    pick = pool[Math.floor(Math.random() * pool.length)];
+  } while (pool.length > 1 && currentQuest && pick.title === currentQuest.title);
+
+  currentQuest = pick;
+  renderQuest(pick);
+  hideCompletion();
+}
+
 function rollQuest() {
   const card = document.getElementById("quest-card");
   card.classList.add("rolling");
-
   setTimeout(() => {
-    let pool = quests.filter(q => {
-      const diffOk = selectedDifficulty === "any" || q.difficulty === selectedDifficulty;
-      const excludedFromAny = ["Dubai", "Cape Town", "Windhoek"];
-      const catOk  = selectedCategory === "any"
-        ? !excludedFromAny.includes(q.category)
-        : q.category === selectedCategory;
-      return diffOk && catOk;
-    });
-
-    if (!pool.length) pool = quests;
-
-    let pick;
-    do {
-      pick = pool[Math.floor(Math.random() * pool.length)];
-    } while (pool.length > 1 && currentQuest && pick.title === currentQuest.title);
-
-    currentQuest = pick;
-    renderQuest(pick);
-    hideCompletion();
+    pickAndApplyQuest();
     card.classList.remove("rolling");
   }, 200);
 }
@@ -118,7 +118,7 @@ function renderQuest(quest) {
 function categoryEmoji(cat) {
   const map = {
     Mental: "🧠", Creative: "🎨", Adventure: "🗺️", Social: "🤝", Physical: "💪", Travel: "✈️",
-    "South Holland": "🌷", "Amsterdam": "🚲", "Netherlands": "🧀"
+    "Cape Town": "🌍", "Windhoek": "🦁", "Dubai": "🌆", "South Holland": "🌷", "Amsterdam": "🚲", "Netherlands": "🧀"
   };
   return map[cat] || "⚡";
 }

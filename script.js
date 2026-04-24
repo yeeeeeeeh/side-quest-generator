@@ -190,10 +190,15 @@ function renderTodoList() {
   }
   list.innerHTML = savedTodos.map((q, i) => `
     <div class="todo-item">
-      <span>${categoryEmoji(q.category)}</span>
-      <span class="todo-title">${q.title}</span>
-      <span class="completed-item-cat">${q.category}</span>
-      <span class="completed-item-xp">+${q.xp} XP</span>
+      <div class="todo-item-body">
+        <div class="todo-item-header">
+          <span>${categoryEmoji(q.category)}</span>
+          <span class="todo-title">${q.title}</span>
+          <span class="completed-item-cat">${q.category}</span>
+          <span class="completed-item-xp">+${q.xp} XP</span>
+        </div>
+        <p class="todo-desc">${q.desc}</p>
+      </div>
       <div class="todo-actions">
         <button class="btn-inline btn-inline-success" onclick="completeTodoQuest(${i})" title="Mark complete">✅</button>
         <button class="btn-inline btn-inline-remove" onclick="removeTodo(${i})" title="Remove">✕</button>

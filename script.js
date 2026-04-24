@@ -487,6 +487,7 @@ function getCookie(name) {
 function saveState() {
   setCookie("userXP", userXP, 365);
   setCookie("completedQuests", JSON.stringify(completedQuests), 365);
+  setCookie("savedTodos", JSON.stringify(savedTodos), 365);
 }
 
 function loadState() {
@@ -496,12 +497,17 @@ function loadState() {
   if (quests !== null) {
     try { completedQuests = JSON.parse(quests); } catch (e) { completedQuests = []; }
   }
+  const todos = getCookie("savedTodos");
+  if (todos !== null) {
+    try { savedTodos = JSON.parse(todos); } catch (e) { savedTodos = []; }
+  }
 }
 
 
 // ===== State =====
 let userXP = 0;
 let completedQuests = [];
+let savedTodos = [];
 let currentQuest = null;
 let selectedDifficulty = "any";
 let selectedCategory = "any";
@@ -598,6 +604,66 @@ function completeQuest() {
   showCompletion(`+${currentQuest.xp} XP earned! Quest complete!`, true);
 }
 
+// ===== Save as Todo =====
+function saveAsTodo() {
+  if (!currentQuest) return;
+  const alreadySaved = savedTodos.some(q => q.title === currentQuest.title);
+  if (alreadySaved) {
+    showCompletion("Quest already in your saved list!", false);
+    return;
+  }
+  savedTodos.push({ ...currentQuest });
+  saveState();
+  renderTodoList();
+  showCompletion("📌 Quest saved for later!", true);
+}
+
+function completeTodoQuest(index) {
+  const quest = savedTodos[index];
+  if (!quest) return;
+  savedTodos.splice(index, 1);
+  const alreadyDone = completedQuests.some(q => q.title === quest.title);
+  if (!alreadyDone) {
+    userXP += quest.xp;
+    completedQuests.unshift({ ...quest });
+  }
+  saveState();
+  updateProgress();
+  updateHeaderXP();
+  renderTodoList();
+  showCompletion(
+    alreadyDone ? "Quest removed from saved list (already completed)." : `+${quest.xp} XP earned! Quest complete!`,
+    true
+  );
+}
+
+function removeTodo(index) {
+  savedTodos.splice(index, 1);
+  saveState();
+  renderTodoList();
+}
+
+function renderTodoList() {
+  const list = document.getElementById("todo-list");
+  if (!list) return;
+  if (!savedTodos.length) {
+    list.innerHTML = `<p class="empty-state">No quests saved yet. Hit 📌 Save for Later on any quest!</p>`;
+    return;
+  }
+  list.innerHTML = savedTodos.map((q, i) => `
+    <div class="todo-item">
+      <span>${categoryEmoji(q.category)}</span>
+      <span class="todo-title">${q.title}</span>
+      <span class="completed-item-cat">${q.category}</span>
+      <span class="completed-item-xp">+${q.xp} XP</span>
+      <div class="todo-actions">
+        <button class="btn-inline btn-inline-success" onclick="completeTodoQuest(${i})" title="Mark complete">✅</button>
+        <button class="btn-inline btn-inline-remove" onclick="removeTodo(${i})" title="Remove">✕</button>
+      </div>
+    </div>
+  `).join("");
+}
+
 // ===== Progress =====
 function updateProgress() {
   const lvl = getLevel(userXP);
@@ -618,6 +684,7 @@ function updateProgress() {
     : "Max Level Reached!";
 
   renderCompletedList();
+  renderTodoList();
 }
 
 function getLevel(xp) {

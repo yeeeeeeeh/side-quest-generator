@@ -1072,7 +1072,7 @@ body.webview-open { overflow: hidden; }
   z-index: 250;
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: var(--bg);
 }
 .webview-panel[hidden] { display: none; }
 
@@ -1094,9 +1094,55 @@ body.webview-open { overflow: hidden; }
   border-radius: var(--radius-sm);
 }
 
-.webview-frame {
+.gw-body {
   flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 20px 16px 24px;
+  background: var(--bg);
+}
+
+.gw-search {
   width: 100%;
-  border: 0;
-  background: #fff;
+  margin-top: 8px;
+  padding: 14px 16px;
+  font: inherit;
+  font-size: 1rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.gw-search:focus { outline: none; border-color: var(--primary); }
+
+.gw-status { margin: 12px 0; font-size: 0.85rem; color: var(--text-muted); }
+
+.gw-results { display: flex; flex-direction: column; gap: 10px; }
+
+.gw-loc {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color var(--transition);
+}
+.gw-loc:active, .gw-loc:hover { border-color: var(--primary); }
+
+.gw-loc-main { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
+.gw-loc-name { color: var(--text); font-weight: 600; overflow-wrap: anywhere; }
+.gw-loc-cars { flex-shrink: 0; color: var(--primary); font-weight: 700; }
+
+.gw-tag {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: var(--text-light);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
 }

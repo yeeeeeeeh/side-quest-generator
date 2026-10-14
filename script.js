@@ -305,3 +305,36 @@ function hideCompletion() {
   document.getElementById("completion-banner").classList.add("hidden");
 }
 
+
+// ===== Tabs =====
+function showTab(tab) {
+  const panel = document.getElementById("greenwheels-panel");
+  const frame = document.getElementById("greenwheels-frame");
+  const isGreenwheels = tab === "greenwheels";
+
+  if (isGreenwheels && !frame.src) frame.src = frame.dataset.src;
+  panel.hidden = !isGreenwheels;
+  document.body.classList.toggle("webview-open", isGreenwheels);
+  document.querySelectorAll(".tab-item").forEach(t => {
+    const active = t.dataset.tab === (isGreenwheels ? "greenwheels" : "quests");
+    t.classList.toggle("active", active);
+    if (active) t.setAttribute("aria-current", "page");
+    else t.removeAttribute("aria-current");
+  });
+}
+
+function syncTabFromHash() {
+  showTab(location.hash === "#greenwheels" ? "greenwheels" : "quests");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelector('.tab-item[data-tab="quests"]').addEventListener("click", e => {
+    e.preventDefault();
+    if (location.hash === "#greenwheels") history.pushState(null, "", location.pathname + location.search);
+    showTab("quests");
+    window.scrollTo({ top: 0 });
+  });
+  window.addEventListener("hashchange", syncTabFromHash);
+  window.addEventListener("popstate", syncTabFromHash);
+  syncTabFromHash();
+});

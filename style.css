@@ -1121,18 +1121,72 @@ body.webview-open { overflow: hidden; }
 
 .gw-results { display: flex; flex-direction: column; gap: 10px; }
 
+.gw-city-row { display: flex; gap: 8px; align-items: stretch; }
+.gw-city-row .gw-search { flex: 1; min-width: 0; }
+.gw-near {
+  margin-top: 8px;
+  flex-shrink: 0;
+  padding: 0 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.gw-times { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.gw-time { display: flex; flex-direction: column; min-width: 0; }
+.gw-time .gw-search { padding: 12px 10px; font-size: 0.9rem; color-scheme: dark; }
+
 .gw-loc {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   transition: border-color var(--transition);
 }
-.gw-loc:active, .gw-loc:hover { border-color: var(--primary); }
+.gw-loc[open], .gw-loc:hover { border-color: var(--primary); }
+
+.gw-loc-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  list-style: none;
+}
+.gw-loc-summary::-webkit-details-marker { display: none; }
+
+.gw-cars { display: flex; flex-direction: column; border-top: 1px solid var(--border); }
+
+.gw-car {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+}
+.gw-car + .gw-car { border-top: 1px solid var(--border-light); }
+
+.gw-car-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.gw-car-model { color: var(--text); font-weight: 600; }
+.gw-car-plate {
+  align-self: flex-start;
+  padding: 0 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #111;
+  background: #F7C800;
+  border-radius: 3px;
+}
+.gw-car-details { font-size: 0.8rem; color: var(--text-muted); }
+.gw-car-state { font-size: 0.8rem; font-weight: 600; }
+.gw-car-state.free { color: var(--success); }
+.gw-car-state.busy { color: var(--danger); }
+
+.gw-book { flex-shrink: 0; padding: 10px 16px; min-height: 44px; font-size: 0.95rem; }
 
 .gw-loc-main { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
 .gw-loc-name { color: var(--text); font-weight: 600; overflow-wrap: anywhere; }

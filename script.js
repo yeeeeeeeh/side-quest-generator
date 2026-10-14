@@ -309,10 +309,9 @@ function hideCompletion() {
 // ===== Tabs =====
 function showTab(tab) {
   const panel = document.getElementById("greenwheels-panel");
-  const frame = document.getElementById("greenwheels-frame");
   const isGreenwheels = tab === "greenwheels";
 
-  if (isGreenwheels && !frame.src) frame.src = frame.dataset.src;
+  if (isGreenwheels) gwInit();
   panel.hidden = !isGreenwheels;
   document.body.classList.toggle("webview-open", isGreenwheels);
   document.querySelectorAll(".tab-item").forEach(t => {

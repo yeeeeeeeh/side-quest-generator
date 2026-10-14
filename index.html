@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=2" />
 </head>
 <body>
   <!-- Header -->
@@ -206,8 +206,25 @@
     </div>
   </footer>
 
+  <!-- Greenwheels (wrapped mobile site) -->
+  <section class="webview-panel" id="greenwheels-panel" hidden aria-label="Greenwheels">
+    <div class="webview-toolbar">
+      <span class="webview-title">🚗 Greenwheels</span>
+      <a class="webview-open" href="https://ns.greenwheels.com/book/search/nl/index?location=" target="_blank" rel="noopener">Open ↗</a>
+    </div>
+    <iframe class="webview-frame" id="greenwheels-frame" title="Greenwheels"
+      data-src="https://ns.greenwheels.com/book/search/nl/index?location="
+      allow="geolocation; payment" referrerpolicy="no-referrer-when-downgrade"></iframe>
+  </section>
+
+  <!-- Bottom Tab Bar -->
+  <nav class="tab-bar" aria-label="Tabs">
+    <a href="#" class="tab-item active" data-tab="quests"><span class="tab-icon">🎲</span><span class="tab-label">Quests</span></a>
+    <a href="#greenwheels" class="tab-item" data-tab="greenwheels"><span class="tab-icon">🚗</span><span class="tab-label">Greenwheels</span></a>
+  </nav>
+
   <script src="quests.js?v=2"></script>
   <script src="traveller.js?v=1"></script>
-  <script src="script.js?v=2"></script>
+  <script src="script.js?v=3"></script>
 </body>
 </html>

@@ -307,29 +307,40 @@ function hideCompletion() {
 
 
 // ===== Tabs =====
-function showTab(tab) {
-  const panel = document.getElementById("greenwheels-panel");
-  const isGreenwheels = tab === "greenwheels";
+// Each tab besides Quests is a full-screen panel with an optional init
+const TAB_PANELS = {
+  greenwheels: { panel: "greenwheels-panel", init: () => gwInit() },
+  ikea: { panel: "ikea-panel", init: () => ikeaInit() },
+};
 
-  if (isGreenwheels) gwInit();
-  panel.hidden = !isGreenwheels;
-  document.body.classList.toggle("webview-open", isGreenwheels);
+function showTab(tab) {
+  const current = TAB_PANELS[tab] ? tab : "quests";
+  Object.entries(TAB_PANELS).forEach(([name, { panel }]) => {
+    document.getElementById(panel).hidden = name !== current;
+  });
+  document.body.classList.toggle("webview-open", current !== "quests");
+  TAB_PANELS[current]?.init();
   document.querySelectorAll(".tab-item").forEach(t => {
-    const active = t.dataset.tab === (isGreenwheels ? "greenwheels" : "quests");
+    const active = t.dataset.tab === current;
     t.classList.toggle("active", active);
     if (active) t.setAttribute("aria-current", "page");
     else t.removeAttribute("aria-current");
   });
 }
 
+// "#ikea?q=billy" → "ikea"
+function tabFromHash() {
+  return location.hash.slice(1).split("?")[0];
+}
+
 function syncTabFromHash() {
-  showTab(location.hash === "#greenwheels" ? "greenwheels" : "quests");
+  showTab(tabFromHash());
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelector('.tab-item[data-tab="quests"]').addEventListener("click", e => {
     e.preventDefault();
-    if (location.hash === "#greenwheels") history.pushState(null, "", location.pathname + location.search);
+    if (TAB_PANELS[tabFromHash()]) history.pushState(null, "", location.pathname + location.search);
     showTab("quests");
     window.scrollTo({ top: 0 });
   });

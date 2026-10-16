@@ -1200,3 +1200,61 @@ body.webview-open { overflow: hidden; }
   background: rgba(255,255,255,0.06);
   border: 1px solid var(--border);
 }
+
+/* ===== IKEA DE vs NL ===== */
+.ikea-lang-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.ikea-lang {
+  padding: 6px 10px;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.ikea-card {
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.ikea-head { display: flex; gap: 12px; align-items: center; }
+.ikea-img {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  object-fit: contain;
+  background: #fff;
+  border-radius: var(--radius-sm);
+}
+.ikea-info { display: flex; flex-direction: column; min-width: 0; }
+.ikea-name { color: var(--text); font-weight: 700; letter-spacing: 0.02em; }
+.ikea-type { font-size: 0.85rem; color: var(--text-light); overflow-wrap: anywhere; }
+.ikea-no { font-size: 0.75rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+.ikea-prices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.ikea-price {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.02);
+}
+.ikea-price.winner { border-color: var(--success); background: rgba(16,185,129,0.1); }
+.ikea-price.missing { opacity: 0.6; }
+.ikea-market { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+.ikea-amount { font-size: 1.25rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.ikea-note { font-size: 0.72rem; color: var(--text-muted); }
+
+.ikea-verdict { margin-top: 10px; font-size: 0.9rem; color: var(--text-light); }
+.ikea-verdict.nl strong, .ikea-verdict.de strong { color: var(--success); }

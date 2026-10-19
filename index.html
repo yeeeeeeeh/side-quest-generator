@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=5" />
+  <link rel="stylesheet" href="style.css?v=6" />
 </head>
 <body>
   <!-- Header -->
@@ -260,17 +260,74 @@
     </div>
   </section>
 
+  <!-- Amazon JP vs Amazon NL vs bol.com -->
+  <section class="webview-panel" id="shop-panel" hidden aria-label="Amazon Japan vs Netherlands">
+    <div class="webview-toolbar">
+      <span class="webview-title">🛒 Amazon 🇯🇵 vs 🇳🇱 · bol</span>
+    </div>
+    <div class="gw-body">
+      <form id="shop-form">
+        <label class="filter-label" for="shop-q">Amazon or bol link, barcode or product name</label>
+        <input class="gw-search" id="shop-q" type="search" autocomplete="off" placeholder="amazon.co.jp/dp/… or 4902370551129" />
+        <p class="gw-status" id="shop-rate">Loading exchange rate…</p>
+        <div class="shop-store" id="shop-jp-card">
+          <div class="shop-store-head">
+            <span class="ikea-market">🇯🇵 Amazon.co.jp</span>
+            <span class="shop-links" id="shop-jp-links"></span>
+          </div>
+          <label class="shop-price">
+            <span class="shop-cur">¥</span>
+            <input class="gw-search" id="shop-jp-price" inputmode="decimal" autocomplete="off" placeholder="Price you see" aria-label="🇯🇵 Amazon.co.jp price" />
+          </label>
+          <span class="shop-hint" id="shop-jp-eur"></span>
+          <select class="ikea-lang shop-mode" id="shop-jp-mode" aria-label="How you'd buy from Japan">
+            <option value="shipped">Shipped to NL (+21% import VAT)</option>
+            <option value="injapan">Bought in Japan</option>
+            <option value="taxfree">Bought in Japan, tax-free (−10%)</option>
+          </select>
+          <label class="shop-price" id="shop-ship-row">
+            <span class="shop-cur">¥</span>
+            <input class="gw-search" id="shop-jp-ship" inputmode="decimal" autocomplete="off" placeholder="Shipping (optional)" aria-label="Shipping in yen" />
+          </label>
+        </div>
+        <div class="shop-store" id="shop-nl-card">
+          <div class="shop-store-head">
+            <span class="ikea-market">🇳🇱 Amazon.nl</span>
+            <span class="shop-links" id="shop-nl-links"></span>
+          </div>
+          <label class="shop-price">
+            <span class="shop-cur">€</span>
+            <input class="gw-search" id="shop-nl-price" inputmode="decimal" autocomplete="off" placeholder="Price you see" aria-label="🇳🇱 Amazon.nl price" />
+          </label>
+        </div>
+        <div class="shop-store" id="shop-bol-card">
+          <div class="shop-store-head">
+            <span class="ikea-market">🇳🇱 bol.com</span>
+            <span class="shop-links" id="shop-bol-links"></span>
+          </div>
+          <label class="shop-price">
+            <span class="shop-cur">€</span>
+            <input class="gw-search" id="shop-bol-price" inputmode="decimal" autocomplete="off" placeholder="Price you see" aria-label="🇳🇱 bol.com price" />
+          </label>
+        </div>
+      </form>
+      <div class="shop-result" id="shop-result"></div>
+    </div>
+  </section>
+
   <!-- Bottom Tab Bar -->
   <nav class="tab-bar" aria-label="Tabs">
     <a href="#" class="tab-item active" data-tab="quests"><span class="tab-icon">🎲</span><span class="tab-label">Quests</span></a>
     <a href="#greenwheels" class="tab-item" data-tab="greenwheels"><span class="tab-icon">🚗</span><span class="tab-label">Greenwheels</span></a>
     <a href="#ikea" class="tab-item" data-tab="ikea"><span class="tab-icon">🛋️</span><span class="tab-label">IKEA NL/DE</span></a>
+    <a href="#shop" class="tab-item" data-tab="shop"><span class="tab-icon">🛒</span><span class="tab-label">JP/NL shop</span></a>
   </nav>
 
   <script src="quests.js?v=2"></script>
   <script src="traveller.js?v=1"></script>
   <script src="greenwheels.js?v=2"></script>
   <script src="ikea.js?v=1"></script>
-  <script src="script.js?v=5"></script>
+  <script src="shop.js?v=1"></script>
+  <script src="script.js?v=6"></script>
 </body>
 </html>

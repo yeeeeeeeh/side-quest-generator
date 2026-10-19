@@ -1258,3 +1258,34 @@ body.webview-open { overflow: hidden; }
 
 .ikea-verdict { margin-top: 10px; font-size: 0.9rem; color: var(--text-light); }
 .ikea-verdict.nl strong, .ikea-verdict.de strong { color: var(--success); }
+
+/* ===== Amazon JP vs NL vs bol ===== */
+.shop-store {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.shop-store.winner { border-color: var(--success); background: rgba(16,185,129,0.08); }
+.shop-store-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.shop-links { display: flex; flex-wrap: wrap; gap: 6px; }
+.shop-link {
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary);
+  border: 1px solid rgba(245,158,11,0.4);
+  border-radius: 999px;
+}
+.shop-price { display: flex; align-items: center; gap: 8px; }
+.shop-price .gw-search { margin-top: 0; }
+.shop-cur { width: 1.2em; font-weight: 700; color: var(--text-light); text-align: center; }
+.shop-mode { width: 100%; }
+.shop-hint { font-size: 0.8rem; color: var(--text-muted); }
+.shop-result { margin-top: 16px; }
+.shop-price[hidden] { display: none; }
+.shop-result strong { color: var(--success); }

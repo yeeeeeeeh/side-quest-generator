@@ -311,6 +311,7 @@ function hideCompletion() {
 const TAB_PANELS = {
   greenwheels: { panel: "greenwheels-panel", init: () => gwInit() },
   ikea: { panel: "ikea-panel", init: () => ikeaInit() },
+  shop: { panel: "shop-panel", init: () => shopInit() },
 };
 
 function showTab(tab) {

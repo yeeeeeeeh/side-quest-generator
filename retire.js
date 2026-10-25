@@ -72,7 +72,8 @@ const R_DEFAULT_MORT = [{from:NOW_YEAR,to:NOW_YEAR+9,rate:3.8,pay:""},{from:NOW_
 
 const rNum = id => { const v = Number($("#r-"+id).value); return Number.isFinite(v) ? v : 0; };
 const money = v => new Intl.NumberFormat("en-GB",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(v);
-const short = v => { const a=Math.abs(v); return a>=1e6?(v/1e6).toFixed(a>=1e7?0:1)+"M":a>=1e3?Math.round(v/1e3)+"k":String(Math.round(v)); };
+const short = v => (v<0?"-":"")+"€"+shortNum(Math.abs(v));
+const shortNum = v => { const a=Math.abs(v); return a>=1e6?(v/1e6).toFixed(a>=1e7?0:1)+"M":a>=1e3?Math.round(v/1e3)+"k":String(Math.round(v)); };
 
 /* ---------- inputs ---------- */
 function mortRow(r){
@@ -274,6 +275,10 @@ function recalc(){
   const head=t("r.atRetire",{age:inp.retire,year:o.yr,cost:money(o.costYear+o.mPaid),month:money((o.costYear+o.mPaid)/12),
     mort:o.mPaid>0?t("r.atRetireMort",{m:money(o.mPaid)}):""});
   const left=o.mortLeft>0.5?" "+t("r.mortLeft",{v:money(o.mortLeft)}):"";
+  const sum=(label,a)=>!Number.isFinite(a.need)
+    ? `<div><b>${esc(label)}</b> <span class="bad">not possible on dividends</span> · have ${esc(short(a.have))}</div>`
+    : `<div><b>${esc(label)}</b> need ${esc(short(a.need))} · have ${esc(short(a.have))} · <span class="${a.have>=a.need?"ok":"bad"}">${a.have>=a.need?"ahead":"short"} ${esc(short(Math.abs(a.have-a.need)))}</span></div>`;
+  $("#r-summary").innerHTML=sum("Old box 3",o)+sum("New box 3",nw);
   $("#r-out").innerHTML=`<p class="rhead">${esc(head+left)}</p>
 <div class="rcards">${card("old",o,inp)}${card("new",nw,inp)}</div>
 <section><h2 class="rsec">${esc(t("r.chart"))}</h2>${chart(inp,o,nw)}</section>
@@ -288,6 +293,12 @@ window.retireInit = function () {
     ready = true;
     loadInputs();
     $("#r-form").addEventListener("input", recalc);
+    $("#r-update").addEventListener("click", () => {
+      recalc();
+      const out = $("#r-out");
+      out.scrollIntoView({behavior: "smooth", block: "start"});
+      out.classList.remove("r-flash"); void out.offsetWidth; out.classList.add("r-flash");
+    });
     document.querySelectorAll(".r-preset").forEach(b => b.addEventListener("click", () => {
       $("#r-yield").value = b.dataset.yield;
       $("#r-growth").value = b.dataset.growth;

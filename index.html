@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=9" />
+  <link rel="stylesheet" href="style.css?v=10" />
 </head>
 <body>
   <!-- Header -->
@@ -354,6 +354,10 @@
             <div><button type="button" class="btn r-add" id="r-mAdd">+ Add period</button></div>
             <p class="r-hint">Leave "per month" empty for a standard annuity that is paid off by the last year. Payments come from your salary while you work, and from the portfolio after you retire.</p>
           </fieldset>
+          <div class="r-sticky">
+            <div class="r-summary" id="r-summary" aria-live="polite"></div>
+            <button type="button" class="btn btn-primary r-update" id="r-update">🔄 Update results</button>
+          </div>
         </form>
         <div id="r-out" class="r-out" aria-live="polite"></div>
       </div>
@@ -380,7 +384,7 @@
   <script src="greenwheels.js?v=2"></script>
   <script src="ikea.js?v=1"></script>
   <script src="shop.js?v=1"></script>
-  <script src="retire.js?v=2"></script>
+  <script src="retire.js?v=3"></script>
   <script src="script.js?v=8"></script>
 </body>
 </html>

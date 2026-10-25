@@ -59,7 +59,7 @@ const TEXT = {
   "x.s5":"5. How much to invest (reverse calculation)",
   "x.s5t":"The projection is run again with different amounts until the portfolio at age {age} just reaches the amount needed. \"Invest each month\" is what you put in every month from now, rising {r} a year with your raises (shown as a % of your salary too). \"Or have invested today\" is the lump sum you would need now instead of {start}, while still investing {p} of your salary.",
   "x.s6":"6. Mortgage",
-  "x.s6t":"Month by month: interest = balance × rate ÷ 12, and the rest of the payment pays off the loan. A period with no payment filled in uses an annuity, payment = balance × r ÷ (1 − (1 + r)^−n), where r is the monthly rate and n is the months left until the last period ends. Interest deduction (hypotheekrenteaftrek): each year you get back deduction rate × (mortgage interest − imputed rental value), where the imputed rental value (eigenwoningforfait) = WOZ value × {forfait}, and the WOZ value rises with inflation. This refund lowers what the mortgage costs you while you work. It is a reduction of income tax on your salary (box 1), so once you retire and live on box 3 dividends there is no tax left to reduce and the refund stops. The Hillen phase-out and the 30-year limit are not modelled."
+  "x.s6t":"Month by month: interest = balance × rate ÷ 12, and the rest of the payment pays off the loan. A period with no payment filled in uses an annuity, payment = balance × r ÷ (1 − (1 + r)^−n), where r is the monthly rate and n is the months left until the last period ends. Interest deduction (hypotheekrenteaftrek): each year you get back deduction rate × (mortgage interest − imputed rental value), where the imputed rental value (eigenwoningforfait) = WOZ value × {forfait}, and the WOZ value rises {wg} a year, so the deduction shrinks as your home gets more valuable. This refund lowers what the mortgage costs you while you work. It is a reduction of income tax on your salary (box 1), so once you retire and live on box 3 dividends there is no tax left to reduce and the refund stops. The Hillen phase-out and the 30-year limit are not modelled."
 };
 const t = (key, params) => String(TEXT[key] ?? key).replace(/\{(\w+)\}/g, (_, k) => params && params[k] != null ? params[k] : "");
 const $ = s => document.querySelector(s);
@@ -67,7 +67,7 @@ const esc = s => String(s ?? "").replace(/[<>&'"]/g, c => ({"<":"&lt;",">":"&gt;
 
 const NOW_YEAR = new Date().getFullYear();
 const R_FIELDS = {age:35,retire:60,until:95,salary:50000,raise:2.5,invest:20,start:25000,
-  cost:3000,infl:2.5,wYield:2,wGrowth:8.3,yield:3.5,growth:3,oRate:36,oDeemed:6,oFree:59357,nRate:36,nFree:1800,mBal:250000,mDed:37.56,mWoz:400000,mForfait:0.35};
+  cost:3000,infl:2.5,wYield:2,wGrowth:8.3,yield:3.5,growth:3,oRate:36,oDeemed:6,oFree:59357,nRate:36,nFree:1800,mBal:250000,mDed:37.56,mWoz:400000,mWozGrowth:4,mForfait:0.35};
 const R_DEFAULT_MORT = [{from:NOW_YEAR,to:NOW_YEAR+9,rate:3.8,pay:""},{from:NOW_YEAR+10,to:NOW_YEAR+24,rate:4.2,pay:""}];
 
 const rNum = id => { const v = Number($("#r-"+id).value); return Number.isFinite(v) ? v : 0; };
@@ -130,13 +130,13 @@ function mortgageYears(bal,periods){
   return out;
 }
 
-// Mortgage interest deduction per year: rate × (interest − WOZ × eigenwoningforfait), WOZ rising with inflation.
+// Mortgage interest deduction per year: rate × (interest − WOZ × eigenwoningforfait), WOZ rising by its own growth rate.
 // It only lowers income tax on box 1 income (salary), so there is no refund once you retire on box 3 dividends.
 // net = what the mortgage really costs that year after the refund.
 function applyDeduction(mort,inp){
   const retireYear=NOW_YEAR+inp.retire-inp.age;
   for(const [yr,m] of mort){
-    const woz=inp.mWoz*Math.pow(1+inp.infl/100,yr-NOW_YEAR);
+    const woz=inp.mWoz*Math.pow(1+inp.mWozGrowth/100,yr-NOW_YEAR);
     m.forfait=m.interest>0?woz*inp.mForfait/100:0;
     m.refund=yr<retireYear?inp.mDed/100*Math.max(0,m.interest-m.forfait):0;
     m.net=m.paid-m.refund;
@@ -210,7 +210,7 @@ function analyse(regime,inp,mort){
 function mortCalc(inp,mort){
   const first=[...mort].find(([,m])=>m.interest>0); if(!first) return "";
   const [yr,m]=first, pc=v=>Number(v.toFixed(2))+"%";
-  return `<div class="calc"><div>${esc(yr)}: ${esc(pc(inp.mDed))} × (${esc(money(m.interest))} − ${esc(money(m.forfait))}) = ${esc(money(m.refund))} back</div>
+  return `<div class="calc"><div>${esc(yr)}: forfait = ${esc(money(m.forfait/inp.mForfait*100))} WOZ × ${esc(pc(inp.mForfait))} = ${esc(money(m.forfait))}</div><div>${esc(yr)}: ${esc(pc(inp.mDed))} × (${esc(money(m.interest))} − ${esc(money(m.forfait))}) = ${esc(money(m.refund))} back</div>
 <div>${esc(money(m.paid))} paid − ${esc(money(m.refund))} = ${esc(money(m.net))} real cost (${esc(money(m.net/12))} a month)</div></div>`;
 }
 
@@ -243,7 +243,7 @@ ${step(t("x.s3"),t("x.s3t",{year:o.yr,free:nw?`${money(oFree)} (old) and ${money
   calc(needLine("old",o))+(nw?calc(needLine("new",nw)):""))}
 ${step(t("x.s4"),t("x.s4t",{p:pc(inp.invest),r:pc(inp.raise),age:inp.retire,wy:pc(inp.wYield),wg:pc(inp.wGrowth),ry:pc(inp.yield),rg:pc(inp.growth)}))}
 ${step(t("x.s5"),t("x.s5t",{age:inp.retire,r:pc(inp.raise),start:money(inp.start),p:pc(inp.invest)}))}
-${step(t("x.s6"),t("x.s6t",{forfait:pc(inp.mForfait)}),mortCalc(inp,mort))}
+${step(t("x.s6"),t("x.s6t",{forfait:pc(inp.mForfait),wg:pc(inp.mWozGrowth)}),mortCalc(inp,mort))}
 </details>`;
 }
 
@@ -310,12 +310,15 @@ function recalc(){
     ? `<div><b>${esc(label)}</b> <span class="bad">not possible on dividends</span> · have ${esc(short(a.have))}</div>`
     : `<div><b>${esc(label)}</b> need ${esc(short(a.need))} · have ${esc(short(a.have))} · <span class="${a.have>=a.need?"ok":"bad"}">${a.have>=a.need?"ahead":"short"} ${esc(short(Math.abs(a.have-a.need)))}</span>${a.monthly!=null&&Number.isFinite(a.monthly)?` · invest ${esc(short(a.monthly))}/mo`:""}</div>`;
   $("#r-summary").innerHTML=sum(nw?"Old box 3":"Box 3",o)+(nw?sum("New box 3",nw):"");
+  // Keep the "How this is calculated" and "Year by year" sections open or closed across recalculations.
+  const wasOpen=[...document.querySelectorAll("#r-out details")].map(d=>d.open);
   $("#r-out").innerHTML=`<p class="rhead">${esc(head+left)}</p>
 <div class="rcards">${card("old",o,inp)}${nw?card("new",nw,inp):""}</div>
 <section><h2 class="rsec">${esc(t("r.chart"))}</h2>${chart(inp,o,nw)}</section>
 ${explain(inp,o,nw,mort)}
 <details><summary>${esc(t("r.table"))}</summary>${table(o,nw)}</details>
 <p class="sub">${esc(t("r.disc"))}</p>`;
+  if(wasOpen.length) document.querySelectorAll("#r-out details").forEach((d,i)=>{ d.open=wasOpen[i]; });
 }
 
 let ready = false;

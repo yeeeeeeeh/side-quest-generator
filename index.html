@@ -361,8 +361,8 @@
           <fieldset class="r-set"><legend>Mortgage</legend>
             <label class="r-field"><span class="filter-label">Mortgage balance today</span><input class="gw-search" id="r-mBal" type="number" inputmode="decimal" step="1000" /></label>
             <p class="r-sub">Interest deduction (hypotheekrenteaftrek)</p>
-            <div class="r-grid3"><label class="r-field"><span class="filter-label">Deduction rate %</span><input class="gw-search" id="r-mDed" type="number" inputmode="decimal" step="0.01" /></label><label class="r-field"><span class="filter-label">Home WOZ value</span><input class="gw-search" id="r-mWoz" type="number" inputmode="decimal" step="1000" /></label><label class="r-field"><span class="filter-label">Eigenwoning&shy;forfait %</span><input class="gw-search" id="r-mForfait" type="number" inputmode="decimal" step="0.01" /></label></div>
-            <p class="r-hint">You get back deduction rate × (interest − WOZ × forfait) each year. Defaults are 2026: 37.56% and 0.35%. It only applies while you earn a salary: after you retire on dividends there is no income tax left to deduct from. Set the rate to 0 to leave it out.</p>
+            <div class="r-grid2"><label class="r-field"><span class="filter-label">Deduction rate %</span><input class="gw-search" id="r-mDed" type="number" inputmode="decimal" step="0.01" /></label><label class="r-field"><span class="filter-label">Home WOZ value</span><input class="gw-search" id="r-mWoz" type="number" inputmode="decimal" step="1000" /></label><label class="r-field"><span class="filter-label">WOZ growth per year %</span><input class="gw-search" id="r-mWozGrowth" type="number" inputmode="decimal" step="0.1" /></label><label class="r-field"><span class="filter-label">Eigenwoning&shy;forfait %</span><input class="gw-search" id="r-mForfait" type="number" inputmode="decimal" step="0.01" /></label></div>
+            <p class="r-hint">You get back deduction rate × (interest − WOZ × forfait) each year. The WOZ value grows by its own rate (4% ≈ long-run Dutch house prices), so the forfait rises and the refund shrinks. Defaults are 2026: 37.56% and 0.35%. It only applies while you earn a salary: after you retire on dividends there is no income tax left to deduct from. Set the rate to 0 to leave it out.</p>
             <table class="r-mtable"><thead><tr><th>From year</th><th>To year</th><th>Interest %</th><th>Per month</th><th></th></tr></thead><tbody id="r-mRows"></tbody></table>
             <div><button type="button" class="btn r-add" id="r-mAdd">+ Add period</button></div>
             <p class="r-hint">Leave "per month" empty for a standard annuity that is paid off by the last year. Payments, minus the interest deduction, come from your salary while you work and from the portfolio after you retire.</p>
@@ -396,7 +396,7 @@
   <script src="greenwheels.js?v=2"></script>
   <script src="ikea.js?v=1"></script>
   <script src="shop.js?v=1"></script>
-  <script src="retire.js?v=8"></script>
+  <script src="retire.js?v=9"></script>
   <script src="script.js?v=8"></script>
 </body>
 </html>

@@ -75,8 +75,13 @@ const R_FIELDS = {age:35,retire:60,until:95,salary:50000,raise:2.5,invest:20,sta
 const R_COSTS = [["groc","Groceries",400],["energy","Energy & water",180],["health","Health insurance",160],["munic","Municipal taxes",60],
   ["insure","Other insurance",50],["net","Internet & phone",60],["transport","Transport (car, OV)",150],["subs","Subscriptions",40],
   ["leisure","Eating out & leisure",250],["cloth","Clothing & personal care",100],["home","Home maintenance",100],["other","Other",150]];
+// A line can also be a group (e.g. Insurance) with its own items; the group's amount is the sum of its items.
+const c3=(n,v)=>({n,now:v,ret:v});
 const R_DEFAULT_COSTS = {
-  m: [...R_COSTS.slice(0,-1).map(([,n,v])=>({n,now:v,ret:v})), {n:"AI",now:20,ret:20}, {n:"Other",now:150,ret:150}],
+  m: [c3("Groceries",400), c3("Energy & water",180), c3("VvE fee",150), c3("Municipal taxes",60),
+    {n:"Insurance", items:[c3("Health insurance",160), c3("Home & contents",20), c3("Liability",5), c3("Legal aid",20), c3("Travel insurance",5)]},
+    c3("Internet & phone",60), c3("Transport (car, OV)",150), c3("Subscriptions",40), c3("Eating out & leisure",250),
+    c3("Clothing & personal care",100), c3("Home maintenance",100), c3("AI",20), c3("Other",150)],
   y: [{n:"Travel",now:6000,ret:6000},{n:"Flights to Taiwan",now:1200,ret:1200}],
 };
 const R_DEFAULT_MORT = [{from:NOW_YEAR,to:NOW_YEAR+9,rate:3.8,pay:""},{from:NOW_YEAR+10,to:NOW_YEAR+24,rate:4.2,pay:""}];
@@ -103,21 +108,67 @@ function readMort(){
     return {from:Number(g(".m-from")),to:Number(g(".m-to")),rate:Number(g(".m-rate"))||0,pay:g(".m-pay")===""?"":Number(g(".m-pay"))};
   }).filter(r=>Number.isFinite(r.from)&&Number.isFinite(r.to)&&r.to>=r.from);
 }
-function costRow(g,c){
+let costGid=0;
+// One cost line. In a group it goes into the group's rows (before its "+ Add" row) and is indented.
+function costRow(g,c,gid=null){
   const tr=document.createElement("tr"), step=g==="y"?100:10;
+  tr.className=gid==null?"c-item":"c-item c-sub";
+  if(gid!=null) tr.dataset.gid=gid;
   tr.innerHTML=`<td><input class="c-name" type="text" maxlength="40" value="${esc(c.n)}" aria-label="Cost name" placeholder="Name"></td>
 <td><input class="c-now" type="number" inputmode="decimal" step="${step}" value="${esc(c.now)}" aria-label="Now"></td>
 <td class="rc"><input class="c-ret" type="number" inputmode="decimal" step="${step}" value="${esc(c.ret)}" aria-label="In retirement"></td>
 <td><button type="button" class="r-del c-del" title="Remove" aria-label="Remove">✕</button></td>`;
   tr.querySelector(".c-del").addEventListener("click",()=>{ tr.remove(); recalc(); });
-  $(g==="y"?"#r-cy":"#r-cm").appendChild(tr);
+  if(gid!=null){ const add=document.querySelector(`tr.c-subadd[data-gid="${gid}"]`); add.before(tr); tr.hidden=add.hidden; }
+  else $(g==="y"?"#r-cy":"#r-cm").appendChild(tr);
   return tr;
 }
-function readCosts(){
-  const read=sel=>[...document.querySelectorAll(sel+" tr")].map(tr=>{
-    const v=c=>{ const x=Number(tr.querySelector(c).value); return Number.isFinite(x)?x:0; };
-    return {n:tr.querySelector(".c-name").value,now:v(".c-now"),ret:v(".c-ret")};
+// A group line: name with ▸/▾, read-only totals, its items, and "+ Add" for more items.
+function costGroup(g,c){
+  const gid=String(++costGid), body=$(g==="y"?"#r-cy":"#r-cm"), open=!!c.open;
+  const tr=document.createElement("tr");
+  tr.className="c-grp"; tr.dataset.gid=gid; tr.dataset.open=open?"1":"";
+  tr.innerHTML=`<td><div class="c-grpname"><button type="button" class="c-tog" aria-expanded="${open}" aria-label="Show items">${open?"▾":"▸"}</button><input class="c-name" type="text" maxlength="40" value="${esc(c.n)}" aria-label="Group name"></div></td>
+<td class="c-gnow"></td><td class="rc c-gret"></td>
+<td><button type="button" class="r-del c-del" title="Remove group" aria-label="Remove group">✕</button></td>`;
+  const add=document.createElement("tr");
+  add.className="c-subadd"; add.dataset.gid=gid; add.hidden=!open;
+  add.innerHTML=`<td colspan="4"><button type="button" class="r-add c-addsub">+ Add to ${esc(c.n||"group")}</button></td>`;
+  body.append(tr,add);
+  (c.items||[]).forEach(it=>costRow(g,it,gid));
+  const rows=()=>document.querySelectorAll(`tr[data-gid="${gid}"]:not(.c-grp)`);
+  tr.querySelector(".c-tog").addEventListener("click",()=>{
+    const now=!tr.dataset.open; tr.dataset.open=now?"1":"";
+    rows().forEach(r=>{ r.hidden=!now; });
+    const b=tr.querySelector(".c-tog"); b.textContent=now?"▾":"▸"; b.setAttribute("aria-expanded",String(now));
+    recalc();
   });
+  tr.querySelector(".c-del").addEventListener("click",()=>{ rows().forEach(r=>r.remove()); tr.remove(); recalc(); });
+  add.querySelector("button").addEventListener("click",()=>{ costRow(g,{n:"",now:0,ret:0},gid).querySelector(".c-name").focus(); recalc(); });
+  return tr;
+}
+function costLine(g,c){ return c.items?costGroup(g,c):costRow(g,c); }
+function readCosts(){
+  const val=(tr,c)=>{ const x=Number(tr.querySelector(c).value); return Number.isFinite(x)?x:0; };
+  const read=sel=>{
+    const out=[], groups={};
+    document.querySelectorAll(sel+" tr").forEach(tr=>{
+      if(tr.classList.contains("c-grp")){
+        const grp={n:tr.querySelector(".c-name").value,open:!!tr.dataset.open,items:[]};
+        groups[tr.dataset.gid]={grp,tr}; out.push(grp);
+      } else if(tr.classList.contains("c-item")){
+        const item={n:tr.querySelector(".c-name").value,now:val(tr,".c-now"),ret:val(tr,".c-ret")};
+        if(tr.dataset.gid&&groups[tr.dataset.gid]) groups[tr.dataset.gid].grp.items.push(item); else out.push(item);
+      }
+    });
+    // Group totals in the group's row, and its "+ Add" button follows the group's name.
+    for(const {grp,tr} of Object.values(groups)){
+      grp.now=grp.items.reduce((n,i)=>n+i.now,0); grp.ret=grp.items.reduce((n,i)=>n+i.ret,0);
+      tr.querySelector(".c-gnow").textContent=money(grp.now); tr.querySelector(".c-gret").textContent=money(grp.ret);
+      const add=document.querySelector(`tr.c-subadd[data-gid="${tr.dataset.gid}"] button`); if(add) add.textContent=`+ Add to ${grp.n||"group"}`;
+    }
+    return out;
+  };
   return {m:read("#r-cm"),y:read("#r-cy")};
 }
 function readInputs(){
@@ -126,7 +177,7 @@ function readInputs(){
   // Monthly costs in today's money: expense lines + yearly costs (travel, flights to Taiwan) ÷ 12, now and in
   // retirement (same unless split).
   o.costSplit=$("#r-costSplit").checked; o.mToStock=$("#r-mToStock").checked;
-  o.costs=readCosts();
+  o.costs=readCosts(); o.costVer=2;
   const tot=(g,k)=>o.costs[g].reduce((n,c)=>n+c[k],0);
   o.living=tot("m","now"); o.yrNow=tot("y","now");
   o.livR=o.costSplit?tot("m","ret"):o.living; o.trR=o.costSplit?tot("y","ret"):o.yrNow;
@@ -153,9 +204,16 @@ function loadInputs(){
     const y=[{n:"Travel",now:num(o.travel),ret:num(o.travelR)},{n:"Flights to Taiwan",now:Number.isFinite(o.twn)?o.twn:1200,ret:Number.isFinite(o.twnR)?o.twnR:1200}];
     o.costs={m,y};
   }
+  // v2: insurance lines go into an "Insurance" group (where health insurance was) and a "VvE fee" line is added.
+  if(o&&o.costs&&Array.isArray(o.costs.m)&&!(o.costVer>=2)){
+    const m=o.costs.m, isIns=c=>!c.items&&/insurance/i.test(c.n), ins=m.filter(isIns);
+    if(ins.length){ const at=m.findIndex(isIns); const rest=m.filter(c=>!isIns(c)); rest.splice(at,0,{n:"Insurance",items:ins}); o.costs.m=rest; }
+    if(!o.costs.m.some(c=>/vve/i.test(c.n))){ const at=o.costs.m.findIndex(c=>/energy/i.test(c.n)); o.costs.m.splice(at<0?0:at+1,0,c3("VvE fee",150)); }
+    o.costVer=2;
+  }
   for(const k in R_FIELDS) $("#r-"+k).value = o&&Number.isFinite(o[k]) ? o[k] : R_FIELDS[k];
   const costs=o&&o.costs&&Array.isArray(o.costs.m)?o.costs:R_DEFAULT_COSTS;
-  for(const g of ["m","y"]) (costs[g]||[]).forEach(c=>costRow(g,c));
+  for(const g of ["m","y"]) (costs[g]||[]).forEach(c=>costLine(g,c));
   $("#r-partner").checked=!!(o&&o.partner);
   $("#r-showNew").checked=!!(o&&o.showNew);
   $("#r-today").checked=!!(o&&o.today);
@@ -435,6 +493,8 @@ function table(o,nw){
 // Costs section: read-only totals, with the mortgage taken from the Mortgage section.
 function costOverview(inp,mort){
   $("#r-ctable").classList.toggle("split",inp.costSplit);
+  // Full-width rows ("+ Add …") must not span the hidden retirement column, or it keeps an empty column.
+  document.querySelectorAll("#r-ctable td[colspan]").forEach(td=>{ td.colSpan=inp.costSplit?4:3; });
   const retYr=NOW_YEAR+inp.retire-inp.age, fR=Math.pow(1+inp.infl/100,inp.retire-inp.age);
   const mNow=(mort.get(NOW_YEAR)||{net:0}).net/12, mRet=(mort.get(retYr)||{net:0}).net/12;
   // Read-only rows; the retirement column is in today's money too (the mortgage there is deflated to match).
@@ -522,7 +582,7 @@ window.retireInit = function () {
     // Splitting costs starts the retirement column from today's numbers.
     $("#r-costSplit").addEventListener("change", e => {
       if (!e.target.checked) return;
-      document.querySelectorAll("#r-cm tr, #r-cy tr").forEach(tr => { tr.querySelector(".c-ret").value = tr.querySelector(".c-now").value; });
+      document.querySelectorAll("#r-cm tr.c-item, #r-cy tr.c-item").forEach(tr => { tr.querySelector(".c-ret").value = tr.querySelector(".c-now").value; });
       recalc();
     });
     for (const g of ["m", "y"]) $(g === "y" ? "#r-cAddY" : "#r-cAddM").addEventListener("click", () => {

@@ -1448,3 +1448,12 @@ body.webview-open { overflow: hidden; }
 #r-costCalc tr.bad td:nth-child(2) { color: var(--danger); }
 .r-costret { margin: 0; font-size: 0.85rem; color: var(--text-light); }
 .r-auto { display: inline-block; margin-left: 4px; padding: 0 6px; font-size: 0.62rem; font-weight: 600; line-height: 1.5; text-transform: uppercase; white-space: nowrap; vertical-align: middle; color: var(--text-muted); border: 1px solid var(--border); border-radius: 999px; }
+.r-ctable tr[hidden] { display: none; }
+.r-ctable tr.c-sub td:first-child { padding-left: 16px; }
+.r-ctable tr.c-sub input.c-name { color: var(--text-muted); }
+.r-ctable tr.c-subadd td { padding: 2px 0 8px 16px; border-bottom: 1px solid var(--border-light); }
+.r-ctable tr.c-subadd .r-add { padding: 4px 10px; font-size: 0.78rem; }
+.c-grpname { display: flex; align-items: center; gap: 2px; }
+.c-tog { flex: 0 0 auto; width: 22px; height: 28px; padding: 0; font-size: 0.8rem; color: var(--primary); background: transparent; border: 0; cursor: pointer; }
+.r-ctable tr.c-grp td { color: var(--text); font-weight: 600; }
+.r-ctable tr.c-grp input.c-name { font-weight: 600; color: var(--text); }

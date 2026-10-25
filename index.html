@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=16" />
+  <link rel="stylesheet" href="style.css?v=17" />
 </head>
 <body>
   <!-- Header -->
@@ -329,9 +329,18 @@
             <div class="r-grid3"><label class="r-field"><span class="filter-label">Current age</span><input class="gw-search" id="r-age" type="number" inputmode="decimal" step="1" /></label><label class="r-field"><span class="filter-label">Retire at age</span><input class="gw-search" id="r-retire" type="number" inputmode="decimal" step="1" /></label><label class="r-field"><span class="filter-label">Plan until age</span><input class="gw-search" id="r-until" type="number" inputmode="decimal" step="1" /></label></div>
             <div class="r-grid2"><label class="r-field"><span class="filter-label">Net salary per year</span><input class="gw-search" id="r-salary" type="number" inputmode="decimal" step="100" /></label><label class="r-field"><span class="filter-label">Salary raise per year %</span><input class="gw-search" id="r-raise" type="number" inputmode="decimal" step="0.1" /></label><label class="r-field"><span class="filter-label">Invest % of salary</span><input class="gw-search" id="r-invest" type="number" inputmode="decimal" step="0.5" /></label><label class="r-field"><span class="filter-label">Invested today</span><input class="gw-search" id="r-start" type="number" inputmode="decimal" step="100" /></label></div>
           </div></details>
+          <details class="r-set" data-sec="costs"><summary>Costs <span class="r-sum-state" id="r-costState"></span></summary><div class="r-set-body">
+            <div class="r-grid2"><label class="r-field"><span class="filter-label">Daily living per month</span><input class="gw-search" id="r-living" type="number" inputmode="decimal" step="50" /></label><label class="r-field"><span class="filter-label">Travel per year</span><input class="gw-search" id="r-travel" type="number" inputmode="decimal" step="100" /></label></div>
+            <label class="r-chk"><input type="checkbox" id="r-costSplit" /> Different costs in retirement</label>
+            <div class="r-costr" id="r-costRFields" hidden>
+              <p class="r-sub">In retirement</p>
+              <div class="r-grid2"><label class="r-field"><span class="filter-label">Daily living per month</span><input class="gw-search" id="r-livingR" type="number" inputmode="decimal" step="50" /></label><label class="r-field"><span class="filter-label">Travel per year</span><input class="gw-search" id="r-travelR" type="number" inputmode="decimal" step="100" /></label></div>
+            </div>
+            <div class="r-costout" id="r-costOut" aria-live="polite"></div>
+            <p class="r-hint">In today's money; rises with inflation. The mortgage is filled in from the Mortgage section (after interest deduction) and can't be edited here.</p>
+          </div></details>
           <details class="r-set" data-sec="retirement"><summary>Retirement</summary><div class="r-set-body">
-            <div class="r-grid2"><label class="r-field"><span class="filter-label">Monthly cost (today's money)</span><input class="gw-search" id="r-cost" type="number" inputmode="decimal" step="50" /></label><label class="r-field"><span class="filter-label">Inflation per year %</span><input class="gw-search" id="r-infl" type="number" inputmode="decimal" step="0.1" /></label></div>
-            <div class="r-grid2"><label class="r-field"><span class="filter-label">Compare: withdrawal rate %</span><input class="gw-search" id="r-wr" type="number" inputmode="decimal" step="0.1" /></label></div>
+            <div class="r-grid2"><label class="r-field"><span class="filter-label">Inflation per year %</span><input class="gw-search" id="r-infl" type="number" inputmode="decimal" step="0.1" /></label><label class="r-field"><span class="filter-label">Compare: withdrawal rate %</span><input class="gw-search" id="r-wr" type="number" inputmode="decimal" step="0.1" /></label></div>
             <label class="r-chk"><input type="checkbox" id="r-today" /> Show amounts in today's money</label>
           </div></details>
           <details class="r-set" data-sec="aow"><summary>AOW &amp; pension <span class="r-sum-state" id="r-aowState">off</span></summary><div class="r-set-body">
@@ -412,7 +421,7 @@
   <script src="greenwheels.js?v=2"></script>
   <script src="ikea.js?v=1"></script>
   <script src="shop.js?v=1"></script>
-  <script src="retire.js?v=13"></script>
+  <script src="retire.js?v=14"></script>
   <script src="script.js?v=8"></script>
 </body>
 </html>

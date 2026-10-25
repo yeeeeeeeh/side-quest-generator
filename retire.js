@@ -35,7 +35,7 @@ const TEXT = {
   "r.legOld":"Old box 3","r.legNew":"New box 3","r.legNeed":"Needed","r.legRetire":"Retire",
   "r.table":"Year by year",
   "c.year":"Year","c.age":"Age","c.salary":"Salary","c.contrib":"Invested","c.spend":"Spent",
-  "c.left":"Salary left","c.mInt":"Mortgage interest","c.ben":"AOW + pension","c.mPaid":"Mortgage paid","c.mRef":"Interest deduction","c.mBal":"Mortgage owed",
+  "c.left":"Left after costs","c.mInt":"Mortgage interest","c.ben":"AOW + pension","c.mPaid":"Mortgage paid","c.mRef":"Interest deduction","c.mBal":"Mortgage owed",
   "c.wOld":"Portfolio (old)","c.taxOld":"Tax (old)","c.wNew":"Portfolio (new)","c.taxNew":"Tax (new)",
   "r.disc":"An estimate, not financial advice. Returns are assumed steady every year; real markets are not.",
   "x.h":"How this is calculated",
@@ -67,7 +67,7 @@ const esc = s => String(s ?? "").replace(/[<>&'"]/g, c => ({"<":"&lt;",">":"&gt;
 
 const NOW_YEAR = new Date().getFullYear();
 const R_FIELDS = {age:35,retire:60,until:95,salary:50000,raise:2.5,invest:20,start:25000,
-  cost:3000,infl:2.5,wYield:2,wGrowth:8.3,yield:3.5,growth:3,oRate:36,oDeemed:6,oFree:59357,nRate:36,nFree:1800,mBal:250000,mDed:37.56,mWoz:400000,mWozGrowth:4,mForfait:0.35,
+  living:2500,travel:6000,livingR:2500,travelR:6000,infl:2.5,wYield:2,wGrowth:8.3,yield:3.5,growth:3,oRate:36,oDeemed:6,oFree:59357,nRate:36,nFree:1800,mBal:250000,mDed:37.56,mWoz:400000,mWozGrowth:4,mForfait:0.35,
   aowAge:68,aow:1558,pen:0,penAge:68,wr:2.5,terW:0.2,terR:0.3,leak:10};
 const R_DEFAULT_MORT = [{from:NOW_YEAR,to:NOW_YEAR+9,rate:3.8,pay:""},{from:NOW_YEAR+10,to:NOW_YEAR+24,rate:4.2,pay:""}];
 
@@ -95,18 +95,26 @@ function readMort(){
 }
 function readInputs(){
   const o={}; for(const k in R_FIELDS) o[k]=rNum(k);
-  o.partner=$("#r-partner").checked; o.showNew=$("#r-showNew").checked; o.today=$("#r-today").checked; o.useAow=$("#r-useAow").checked; o.mort=readMort(); return o;
+  o.partner=$("#r-partner").checked; o.showNew=$("#r-showNew").checked; o.today=$("#r-today").checked; o.useAow=$("#r-useAow").checked; o.mort=readMort();
+  // Monthly costs in today's money: daily living + travel ÷ 12, now and in retirement (same unless split).
+  o.costSplit=$("#r-costSplit").checked;
+  o.livR=o.costSplit?o.livingR:o.living; o.trR=o.costSplit?o.travelR:o.travel;
+  o.costNow=o.living+o.travel/12; o.cost=o.livR+o.trR/12;
+  return o;
 }
 function saveInputs(o){ try{ localStorage.setItem("retire",JSON.stringify(o)); }catch(_){} }
 function loadInputs(){
   let o=null; try{ o=JSON.parse(localStorage.getItem("retire")||"null"); }catch(_){}
   // Saved 2025 defaults move to the 2026 figures; values the user changed are kept.
   if(o){ for(const [k,from,to] of [["oDeemed",5.88,6],["oFree",57684,59357],["mDed",37.48,37.56]]) if(o[k]===from) o[k]=to; }
+  // Before the Costs section there was one "monthly cost" field: keep that total as daily living.
+  if(o&&o.living==null&&Number.isFinite(o.cost)){ o.living=o.livingR=o.cost; o.travel=o.travelR=0; }
   for(const k in R_FIELDS) $("#r-"+k).value = o&&Number.isFinite(o[k]) ? o[k] : R_FIELDS[k];
   $("#r-partner").checked=!!(o&&o.partner);
   $("#r-showNew").checked=!!(o&&o.showNew);
   $("#r-today").checked=!!(o&&o.today);
   $("#r-useAow").checked=!!(o&&o.useAow);
+  $("#r-costSplit").checked=!!(o&&o.costSplit);
   (o&&Array.isArray(o.mort)?o.mort:R_DEFAULT_MORT).forEach(mortRow);
 }
 
@@ -222,7 +230,7 @@ function simulate(regime,inp,investPct,mort,start=inp.start){
     const ben=working?0:benefits(inp,age,f);
     const spend=working?0:Math.max(0,inp.cost*12*f+m.net-ben);
     if(!working&&firstSell==null&&div-tax<spend-0.5) firstSell=age;
-    rows.push({yr,age,salary:working?salary:0,contrib,spend,ben,left:working?salary-contrib-m.net:0,
+    rows.push({yr,age,salary:working?salary:0,contrib,spend,ben,left:working?salary-contrib-m.net-inp.costNow*12*f:0,
       mInt:m.interest,mPaid:m.paid,mRef:m.refund,mBal:m.bal,w,tax});
     w=Math.max(0,w+div+gain-tax+contrib-spend);
     if(w<=0&&broke==null&&!working) broke=age;
@@ -279,7 +287,7 @@ function explain(inp,o,nw,mort){
   const y=inp.ry, rd=inp.oRate*inp.oDeemed/100, rn=inp.nRate*(inp.ry+inp.rg)/100;
   const calc=lines=>`<div class="calc">${lines.map(l=>`<div>${esc(l)}</div>`).join("")}</div>`;
   const step=(h,p,body)=>`<h3>${esc(h)}</h3><p>${esc(p)}</p>${body||""}`;
-  const s1=[`${money(inp.cost)} × 12 × (1 + ${pc(inp.infl)})^${yrs} = ${money(o.costYear)}`+(o.mPaid>0?` + ${money(o.mPaid)} (${t("x.mort")}) = ${money(cost)}`:"")];
+  const s1=[`(${money(inp.livR)} + ${money(inp.trR)} travel ÷ 12) × 12 × (1 + ${pc(inp.infl)})^${yrs} = ${money(o.costYear)}`+(o.mPaid>0?` + ${money(o.mPaid)} (${t("x.mort")}) = ${money(cost)}`:"")];
   if(o.fullBen>0) s1.push(`AOW ${money(inp.aow)} (from age ${inp.aowAge})${inp.pen>0?` + pension ${money(inp.pen)} (from age ${inp.penAge})`:""} a month × 12 × (1 + ${pc(inp.infl)})^${yrs} = ${money(o.fullBen)} a year`,
     `left for the portfolio in the long run: ${money(cost)} − ${money(o.fullBen)} = ${money(o.divSpend)}`);
   const per=tax=>`${t("x.div")} ${m2(inp.yield)} − leakage ${pc(inp.leak)} = ${m2(y)}, − ${t("x.tax")} ${m2(tax)} = ${m2(y-tax)} ${t("x.left")}`;
@@ -366,6 +374,26 @@ function table(o,nw){
   return `<div class="tblwrap"><table class="rtable"><thead><tr>${cols.map(c=>`<th>${esc(t(c))}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
+// Costs section: read-only totals, with the mortgage taken from the Mortgage section.
+function costOverview(inp,mort){
+  $("#r-costRFields").hidden=!inp.costSplit;
+  const retYr=NOW_YEAR+inp.retire-inp.age, fR=Math.pow(1+inp.infl/100,inp.retire-inp.age);
+  const mNow=(mort.get(NOW_YEAR)||{net:0}).net/12, mRet=(mort.get(retYr)||{net:0}).net/12;
+  const row=(label,v,cls="")=>`<tr class="${cls}"><td>${esc(label)}${cls==="auto"?' <span class="r-auto">auto</span>':""}</td><td>${esc(money(v))}</td></tr>`;
+  const totNow=inp.costNow+mNow, left=inp.salary/12*(1-inp.invest/100)-totNow;
+  const now=`<table><caption>Now, per month</caption>
+${row("Daily living",inp.living)}${row(`Travel (${money(inp.travel)} ÷ 12)`,inp.travel/12)}
+${row("Mortgage (after deduction)",mNow,"auto")}${row("Total",totNow,"total")}
+${inp.salary>0?row(`Left from salary after investing ${inp.invest}%`,left,"total "+(left>=0?"ok":"bad")):""}</table>`;
+  const ret=`<table><caption>In retirement, from age ${esc(inp.retire)} (${esc(retYr)}), per month</caption>
+${row("Daily living, today's money",inp.livR)}${row(`Travel (${money(inp.trR)} ÷ 12), today's money`,inp.trR/12)}
+${row(`Living + travel in ${retYr} euros`,inp.cost*fR)}
+${row(mRet>0?`Mortgage (no deduction once retired)`:"Mortgage (paid off)",mRet,"auto")}
+${row(`Total in ${retYr} euros`,inp.cost*fR+mRet,"total")}</table>`;
+  $("#r-costOut").innerHTML=now+ret;
+  $("#r-costState").textContent=`${money(inp.cost)}/mo`;
+}
+
 function recalc(){
   const inp=readInputs(); saveInputs(inp);
   document.querySelectorAll(".r-preset").forEach(b=>{ const w=b.dataset.phase==="w";
@@ -381,6 +409,7 @@ function recalc(){
   effective(inp);
   deflate=yr=>inp.today?Math.pow(1+inp.infl/100,yr-NOW_YEAR):1;
   const mort=applyDeduction(mortgageYears(inp.mBal,inp.mort),inp);
+  costOverview(inp,mort);
   $("#r-newBox").hidden=!inp.showNew;
   const o=analyse("old",inp,mort), nw=inp.showNew?analyse("new",inp,mort):null;
   const head=t("r.atRetire",{age:inp.retire,year:o.yr,cost:M(o.costYear+o.mPaid,o.yr),month:M((o.costYear+o.mPaid)/12,o.yr),

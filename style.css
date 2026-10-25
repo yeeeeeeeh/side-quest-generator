@@ -1421,3 +1421,15 @@ body.webview-open { overflow: hidden; }
 .r-aowfields[hidden] { display: none; }
 .r-sum-state { margin-left: auto; font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
 .r-sum-state.on { color: var(--success); }
+.r-costr { display: flex; flex-direction: column; gap: 10px; }
+.r-costr[hidden] { display: none; }
+.r-costout { display: flex; flex-direction: column; gap: 10px; }
+.r-costout table { width: 100%; border-collapse: collapse; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.r-costout caption { padding-bottom: 4px; text-align: left; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+.r-costout td { padding: 4px 0; color: var(--text-light); border-bottom: 1px solid var(--border-light); }
+.r-costout td:last-child { text-align: right; color: var(--text); }
+.r-auto { display: inline-block; margin-left: 4px; padding: 0 6px; font-size: 0.62rem; font-weight: 600; line-height: 1.5; text-transform: uppercase; white-space: nowrap; vertical-align: middle; color: var(--text-muted); border: 1px solid var(--border); border-radius: 999px; }
+.r-costout tr.total td { font-weight: 700; color: var(--text); border-bottom: 0; }
+.r-costout tr.ok td:last-child { color: var(--success); }
+.r-costout tr.bad td:last-child { color: var(--danger); }
+.r-costout { padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); }

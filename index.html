@@ -399,6 +399,8 @@
           </div></details>
           <details class="r-set" data-sec="mortgage"><summary>Mortgage</summary><div class="r-set-body">
             <label class="r-field"><span class="filter-label">Mortgage balance today</span><input class="gw-search" id="r-mBal" type="number" inputmode="decimal" step="1000" /></label>
+            <label class="r-chk"><input type="checkbox" id="r-mToStock" /> Invest the mortgage money once it's paid off</label>
+            <p class="r-hint r-freed" id="r-mFreed"></p>
             <p class="r-sub">Interest deduction (hypotheekrenteaftrek)</p>
             <div class="r-grid2"><label class="r-field"><span class="filter-label">Deduction rate %</span><input class="gw-search" id="r-mDed" type="number" inputmode="decimal" step="0.01" /></label><label class="r-field"><span class="filter-label">Home WOZ value</span><input class="gw-search" id="r-mWoz" type="number" inputmode="decimal" step="1000" /></label><label class="r-field"><span class="filter-label">WOZ growth per year %</span><input class="gw-search" id="r-mWozGrowth" type="number" inputmode="decimal" step="0.1" /></label><label class="r-field"><span class="filter-label">Eigenwoning&shy;forfait %</span><input class="gw-search" id="r-mForfait" type="number" inputmode="decimal" step="0.01" /></label></div>
             <p class="r-hint">You get back deduction rate × (interest − WOZ × forfait) each year. The WOZ value grows by its own rate (4% ≈ long-run Dutch house prices), so the forfait rises and the refund shrinks. Defaults are 2026: 37.56% and 0.35%. It only applies while you earn a salary: after you retire on dividends there is no income tax left to deduct from. Set the rate to 0 to leave it out.</p>
@@ -435,7 +437,7 @@
   <script src="greenwheels.js?v=2"></script>
   <script src="ikea.js?v=1"></script>
   <script src="shop.js?v=1"></script>
-  <script src="retire.js?v=15"></script>
+  <script src="retire.js?v=16"></script>
   <script src="script.js?v=8"></script>
 </body>
 </html>

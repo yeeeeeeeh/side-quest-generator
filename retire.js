@@ -386,10 +386,14 @@ function recalc(){
   const head=t("r.atRetire",{age:inp.retire,year:o.yr,cost:M(o.costYear+o.mPaid,o.yr),month:M((o.costYear+o.mPaid)/12,o.yr),
     mort:o.mPaid>0?t("r.atRetireMort",{m:M(o.mPaid,o.yr)}):""});
   const left=(o.mortLeft>0.5?" "+t("r.mortLeft",{v:M(o.mortLeft,o.yr)}):"")+(inp.today?" All amounts are in today's money.":"");
-  const sum=(label,a)=>!Number.isFinite(a.need)
-    ? `<div><b>${esc(label)}</b> <span class="bad">not possible on dividends</span> · have ${esc(S(a.have,a.yr))}</div>`
-    : `<div><b>${esc(label)}</b> need ${esc(S(a.need,a.yr))} · have ${esc(S(a.have,a.yr))} · <span class="${a.have>=a.need?"ok":"bad"}">${a.have>=a.need?"ahead":"short"} ${esc(S(Math.abs(a.have-a.need),a.yr))}</span>${a.monthly!=null&&Number.isFinite(a.monthly)?` · invest ${esc(short(a.monthly))}/mo`:""}</div>`;
-  $("#r-summary").innerHTML=sum(nw?"Old box 3":"Box 3",o)+(nw?sum("New box 3",nw):"")+(inp.today?`<div class="r-today-note">in today's money</div>`:"");
+  // One short line per box 3 system: need → have, the gap (+ ahead / − short), and the monthly amount that is enough.
+  const sum=(label,a)=>{
+    const lbl=label?`<b>${esc(label)}</b> `:"", today=inp.today?" <small>today's €</small>":"";
+    if(!Number.isFinite(a.need)) return `<div>${lbl}<span class="bad">Not possible on dividends</span>${today}</div>`;
+    const d=a.have-a.need, mo=a.monthly!=null&&Number.isFinite(a.monthly)?` · ${esc(short(a.monthly))}/mo`:"";
+    return `<div>${lbl}Need ${esc(S(a.need,a.yr))} · have ${esc(S(a.have,a.yr))} · <span class="${d>=0?"ok":"bad"}">${d>=0?"+":"−"}${esc(S(Math.abs(d),a.yr))}</span>${mo}${today}</div>`;
+  };
+  $("#r-summary").innerHTML=nw?sum("Old",o)+sum("New",nw):sum("",o);
   // Keep the "How this is calculated" and "Year by year" sections open or closed across recalculations.
   const wasOpen=[...document.querySelectorAll("#r-out details")].map(d=>d.open);
   $("#r-out").innerHTML=`<p class="rhead">${esc(head+left)}</p>

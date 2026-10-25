@@ -1406,6 +1406,8 @@ body.webview-open { overflow: hidden; }
 .r-preset[aria-pressed="true"] { background: rgba(245, 158, 11, 0.1); }
 .r-sticky { position: sticky; bottom: -24px; z-index: 5; display: flex; flex-direction: column; gap: 8px; margin: 0 -4px; padding: 10px 12px 12px; background: var(--bg-alt); border: 1px solid var(--primary); border-radius: var(--radius); box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.45); }
 .r-summary { display: flex; flex-direction: column; gap: 2px; font-size: 0.82rem; color: var(--text-light); font-variant-numeric: tabular-nums; }
+.r-summary > div { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.r-summary small { font-size: 0.72rem; color: var(--text-muted); }
 .r-summary b { color: var(--text); }
 .r-summary .ok { color: var(--success); font-weight: 600; }
 .r-summary .bad { color: var(--danger); font-weight: 600; }
@@ -1415,7 +1417,6 @@ body.webview-open { overflow: hidden; }
 .r-reverse h4 { margin: 0 0 6px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--primary); }
 .r-reverse .kv:last-child { border-bottom: 0; }
 .r-reverse small { display: block; margin-top: 2px; font-size: 0.75rem; color: var(--text-muted); }
-.r-today-note { font-size: 0.72rem; color: var(--text-muted); }
 .r-aowfields { display: flex; flex-direction: column; gap: 10px; }
 .r-aowfields[hidden] { display: none; }
 .r-sum-state { margin-left: auto; font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }

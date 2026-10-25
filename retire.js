@@ -95,7 +95,7 @@ function readMort(){
 }
 function readInputs(){
   const o={}; for(const k in R_FIELDS) o[k]=rNum(k);
-  o.partner=$("#r-partner").checked; o.showNew=$("#r-showNew").checked; o.today=$("#r-today").checked; o.mort=readMort(); return o;
+  o.partner=$("#r-partner").checked; o.showNew=$("#r-showNew").checked; o.today=$("#r-today").checked; o.useAow=$("#r-useAow").checked; o.mort=readMort(); return o;
 }
 function saveInputs(o){ try{ localStorage.setItem("retire",JSON.stringify(o)); }catch(_){} }
 function loadInputs(){
@@ -106,6 +106,7 @@ function loadInputs(){
   $("#r-partner").checked=!!(o&&o.partner);
   $("#r-showNew").checked=!!(o&&o.showNew);
   $("#r-today").checked=!!(o&&o.today);
+  $("#r-useAow").checked=!!(o&&o.useAow);
   (o&&Array.isArray(o.mort)?o.mort:R_DEFAULT_MORT).forEach(mortRow);
 }
 
@@ -370,6 +371,11 @@ function recalc(){
   document.querySelectorAll(".r-preset").forEach(b=>{ const w=b.dataset.phase==="w";
     b.setAttribute("aria-pressed",String(Number(b.dataset.yield)===(w?inp.wYield:inp.yield)&&Number(b.dataset.growth)===(w?inp.wGrowth:inp.growth))); });
   document.querySelectorAll(".r-aowp").forEach(b=>b.setAttribute("aria-pressed",String(Number(b.dataset.aow)===inp.aow)));
+  // AOW and pension only count when ticked (off by default); the amounts typed in are kept.
+  $("#r-aowFields").hidden=!inp.useAow;
+  $("#r-aowState").textContent=inp.useAow?"on":"off";
+  $("#r-aowState").classList.toggle("on",inp.useAow);
+  if(!inp.useAow){ inp.aow=0; inp.pen=0; }
   if(inp.retire<inp.age) inp.retire=inp.age;
   if(inp.until<inp.retire) inp.until=inp.retire;
   effective(inp);

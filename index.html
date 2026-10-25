@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=14" />
+  <link rel="stylesheet" href="style.css?v=15" />
 </head>
 <body>
   <!-- Header -->
@@ -334,13 +334,16 @@
             <div class="r-grid2"><label class="r-field"><span class="filter-label">Compare: withdrawal rate %</span><input class="gw-search" id="r-wr" type="number" inputmode="decimal" step="0.1" /></label></div>
             <label class="r-chk"><input type="checkbox" id="r-today" /> Show amounts in today's money</label>
           </div></details>
-          <details class="r-set" data-sec="aow"><summary>AOW &amp; pension</summary><div class="r-set-body">
+          <details class="r-set" data-sec="aow"><summary>AOW &amp; pension <span class="r-sum-state" id="r-aowState">off</span></summary><div class="r-set-body">
+            <label class="r-chk"><input type="checkbox" id="r-useAow" /> Count AOW and pension</label>
+            <div class="r-aowfields" id="r-aowFields" hidden>
             <div class="r-grid2"><label class="r-field"><span class="filter-label">AOW from age</span><input class="gw-search" id="r-aowAge" type="number" inputmode="decimal" step="1" /></label><label class="r-field"><span class="filter-label">AOW per month, net</span><input class="gw-search" id="r-aow" type="number" inputmode="decimal" step="10" /></label><label class="r-field"><span class="filter-label">Pension from age</span><input class="gw-search" id="r-penAge" type="number" inputmode="decimal" step="1" /></label><label class="r-field"><span class="filter-label">Employer pension per month, net</span><input class="gw-search" id="r-pen" type="number" inputmode="decimal" step="10" /></label></div>
             <div class="r-presets" role="group" aria-label="AOW amount">
               <button type="button" class="r-preset r-aowp" data-aow="1558">🧍 Single<small>€1,558 a month net (2026)</small></button>
               <button type="button" class="r-preset r-aowp" data-aow="2168">👫 Couple<small>2 × €1,084 a month net (2026)</small></button>
             </div>
             <p class="r-hint">In today's money; both rise with inflation. Dividends must cover your costs minus these; until they start you sell shares for that part (the bridge). Your AOW age depends on life expectancy (about 68 for people born around 1990: check svb.nl). Set an amount to 0 to leave it out.</p>
+            </div>
           </div></details>
           <details class="r-set" data-sec="investments"><summary>Investments</summary><div class="r-set-body">
             <p class="r-sub">While working (recurring ETF)</p>
@@ -409,7 +412,7 @@
   <script src="greenwheels.js?v=2"></script>
   <script src="ikea.js?v=1"></script>
   <script src="shop.js?v=1"></script>
-  <script src="retire.js?v=11"></script>
+  <script src="retire.js?v=12"></script>
   <script src="script.js?v=8"></script>
 </body>
 </html>

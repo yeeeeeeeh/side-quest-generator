@@ -1416,3 +1416,7 @@ body.webview-open { overflow: hidden; }
 .r-reverse .kv:last-child { border-bottom: 0; }
 .r-reverse small { display: block; margin-top: 2px; font-size: 0.75rem; color: var(--text-muted); }
 .r-today-note { font-size: 0.72rem; color: var(--text-muted); }
+.r-aowfields { display: flex; flex-direction: column; gap: 10px; }
+.r-aowfields[hidden] { display: none; }
+.r-sum-state { margin-left: auto; font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+.r-sum-state.on { color: var(--success); }

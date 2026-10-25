@@ -67,7 +67,7 @@ const esc = s => String(s ?? "").replace(/[<>&'"]/g, c => ({"<":"&lt;",">":"&gt;
 
 const NOW_YEAR = new Date().getFullYear();
 const R_FIELDS = {age:35,retire:60,until:95,salary:50000,raise:2.5,invest:20,start:25000,
-  travel:6000,travelR:6000,infl:2.5,wYield:2,wGrowth:8.3,yield:3.5,growth:3,oRate:36,oDeemed:6,oFree:59357,nRate:36,nFree:1800,mBal:250000,mDed:37.56,mWoz:400000,mWozGrowth:4,mForfait:0.35,
+  travel:6000,travelR:6000,twn:1200,twnR:1200,infl:2.5,wYield:2,wGrowth:8.3,yield:3.5,growth:3,oRate:36,oDeemed:6,oFree:59357,nRate:36,nFree:1800,mBal:250000,mDed:37.56,mWoz:400000,mWozGrowth:4,mForfait:0.35,
   aowAge:68,aow:1558,pen:0,penAge:68,wr:2.5,terW:0.2,terR:0.3,leak:10};
 // Monthly expense lines in the Costs section (today's money): c_… now, cr_… in retirement.
 const R_COSTS = [["groc",400],["energy",180],["health",160],["munic",60],["insure",50],["net",60],["transport",150],["subs",40],["leisure",250],["cloth",100],["home",100],["other",150]];
@@ -99,11 +99,12 @@ function readMort(){
 function readInputs(){
   const o={}; for(const k in R_FIELDS) o[k]=rNum(k);
   o.partner=$("#r-partner").checked; o.showNew=$("#r-showNew").checked; o.today=$("#r-today").checked; o.useAow=$("#r-useAow").checked; o.mort=readMort();
-  // Monthly costs in today's money: expense lines + travel ÷ 12, now and in retirement (same unless split).
+  // Monthly costs in today's money: expense lines + yearly costs (travel, flights to Taiwan) ÷ 12, now and in
+  // retirement (same unless split).
   o.costSplit=$("#r-costSplit").checked; o.mToStock=$("#r-mToStock").checked;
   o.living=R_COSTS.reduce((n,[k])=>n+o["c_"+k],0); o.livingR=R_COSTS.reduce((n,[k])=>n+o["cr_"+k],0);
-  o.livR=o.costSplit?o.livingR:o.living; o.trR=o.costSplit?o.travelR:o.travel;
-  o.costNow=o.living+o.travel/12; o.cost=o.livR+o.trR/12;
+  o.livR=o.costSplit?o.livingR:o.living; o.yrNow=o.travel+o.twn; o.trR=o.costSplit?o.travelR+o.twnR:o.yrNow;
+  o.costNow=o.living+o.yrNow/12; o.cost=o.livR+o.trR/12;
   return o;
 }
 function saveInputs(o){ try{ localStorage.setItem("retire",JSON.stringify(o)); }catch(_){} }
@@ -308,7 +309,7 @@ function explain(inp,o,nw,mort){
   const y=inp.ry, rd=inp.oRate*inp.oDeemed/100, rn=inp.nRate*(inp.ry+inp.rg)/100;
   const calc=lines=>`<div class="calc">${lines.map(l=>`<div>${esc(l)}</div>`).join("")}</div>`;
   const step=(h,p,body)=>`<h3>${esc(h)}</h3><p>${esc(p)}</p>${body||""}`;
-  const s1=[`(${money(inp.livR)} expenses + ${money(inp.trR)} travel ÷ 12) × 12 × (1 + ${pc(inp.infl)})^${yrs} = ${money(o.costYear)}`+(o.mPaid>0?` + ${money(o.mPaid)} (${t("x.mort")}) = ${money(cost)}`:"")];
+  const s1=[`(${money(inp.livR)} expenses + ${money(inp.trR)} travel and flights to Taiwan ÷ 12) × 12 × (1 + ${pc(inp.infl)})^${yrs} = ${money(o.costYear)}`+(o.mPaid>0?` + ${money(o.mPaid)} (${t("x.mort")}) = ${money(cost)}`:"")];
   if(o.fullBen>0) s1.push(`AOW ${money(inp.aow)} (from age ${inp.aowAge})${inp.pen>0?` + pension ${money(inp.pen)} (from age ${inp.penAge})`:""} a month × 12 × (1 + ${pc(inp.infl)})^${yrs} = ${money(o.fullBen)} a year`,
     `left for the portfolio in the long run: ${money(cost)} − ${money(o.fullBen)} = ${money(o.divSpend)}`);
   const per=tax=>`${t("x.div")} ${m2(inp.yield)} − leakage ${pc(inp.leak)} = ${m2(y)}, − ${t("x.tax")} ${m2(tax)} = ${m2(y-tax)} ${t("x.left")}`;
@@ -404,7 +405,7 @@ function costOverview(inp,mort){
   const row=(label,now,ret,cls="")=>`<tr class="${cls}"><td>${label}</td><td>${now==null?"":esc(money(now))}</td><td class="rc">${ret==null?"":esc(money(ret))}</td></tr>`;
   const totNow=inp.costNow+mNow, totRet=inp.cost+mRet/fR, left=inp.salary/12*(1-inp.invest/100)-totNow;
   $("#r-costCalc").innerHTML=
-    row("Travel ÷ 12",inp.travel/12,inp.trR/12)+
+    row("Yearly costs ÷ 12",inp.yrNow/12,inp.trR/12)+
     row('Mortgage <span class="r-auto">auto</span>',mNow,mRet/fR)+
     row("Total per month",totNow,totRet,"total")+
     (inp.salary>0?row(`Left from salary after investing ${esc(inp.invest)}%`,left,null,"total "+(left>=0?"ok":"bad")):"");
@@ -487,6 +488,7 @@ window.retireInit = function () {
       if (!e.target.checked) return;
       for (const [k] of R_COSTS) $("#r-cr_" + k).value = $("#r-c_" + k).value;
       $("#r-travelR").value = $("#r-travel").value;
+      $("#r-twnR").value = $("#r-twn").value;
       recalc();
     });
     $("#r-form").addEventListener("submit", e => e.preventDefault());

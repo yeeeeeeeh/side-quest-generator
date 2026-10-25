@@ -312,6 +312,7 @@ const TAB_PANELS = {
   greenwheels: { panel: "greenwheels-panel", init: () => gwInit() },
   ikea: { panel: "ikea-panel", init: () => ikeaInit() },
   shop: { panel: "shop-panel", init: () => shopInit() },
+  retire: { panel: "retire-panel", init: () => retireInit() },
 };
 
 function showTab(tab) {

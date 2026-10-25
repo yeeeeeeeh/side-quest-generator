@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=6" />
+  <link rel="stylesheet" href="style.css?v=7" />
 </head>
 <body>
   <!-- Header -->
@@ -315,12 +315,52 @@
     </div>
   </section>
 
+  <!-- Retirement calculator -->
+  <section class="webview-panel" id="retire-panel" hidden aria-label="Retirement calculator">
+    <div class="webview-toolbar">
+      <span class="webview-title">💰 Retire on dividends</span>
+    </div>
+    <div class="gw-body">
+      <div class="r-layout">
+        <form id="r-form" class="r-form" autocomplete="off">
+          <p class="r-intro">How big must your portfolio be to pay a monthly cost from dividends alone, and do your savings get you there? Compared under the old and the new Dutch box 3 tax.</p>
+          <fieldset class="r-set"><legend>You</legend>
+            <div class="r-grid3"><label class="r-field"><span class="filter-label">Current age</span><input class="gw-search" id="r-age" type="number" inputmode="decimal" step="1" /></label><label class="r-field"><span class="filter-label">Retire at age</span><input class="gw-search" id="r-retire" type="number" inputmode="decimal" step="1" /></label><label class="r-field"><span class="filter-label">Plan until age</span><input class="gw-search" id="r-until" type="number" inputmode="decimal" step="1" /></label></div>
+            <div class="r-grid2"><label class="r-field"><span class="filter-label">Net salary per year</span><input class="gw-search" id="r-salary" type="number" inputmode="decimal" step="100" /></label><label class="r-field"><span class="filter-label">Salary raise per year %</span><input class="gw-search" id="r-raise" type="number" inputmode="decimal" step="0.1" /></label><label class="r-field"><span class="filter-label">Invest % of salary</span><input class="gw-search" id="r-invest" type="number" inputmode="decimal" step="0.5" /></label><label class="r-field"><span class="filter-label">Invested today</span><input class="gw-search" id="r-start" type="number" inputmode="decimal" step="100" /></label></div>
+          </fieldset>
+          <fieldset class="r-set"><legend>Retirement</legend>
+            <div class="r-grid2"><label class="r-field"><span class="filter-label">Monthly cost (today's money)</span><input class="gw-search" id="r-cost" type="number" inputmode="decimal" step="50" /></label><label class="r-field"><span class="filter-label">Inflation per year %</span><input class="gw-search" id="r-infl" type="number" inputmode="decimal" step="0.1" /></label></div>
+          </fieldset>
+          <fieldset class="r-set"><legend>Investments</legend>
+            <div class="r-grid2"><label class="r-field"><span class="filter-label">Dividend yield %</span><input class="gw-search" id="r-yield" type="number" inputmode="decimal" step="0.1" /></label><label class="r-field"><span class="filter-label">Share price growth per year %</span><input class="gw-search" id="r-growth" type="number" inputmode="decimal" step="0.1" /></label></div>
+          </fieldset>
+          <fieldset class="r-set"><legend>Box 3 tax</legend>
+            <label class="r-chk"><input type="checkbox" id="r-partner" /> Fiscal partner (doubles the tax-free amounts)</label>
+            <p class="r-sub">Old box 3 (deemed return)</p>
+            <div class="r-grid3"><label class="r-field"><span class="filter-label">Tax rate %</span><input class="gw-search" id="r-oRate" type="number" inputmode="decimal" step="0.1" /></label><label class="r-field"><span class="filter-label">Deemed return %</span><input class="gw-search" id="r-oDeemed" type="number" inputmode="decimal" step="0.01" /></label><label class="r-field"><span class="filter-label">Tax-free wealth per person</span><input class="gw-search" id="r-oFree" type="number" inputmode="decimal" step="100" /></label></div>
+            <p class="r-sub">New box 3 (actual return)</p>
+            <div class="r-grid2"><label class="r-field"><span class="filter-label">Tax rate %</span><input class="gw-search" id="r-nRate" type="number" inputmode="decimal" step="0.1" /></label><label class="r-field"><span class="filter-label">Tax-free return per person</span><input class="gw-search" id="r-nFree" type="number" inputmode="decimal" step="100" /></label></div>
+            <p class="r-hint">Defaults are the 2025 rules and the new-system bill. Tax-free amounts and your monthly cost rise with inflation. Dividend withholding tax is assumed to be credited.</p>
+          </fieldset>
+          <fieldset class="r-set"><legend>Mortgage</legend>
+            <label class="r-field"><span class="filter-label">Mortgage balance today</span><input class="gw-search" id="r-mBal" type="number" inputmode="decimal" step="1000" /></label>
+            <table class="r-mtable"><thead><tr><th>From year</th><th>To year</th><th>Interest %</th><th>Per month</th><th></th></tr></thead><tbody id="r-mRows"></tbody></table>
+            <div><button type="button" class="btn r-add" id="r-mAdd">+ Add period</button></div>
+            <p class="r-hint">Leave "per month" empty for a standard annuity that is paid off by the last year. Payments come from your salary while you work, and from the portfolio after you retire.</p>
+          </fieldset>
+        </form>
+        <div id="r-out" class="r-out" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
   <!-- Bottom Tab Bar -->
   <nav class="tab-bar" aria-label="Tabs">
     <a href="#" class="tab-item active" data-tab="quests"><span class="tab-icon">🎲</span><span class="tab-label">Quests</span></a>
     <a href="#greenwheels" class="tab-item" data-tab="greenwheels"><span class="tab-icon">🚗</span><span class="tab-label">Greenwheels</span></a>
     <a href="#ikea" class="tab-item" data-tab="ikea"><span class="tab-icon">🛋️</span><span class="tab-label">IKEA NL/DE</span></a>
     <a href="#shop" class="tab-item" data-tab="shop"><span class="tab-icon">🛒</span><span class="tab-label">JP/NL shop</span></a>
+    <a href="#retire" class="tab-item" data-tab="retire"><span class="tab-icon">💰</span><span class="tab-label">Retire</span></a>
   </nav>
 
   <script src="quests.js?v=2"></script>
@@ -328,6 +368,7 @@
   <script src="greenwheels.js?v=2"></script>
   <script src="ikea.js?v=1"></script>
   <script src="shop.js?v=1"></script>
-  <script src="script.js?v=6"></script>
+  <script src="retire.js?v=1"></script>
+  <script src="script.js?v=7"></script>
 </body>
 </html>

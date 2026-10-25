@@ -67,11 +67,18 @@ const esc = s => String(s ?? "").replace(/[<>&'"]/g, c => ({"<":"&lt;",">":"&gt;
 
 const NOW_YEAR = new Date().getFullYear();
 const R_FIELDS = {age:35,retire:60,until:95,salary:50000,raise:2.5,invest:20,start:25000,
-  travel:6000,travelR:6000,twn:1200,twnR:1200,infl:2.5,wYield:2,wGrowth:8.3,yield:3.5,growth:3,oRate:36,oDeemed:6,oFree:59357,nRate:36,nFree:1800,mBal:250000,mDed:37.56,mWoz:400000,mWozGrowth:4,mForfait:0.35,
+  infl:2.5,wYield:2,wGrowth:8.3,yield:3.5,growth:3,oRate:36,oDeemed:6,oFree:59357,nRate:36,nFree:1800,mBal:250000,mDed:37.56,mWoz:400000,mWozGrowth:4,mForfait:0.35,
   aowAge:68,aow:1558,pen:0,penAge:68,wr:2.5,terW:0.2,terR:0.3,leak:10};
 // Monthly expense lines in the Costs section (today's money): c_… now, cr_… in retirement.
-const R_COSTS = [["groc",400],["energy",180],["health",160],["munic",60],["insure",50],["net",60],["transport",150],["subs",40],["leisure",250],["cloth",100],["home",100],["other",150]];
-for (const [k,d] of R_COSTS) { R_FIELDS["c_"+k]=d; R_FIELDS["cr_"+k]=d; }
+// Cost lines are a list the viewer can add to, rename and remove: m = per month, y = per year.
+// R_COSTS keys are the fixed lines of an earlier version, kept to carry saved amounts over.
+const R_COSTS = [["groc","Groceries",400],["energy","Energy & water",180],["health","Health insurance",160],["munic","Municipal taxes",60],
+  ["insure","Other insurance",50],["net","Internet & phone",60],["transport","Transport (car, OV)",150],["subs","Subscriptions",40],
+  ["leisure","Eating out & leisure",250],["cloth","Clothing & personal care",100],["home","Home maintenance",100],["other","Other",150]];
+const R_DEFAULT_COSTS = {
+  m: [...R_COSTS.slice(0,-1).map(([,n,v])=>({n,now:v,ret:v})), {n:"AI",now:20,ret:20}, {n:"Other",now:150,ret:150}],
+  y: [{n:"Travel",now:6000,ret:6000},{n:"Flights to Taiwan",now:1200,ret:1200}],
+};
 const R_DEFAULT_MORT = [{from:NOW_YEAR,to:NOW_YEAR+9,rate:3.8,pay:""},{from:NOW_YEAR+10,to:NOW_YEAR+24,rate:4.2,pay:""}];
 
 const rNum = id => { const v = Number($("#r-"+id).value); return Number.isFinite(v) ? v : 0; };
@@ -96,14 +103,33 @@ function readMort(){
     return {from:Number(g(".m-from")),to:Number(g(".m-to")),rate:Number(g(".m-rate"))||0,pay:g(".m-pay")===""?"":Number(g(".m-pay"))};
   }).filter(r=>Number.isFinite(r.from)&&Number.isFinite(r.to)&&r.to>=r.from);
 }
+function costRow(g,c){
+  const tr=document.createElement("tr"), step=g==="y"?100:10;
+  tr.innerHTML=`<td><input class="c-name" type="text" maxlength="40" value="${esc(c.n)}" aria-label="Cost name" placeholder="Name"></td>
+<td><input class="c-now" type="number" inputmode="decimal" step="${step}" value="${esc(c.now)}" aria-label="Now"></td>
+<td class="rc"><input class="c-ret" type="number" inputmode="decimal" step="${step}" value="${esc(c.ret)}" aria-label="In retirement"></td>
+<td><button type="button" class="r-del c-del" title="Remove" aria-label="Remove">✕</button></td>`;
+  tr.querySelector(".c-del").addEventListener("click",()=>{ tr.remove(); recalc(); });
+  $(g==="y"?"#r-cy":"#r-cm").appendChild(tr);
+  return tr;
+}
+function readCosts(){
+  const read=sel=>[...document.querySelectorAll(sel+" tr")].map(tr=>{
+    const v=c=>{ const x=Number(tr.querySelector(c).value); return Number.isFinite(x)?x:0; };
+    return {n:tr.querySelector(".c-name").value,now:v(".c-now"),ret:v(".c-ret")};
+  });
+  return {m:read("#r-cm"),y:read("#r-cy")};
+}
 function readInputs(){
   const o={}; for(const k in R_FIELDS) o[k]=rNum(k);
   o.partner=$("#r-partner").checked; o.showNew=$("#r-showNew").checked; o.today=$("#r-today").checked; o.useAow=$("#r-useAow").checked; o.mort=readMort();
   // Monthly costs in today's money: expense lines + yearly costs (travel, flights to Taiwan) ÷ 12, now and in
   // retirement (same unless split).
   o.costSplit=$("#r-costSplit").checked; o.mToStock=$("#r-mToStock").checked;
-  o.living=R_COSTS.reduce((n,[k])=>n+o["c_"+k],0); o.livingR=R_COSTS.reduce((n,[k])=>n+o["cr_"+k],0);
-  o.livR=o.costSplit?o.livingR:o.living; o.yrNow=o.travel+o.twn; o.trR=o.costSplit?o.travelR+o.twnR:o.yrNow;
+  o.costs=readCosts();
+  const tot=(g,k)=>o.costs[g].reduce((n,c)=>n+c[k],0);
+  o.living=tot("m","now"); o.yrNow=tot("y","now");
+  o.livR=o.costSplit?tot("m","ret"):o.living; o.trR=o.costSplit?tot("y","ret"):o.yrNow;
   o.costNow=o.living+o.yrNow/12; o.cost=o.livR+o.trR/12;
   return o;
 }
@@ -119,7 +145,17 @@ function loadInputs(){
     for(const [k] of R_COSTS){ o["c_"+k]=0; o["cr_"+k]=0; }
     o.c_other=o.living; o.cr_other=Number.isFinite(o.livingR)?o.livingR:o.living;
   }
+  // The fixed cost fields of the previous version become list rows with the same amounts.
+  if(o&&!o.costs&&(o.c_groc!=null||o.living!=null)){
+    const num=v=>Number.isFinite(v)?v:0;
+    const m=o.c_groc!=null?R_COSTS.map(([k,n])=>({n,now:num(o["c_"+k]),ret:num(o["cr_"+k])})):R_DEFAULT_COSTS.m.map(c=>({...c}));
+    if(!m.some(c=>c.n==="AI")) m.splice(m.length-1,0,{n:"AI",now:20,ret:20});
+    const y=[{n:"Travel",now:num(o.travel),ret:num(o.travelR)},{n:"Flights to Taiwan",now:Number.isFinite(o.twn)?o.twn:1200,ret:Number.isFinite(o.twnR)?o.twnR:1200}];
+    o.costs={m,y};
+  }
   for(const k in R_FIELDS) $("#r-"+k).value = o&&Number.isFinite(o[k]) ? o[k] : R_FIELDS[k];
+  const costs=o&&o.costs&&Array.isArray(o.costs.m)?o.costs:R_DEFAULT_COSTS;
+  for(const g of ["m","y"]) (costs[g]||[]).forEach(c=>costRow(g,c));
   $("#r-partner").checked=!!(o&&o.partner);
   $("#r-showNew").checked=!!(o&&o.showNew);
   $("#r-today").checked=!!(o&&o.today);
@@ -309,7 +345,7 @@ function explain(inp,o,nw,mort){
   const y=inp.ry, rd=inp.oRate*inp.oDeemed/100, rn=inp.nRate*(inp.ry+inp.rg)/100;
   const calc=lines=>`<div class="calc">${lines.map(l=>`<div>${esc(l)}</div>`).join("")}</div>`;
   const step=(h,p,body)=>`<h3>${esc(h)}</h3><p>${esc(p)}</p>${body||""}`;
-  const s1=[`(${money(inp.livR)} expenses + ${money(inp.trR)} travel and flights to Taiwan ÷ 12) × 12 × (1 + ${pc(inp.infl)})^${yrs} = ${money(o.costYear)}`+(o.mPaid>0?` + ${money(o.mPaid)} (${t("x.mort")}) = ${money(cost)}`:"")];
+  const s1=[`(${money(inp.livR)} expenses + ${money(inp.trR)} yearly costs ÷ 12) × 12 × (1 + ${pc(inp.infl)})^${yrs} = ${money(o.costYear)}`+(o.mPaid>0?` + ${money(o.mPaid)} (${t("x.mort")}) = ${money(cost)}`:"")];
   if(o.fullBen>0) s1.push(`AOW ${money(inp.aow)} (from age ${inp.aowAge})${inp.pen>0?` + pension ${money(inp.pen)} (from age ${inp.penAge})`:""} a month × 12 × (1 + ${pc(inp.infl)})^${yrs} = ${money(o.fullBen)} a year`,
     `left for the portfolio in the long run: ${money(cost)} − ${money(o.fullBen)} = ${money(o.divSpend)}`);
   const per=tax=>`${t("x.div")} ${m2(inp.yield)} − leakage ${pc(inp.leak)} = ${m2(y)}, − ${t("x.tax")} ${m2(tax)} = ${m2(y-tax)} ${t("x.left")}`;
@@ -402,7 +438,7 @@ function costOverview(inp,mort){
   const retYr=NOW_YEAR+inp.retire-inp.age, fR=Math.pow(1+inp.infl/100,inp.retire-inp.age);
   const mNow=(mort.get(NOW_YEAR)||{net:0}).net/12, mRet=(mort.get(retYr)||{net:0}).net/12;
   // Read-only rows; the retirement column is in today's money too (the mortgage there is deflated to match).
-  const row=(label,now,ret,cls="")=>`<tr class="${cls}"><td>${label}</td><td>${now==null?"":esc(money(now))}</td><td class="rc">${ret==null?"":esc(money(ret))}</td></tr>`;
+  const row=(label,now,ret,cls="")=>`<tr class="${cls}"><td>${label}</td><td>${now==null?"":esc(money(now))}</td><td class="rc">${ret==null?"":esc(money(ret))}</td><td></td></tr>`;
   const totNow=inp.costNow+mNow, totRet=inp.cost+mRet/fR, left=inp.salary/12*(1-inp.invest/100)-totNow;
   $("#r-costCalc").innerHTML=
     row("Yearly costs ÷ 12",inp.yrNow/12,inp.trR/12)+
@@ -486,9 +522,11 @@ window.retireInit = function () {
     // Splitting costs starts the retirement column from today's numbers.
     $("#r-costSplit").addEventListener("change", e => {
       if (!e.target.checked) return;
-      for (const [k] of R_COSTS) $("#r-cr_" + k).value = $("#r-c_" + k).value;
-      $("#r-travelR").value = $("#r-travel").value;
-      $("#r-twnR").value = $("#r-twn").value;
+      document.querySelectorAll("#r-cm tr, #r-cy tr").forEach(tr => { tr.querySelector(".c-ret").value = tr.querySelector(".c-now").value; });
+      recalc();
+    });
+    for (const g of ["m", "y"]) $(g === "y" ? "#r-cAddY" : "#r-cAddM").addEventListener("click", () => {
+      costRow(g, {n: "", now: 0, ret: 0}).querySelector(".c-name").focus();
       recalc();
     });
     $("#r-form").addEventListener("submit", e => e.preventDefault());

@@ -1426,7 +1426,18 @@ body.webview-open { overflow: hidden; }
 .r-ctable th:first-child { text-align: left; }
 .r-ctable td { padding: 3px 0; color: var(--text-light); border-bottom: 1px solid var(--border-light); }
 .r-ctable td + td { padding-left: 6px; text-align: right; }
-.r-ctable td:first-child { width: 46%; }
+.r-ctable tr.r-cadd td + td { padding-left: 0; }
+.r-ctable thead th:first-child { width: 50%; }
+.r-ctable.split thead th:first-child { width: 40%; }
+.r-ctable.split input:not(.c-name) { padding: 6px 4px; }
+.r-ctable input.c-name { font-size: 0.82rem; }
+.r-ctable th:last-child, .r-ctable td:last-child { width: 34px; padding-left: 4px; }
+.r-ctable input.c-name { text-align: left; padding: 6px 6px; background: transparent; border-color: transparent; color: var(--text-light); }
+.r-ctable input.c-name:hover { border-color: var(--border); }
+.r-ctable input.c-name:focus { background: var(--bg); border-color: var(--primary); }
+.r-ctable .r-del { width: 30px; height: 30px; }
+.r-ctable tr.r-cadd td { padding: 6px 0 10px; border-bottom: 0; text-align: left; }
+.r-ctable tr.r-cgroup th { padding-top: 6px; }
 .r-ctable em { font-style: normal; font-size: 0.75rem; color: var(--text-muted); }
 .r-ctable input { width: 100%; padding: 6px 8px; font: inherit; text-align: right; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color-scheme: dark; }
 .r-ctable input:focus { outline: none; border-color: var(--primary); }

@@ -350,3 +350,61 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("popstate", syncTabFromHash);
   syncTabFromHash();
 });
+
+
+// ===== Update =====
+// A home-screen web app has no reload button and can keep old files cached,
+// so "Update" re-downloads the page and every file it uses, then reloads.
+// The site also checks now and then whether index.html lists newer file
+// versions (?v=…) than the ones running, and shows a bar if so.
+const UPDATE_CHECK_MS = 10 * 60 * 1000;
+let updateLastCheck = 0;
+
+// Local scripts and stylesheets a page uses, e.g. ["style.css?v=8", "script.js?v=8"]
+function updateAssets(doc) {
+  const urls = [...doc.querySelectorAll("script[src], link[rel=stylesheet][href]")]
+    .map(el => el.getAttribute("src") || el.getAttribute("href"))
+    .filter(u => !/^(https?:)?\/\//.test(u));
+  return [...new Set(urls)].sort();
+}
+
+async function updateFetchLatest() {
+  const res = await fetch(location.pathname, { cache: "no-store" });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return new DOMParser().parseFromString(await res.text(), "text/html");
+}
+
+async function updateCheck() {
+  if (Date.now() - updateLastCheck < UPDATE_CHECK_MS) return;
+  updateLastCheck = Date.now();
+  try {
+    const latest = updateAssets(await updateFetchLatest()).join(" ");
+    document.getElementById("update-bar").hidden = latest === updateAssets(document).join(" ");
+  } catch (e) { /* offline: try again next time */ }
+}
+
+async function updateNow() {
+  document.querySelectorAll("#update-btn, #update-bar-btn").forEach(b => {
+    b.disabled = true;
+    b.textContent = "Updating…";
+  });
+  try {
+    const latest = updateAssets(await updateFetchLatest());
+    const all = [...new Set([...latest, ...updateAssets(document)])];
+    await Promise.all(all.map(u => fetch(u, { cache: "reload" }).catch(() => {})));
+  } catch (e) { /* offline: the reload below still uses whatever is cached */ }
+  location.replace(`${location.pathname}?updated=${Date.now()}${location.hash}`);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Drop the ?updated=… cache buster from the address after an update.
+  if (new URLSearchParams(location.search).has("updated")) {
+    history.replaceState(history.state, "", location.pathname + location.hash);
+  }
+  document.getElementById("update-btn").addEventListener("click", updateNow);
+  document.getElementById("update-bar-btn").addEventListener("click", updateNow);
+  updateCheck();
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") updateCheck();
+  });
+});

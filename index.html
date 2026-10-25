@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=7" />
+  <link rel="stylesheet" href="style.css?v=8" />
 </head>
 <body>
   <!-- Header -->
@@ -23,6 +23,7 @@
         <a href="#generator" class="nav-link">Quests</a>
         <a href="#how-it-works" class="nav-link">How It Works</a>
       </nav>
+      <button class="update-btn" id="update-btn" type="button" title="Load the newest version of the site">⟳ Update</button>
       <div class="header-xp">
         <span class="xp-badge">
           <span class="xp-label">Your XP</span>
@@ -354,6 +355,12 @@
     </div>
   </section>
 
+  <!-- New version notice -->
+  <div class="update-bar" id="update-bar" hidden role="status">
+    <span>✨ A new version of the site is available.</span>
+    <button class="btn btn-primary" id="update-bar-btn" type="button">Update</button>
+  </div>
+
   <!-- Bottom Tab Bar -->
   <nav class="tab-bar" aria-label="Tabs">
     <a href="#" class="tab-item active" data-tab="quests"><span class="tab-icon">🎲</span><span class="tab-label">Quests</span></a>
@@ -369,6 +376,6 @@
   <script src="ikea.js?v=1"></script>
   <script src="shop.js?v=1"></script>
   <script src="retire.js?v=1"></script>
-  <script src="script.js?v=7"></script>
+  <script src="script.js?v=8"></script>
 </body>
 </html>

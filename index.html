@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=12" />
+  <link rel="stylesheet" href="style.css?v=13" />
 </head>
 <body>
   <!-- Header -->
@@ -331,6 +331,16 @@
           </fieldset>
           <fieldset class="r-set"><legend>Retirement</legend>
             <div class="r-grid2"><label class="r-field"><span class="filter-label">Monthly cost (today's money)</span><input class="gw-search" id="r-cost" type="number" inputmode="decimal" step="50" /></label><label class="r-field"><span class="filter-label">Inflation per year %</span><input class="gw-search" id="r-infl" type="number" inputmode="decimal" step="0.1" /></label></div>
+            <div class="r-grid2"><label class="r-field"><span class="filter-label">Compare: withdrawal rate %</span><input class="gw-search" id="r-wr" type="number" inputmode="decimal" step="0.1" /></label></div>
+            <label class="r-chk"><input type="checkbox" id="r-today" /> Show amounts in today's money</label>
+          </fieldset>
+          <fieldset class="r-set"><legend>AOW &amp; pension</legend>
+            <div class="r-grid2"><label class="r-field"><span class="filter-label">AOW from age</span><input class="gw-search" id="r-aowAge" type="number" inputmode="decimal" step="1" /></label><label class="r-field"><span class="filter-label">AOW per month, net</span><input class="gw-search" id="r-aow" type="number" inputmode="decimal" step="10" /></label><label class="r-field"><span class="filter-label">Pension from age</span><input class="gw-search" id="r-penAge" type="number" inputmode="decimal" step="1" /></label><label class="r-field"><span class="filter-label">Employer pension per month, net</span><input class="gw-search" id="r-pen" type="number" inputmode="decimal" step="10" /></label></div>
+            <div class="r-presets" role="group" aria-label="AOW amount">
+              <button type="button" class="r-preset r-aowp" data-aow="1558">🧍 Single<small>€1,558 a month net (2026)</small></button>
+              <button type="button" class="r-preset r-aowp" data-aow="2168">👫 Couple<small>2 × €1,084 a month net (2026)</small></button>
+            </div>
+            <p class="r-hint">In today's money; both rise with inflation. Dividends must cover your costs minus these; until they start you sell shares for that part (the bridge). Your AOW age depends on life expectancy (about 68 for people born around 1990: check svb.nl). Set an amount to 0 to leave it out.</p>
           </fieldset>
           <fieldset class="r-set"><legend>Investments</legend>
             <p class="r-sub">While working (recurring ETF)</p>
@@ -346,6 +356,9 @@
               <button type="button" class="r-preset" data-phase="r" data-yield="1.2" data-growth="7">📊 S&amp;P 500 today<small>7% growth + 1.2% dividend</small></button>
             </div>
             <p class="r-hint">Dividends are reinvested while you work. At retirement you switch to the retirement ETF; the Netherlands has no capital gains tax, so switching costs only fees. S&amp;P 500 figures are 2005–2024 and 1957–2024 averages, before inflation and fund costs.</p>
+            <p class="r-sub">Costs</p>
+            <div class="r-grid3"><label class="r-field"><span class="filter-label">Fund cost while working %</span><input class="gw-search" id="r-terW" type="number" inputmode="decimal" step="0.01" /></label><label class="r-field"><span class="filter-label">Fund cost in retirement %</span><input class="gw-search" id="r-terR" type="number" inputmode="decimal" step="0.01" /></label><label class="r-field"><span class="filter-label">Dividend leakage %</span><input class="gw-search" id="r-leak" type="number" inputmode="decimal" step="1" /></label></div>
+            <p class="r-hint">Fund cost (TER) comes off the growth. Dividend leakage is the share of dividends lost to withholding tax inside the fund that you can't claim back: about 10–15% for Irish-domiciled world and US ETFs.</p>
           </fieldset>
           <fieldset class="r-set"><legend>Box 3 tax</legend>
             <label class="r-chk"><input type="checkbox" id="r-partner" /> Fiscal partner (doubles the tax-free amounts)</label>
@@ -396,7 +409,7 @@
   <script src="greenwheels.js?v=2"></script>
   <script src="ikea.js?v=1"></script>
   <script src="shop.js?v=1"></script>
-  <script src="retire.js?v=9"></script>
+  <script src="retire.js?v=10"></script>
   <script src="script.js?v=8"></script>
 </body>
 </html>

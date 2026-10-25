@@ -1411,3 +1411,4 @@ body.webview-open { overflow: hidden; }
 .r-reverse h4 { margin: 0 0 6px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--primary); }
 .r-reverse .kv:last-child { border-bottom: 0; }
 .r-reverse small { display: block; margin-top: 2px; font-size: 0.75rem; color: var(--text-muted); }
+.r-today-note { font-size: 0.72rem; color: var(--text-muted); }

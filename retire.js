@@ -43,7 +43,7 @@ const TEXT = {
   "x.s1":"1. Yearly cost when you retire",
   "x.s1t":"Your monthly cost grows with inflation every year from now until you retire in {year} ({n} years).",
   "x.mort":"mortgage that year after interest deduction",
-  "x.s2":"2. What box 3 takes, per €100 invested",
+  "x.s2":"2. What box 3 takes in retirement, per €100 invested",
   "x.s2t":"Box 3 is charged every year and is paid out of the dividends. This is per €100 above the tax-free amount.",
   "x.div":"dividend","x.tax":"tax","x.left":"left to spend",
   "x.s2new":"The new box 3 also taxes the {g} price growth per €100, even though you don't sell, so that tax comes out of the dividends too.",
@@ -55,7 +55,7 @@ const TEXT = {
   "x.noTax":"This is below the tax-free amount, so no box 3 tax: needed = yearly cost ÷ dividend yield.",
   "x.never":"The bottom of the formula is zero or less: box 3 takes all of the dividends, so no portfolio is big enough.",
   "x.s4":"4. Year-by-year projection",
-  "x.s4t":"Each year: next year's portfolio = portfolio + dividends + price growth − box 3 tax + invested − spent. While you work, invested = salary × {p}, and the salary rises {r} a year. After you retire, spent = the yearly cost (rising with inflation) plus any mortgage payments after interest deduction. When the dividends after tax fall short, the rest comes from selling shares. \"You will have\" is the portfolio at the start of age {age}. The year-by-year table shows every step.",
+  "x.s4t":"Each year: next year's portfolio = portfolio + dividends + price growth − box 3 tax + invested − spent. While you work it grows at your while-working ETF figures ({wy} dividend + {wg} growth, dividends reinvested); from retirement it uses the retirement ETF ({ry} dividend + {rg} growth). While you work, invested = salary × {p}, and the salary rises {r} a year. After you retire, spent = the yearly cost (rising with inflation) plus any mortgage payments after interest deduction. When the dividends after tax fall short, the rest comes from selling shares. \"You will have\" is the portfolio at the start of age {age}. The year-by-year table shows every step.",
   "x.s5":"5. How much to invest (reverse calculation)",
   "x.s5t":"The projection is run again with different amounts until the portfolio at age {age} just reaches the amount needed. \"Invest each month\" is what you put in every month from now, rising {r} a year with your raises (shown as a % of your salary too). \"Or have invested today\" is the lump sum you would need now instead of {start}, while still investing {p} of your salary.",
   "x.s6":"6. Mortgage",
@@ -67,7 +67,7 @@ const esc = s => String(s ?? "").replace(/[<>&'"]/g, c => ({"<":"&lt;",">":"&gt;
 
 const NOW_YEAR = new Date().getFullYear();
 const R_FIELDS = {age:35,retire:60,until:95,salary:50000,raise:2.5,invest:20,start:25000,
-  cost:3000,infl:2.5,yield:3.5,growth:3,oRate:36,oDeemed:5.88,oFree:57684,nRate:36,nFree:1800,mBal:250000,mDed:37.48,mWoz:400000,mForfait:0.35};
+  cost:3000,infl:2.5,wYield:2,wGrowth:8.3,yield:3.5,growth:3,oRate:36,oDeemed:5.88,oFree:57684,nRate:36,nFree:1800,mBal:250000,mDed:37.48,mWoz:400000,mForfait:0.35};
 const R_DEFAULT_MORT = [{from:NOW_YEAR,to:NOW_YEAR+9,rate:3.8,pay:""},{from:NOW_YEAR+10,to:NOW_YEAR+24,rate:4.2,pay:""}];
 
 const rNum = id => { const v = Number($("#r-"+id).value); return Number.isFinite(v) ? v : 0; };
@@ -168,7 +168,8 @@ function simulate(regime,inp,investPct,mort,start=inp.start){
   for(let age=inp.age, yr=NOW_YEAR; age<=inp.until; age++, yr++){
     const f=Math.pow(1+inp.infl/100,yr-NOW_YEAR), working=age<inp.retire;
     const m=mort.get(yr)||{interest:0,paid:0,refund:0,net:0,bal:mort.size?[...mort.values()].pop().bal:Math.max(0,inp.mBal)};
-    const div=w*inp.yield/100, gain=w*inp.growth/100, tax=box3(regime,inp,w,div,gain,f);
+    const yl=working?inp.wYield:inp.yield, gr=working?inp.wGrowth:inp.growth;
+    const div=w*yl/100, gain=w*gr/100, tax=box3(regime,inp,w,div,gain,f);
     const contrib=working?salary*investPct/100:0;
     const spend=working?0:inp.cost*12*f+m.net;
     if(!working&&firstSell==null&&div-tax<spend-0.5) firstSell=age;
@@ -236,7 +237,7 @@ ${step(t("x.s2"),t("x.s2t"),calc([
   +(nw?`<p>${esc(t("x.s2new",{g:m2(inp.growth)}))}</p>`:""))}
 ${step(t("x.s3"),t("x.s3t",{year:o.yr,free:nw?`${money(oFree)} (old) and ${money(nFree)} (new)`:money(oFree),partner:inp.partner?t("x.partner"):""}),
   calc(needLine("old",o))+(nw?calc(needLine("new",nw)):""))}
-${step(t("x.s4"),t("x.s4t",{p:pc(inp.invest),r:pc(inp.raise),age:inp.retire}))}
+${step(t("x.s4"),t("x.s4t",{p:pc(inp.invest),r:pc(inp.raise),age:inp.retire,wy:pc(inp.wYield),wg:pc(inp.wGrowth),ry:pc(inp.yield),rg:pc(inp.growth)}))}
 ${step(t("x.s5"),t("x.s5t",{age:inp.retire,r:pc(inp.raise),start:money(inp.start),p:pc(inp.invest)}))}
 ${step(t("x.s6"),t("x.s6t",{forfait:pc(inp.mForfait)}),mortCalc(inp,mort))}
 </details>`;
@@ -291,7 +292,8 @@ function table(o,nw){
 
 function recalc(){
   const inp=readInputs(); saveInputs(inp);
-  document.querySelectorAll(".r-preset").forEach(b=>b.setAttribute("aria-pressed",String(Number(b.dataset.yield)===inp.yield&&Number(b.dataset.growth)===inp.growth)));
+  document.querySelectorAll(".r-preset").forEach(b=>{ const w=b.dataset.phase==="w";
+    b.setAttribute("aria-pressed",String(Number(b.dataset.yield)===(w?inp.wYield:inp.yield)&&Number(b.dataset.growth)===(w?inp.wGrowth:inp.growth))); });
   if(inp.retire<inp.age) inp.retire=inp.age;
   if(inp.until<inp.retire) inp.until=inp.retire;
   const mort=applyDeduction(mortgageYears(inp.mBal,inp.mort),inp);
@@ -319,8 +321,9 @@ window.retireInit = function () {
     loadInputs();
     $("#r-form").addEventListener("input", recalc);
     document.querySelectorAll(".r-preset").forEach(b => b.addEventListener("click", () => {
-      $("#r-yield").value = b.dataset.yield;
-      $("#r-growth").value = b.dataset.growth;
+      const w = b.dataset.phase === "w";
+      $(w ? "#r-wYield" : "#r-yield").value = b.dataset.yield;
+      $(w ? "#r-wGrowth" : "#r-growth").value = b.dataset.growth;
       recalc();
     }));
     $("#r-form").addEventListener("submit", e => e.preventDefault());

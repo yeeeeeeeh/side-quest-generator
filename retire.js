@@ -25,7 +25,7 @@ const TEXT = {
   "r.pct":"Invest {p}% of salary to get there","r.pctNo":"Not reachable even at 100% of salary",
   "r.never":"Not possible on dividends alone: after tax the dividends never cover the cost.",
   "r.atRetire":"At age {age} ({year}) you need {cost} a year: {month} a month{mort}.",
-  "r.atRetireMort":", including {m} a year of mortgage",
+  "r.atRetireMort":", including {m} a year of mortgage after interest deduction",
   "r.afterMort":"Once the mortgage is paid off: {v} needed.",
   "r.mortLeft":"Mortgage still owed at retirement: {v}.",
   "r.netDiv":"Dividends after tax in the first retirement year: {v} a year.",
@@ -35,14 +35,14 @@ const TEXT = {
   "r.legOld":"Old box 3","r.legNew":"New box 3","r.legNeed":"Needed","r.legRetire":"Retire",
   "r.table":"Year by year",
   "c.year":"Year","c.age":"Age","c.salary":"Salary","c.contrib":"Invested","c.spend":"Spent",
-  "c.left":"Salary left","c.mInt":"Mortgage interest","c.mPaid":"Mortgage paid","c.mBal":"Mortgage owed",
+  "c.left":"Salary left","c.mInt":"Mortgage interest","c.mPaid":"Mortgage paid","c.mRef":"Interest deduction","c.mBal":"Mortgage owed",
   "c.wOld":"Portfolio (old)","c.taxOld":"Tax (old)","c.wNew":"Portfolio (new)","c.taxNew":"Tax (new)",
   "r.disc":"An estimate, not financial advice. Returns are assumed steady every year; real markets are not.",
   "x.h":"How this is calculated",
   "x.intro":"Every step below uses the numbers you entered, so you can check it by hand.",
   "x.s1":"1. Yearly cost when you retire",
   "x.s1t":"Your monthly cost grows with inflation every year from now until you retire in {year} ({n} years).",
-  "x.mort":"mortgage payments that year",
+  "x.mort":"mortgage that year after interest deduction",
   "x.s2":"2. What box 3 takes, per €100 invested",
   "x.s2t":"Box 3 is charged every year and is paid out of the dividends. This is per €100 above the tax-free amount.",
   "x.div":"dividend","x.tax":"tax","x.left":"left to spend",
@@ -55,11 +55,11 @@ const TEXT = {
   "x.noTax":"This is below the tax-free amount, so no box 3 tax: needed = yearly cost ÷ dividend yield.",
   "x.never":"The bottom of the formula is zero or less: box 3 takes all of the dividends, so no portfolio is big enough.",
   "x.s4":"4. Year-by-year projection",
-  "x.s4t":"Each year: next year's portfolio = portfolio + dividends + price growth − box 3 tax + invested − spent. While you work, invested = salary × {p}, and the salary rises {r} a year. After you retire, spent = the yearly cost (rising with inflation) plus any mortgage payments. When the dividends after tax fall short, the rest comes from selling shares. \"You will have\" is the portfolio at the start of age {age}. The year-by-year table shows every step.",
+  "x.s4t":"Each year: next year's portfolio = portfolio + dividends + price growth − box 3 tax + invested − spent. While you work, invested = salary × {p}, and the salary rises {r} a year. After you retire, spent = the yearly cost (rising with inflation) plus any mortgage payments after interest deduction. When the dividends after tax fall short, the rest comes from selling shares. \"You will have\" is the portfolio at the start of age {age}. The year-by-year table shows every step.",
   "x.s5":"5. % of salary needed",
   "x.s5t":"The projection is run again with different percentages until the portfolio at age {age} just reaches the amount needed.",
   "x.s6":"6. Mortgage",
-  "x.s6t":"Month by month: interest = balance × rate ÷ 12, and the rest of the payment pays off the loan. A period with no payment filled in uses an annuity, payment = balance × r ÷ (1 − (1 + r)^−n), where r is the monthly rate and n is the months left until the last period ends. The interest deduction (hypotheekrenteaftrek) is not included."
+  "x.s6t":"Month by month: interest = balance × rate ÷ 12, and the rest of the payment pays off the loan. A period with no payment filled in uses an annuity, payment = balance × r ÷ (1 − (1 + r)^−n), where r is the monthly rate and n is the months left until the last period ends. Interest deduction (hypotheekrenteaftrek): each year you get back deduction rate × (mortgage interest − imputed rental value), where the imputed rental value (eigenwoningforfait) = WOZ value × {forfait}, and the WOZ value rises with inflation. This refund lowers what the mortgage costs you, both from your salary and from the portfolio. The Hillen phase-out and the 30-year limit are not modelled."
 };
 const t = (key, params) => String(TEXT[key] ?? key).replace(/\{(\w+)\}/g, (_, k) => params && params[k] != null ? params[k] : "");
 const $ = s => document.querySelector(s);
@@ -67,7 +67,7 @@ const esc = s => String(s ?? "").replace(/[<>&'"]/g, c => ({"<":"&lt;",">":"&gt;
 
 const NOW_YEAR = new Date().getFullYear();
 const R_FIELDS = {age:35,retire:60,until:95,salary:50000,raise:2.5,invest:20,start:25000,
-  cost:3000,infl:2.5,yield:3.5,growth:3,oRate:36,oDeemed:5.88,oFree:57684,nRate:36,nFree:1800,mBal:250000};
+  cost:3000,infl:2.5,yield:3.5,growth:3,oRate:36,oDeemed:5.88,oFree:57684,nRate:36,nFree:1800,mBal:250000,mDed:37.48,mWoz:400000,mForfait:0.35};
 const R_DEFAULT_MORT = [{from:NOW_YEAR,to:NOW_YEAR+9,rate:3.8,pay:""},{from:NOW_YEAR+10,to:NOW_YEAR+24,rate:4.2,pay:""}];
 
 const rNum = id => { const v = Number($("#r-"+id).value); return Number.isFinite(v) ? v : 0; };
@@ -127,6 +127,18 @@ function mortgageYears(bal,periods){
   return out;
 }
 
+// Mortgage interest deduction per year: rate × (interest − WOZ × eigenwoningforfait), WOZ rising with inflation.
+// net = what the mortgage really costs that year after the refund.
+function applyDeduction(mort,inp){
+  for(const [yr,m] of mort){
+    const woz=inp.mWoz*Math.pow(1+inp.infl/100,yr-NOW_YEAR);
+    m.forfait=m.interest>0?woz*inp.mForfait/100:0;
+    m.refund=inp.mDed/100*Math.max(0,m.interest-m.forfait);
+    m.net=m.paid-m.refund;
+  }
+  return mort;
+}
+
 // Box 3 tax for one year on a portfolio of w. f = inflation index for the tax-free amounts.
 function box3(regime,inp,w,div,gain,f){
   const people=inp.partner?2:1;
@@ -154,13 +166,13 @@ function simulate(regime,inp,investPct,mort){
   const rows=[]; let w=inp.start, salary=inp.salary, firstSell=null, broke=null;
   for(let age=inp.age, yr=NOW_YEAR; age<=inp.until; age++, yr++){
     const f=Math.pow(1+inp.infl/100,yr-NOW_YEAR), working=age<inp.retire;
-    const m=mort.get(yr)||{interest:0,paid:0,bal:mort.size?[...mort.values()].pop().bal:Math.max(0,inp.mBal)};
+    const m=mort.get(yr)||{interest:0,paid:0,refund:0,net:0,bal:mort.size?[...mort.values()].pop().bal:Math.max(0,inp.mBal)};
     const div=w*inp.yield/100, gain=w*inp.growth/100, tax=box3(regime,inp,w,div,gain,f);
     const contrib=working?salary*investPct/100:0;
-    const spend=working?0:inp.cost*12*f+m.paid;
+    const spend=working?0:inp.cost*12*f+m.net;
     if(!working&&firstSell==null&&div-tax<spend-0.5) firstSell=age;
-    rows.push({yr,age,salary:working?salary:0,contrib,spend,left:working?salary-contrib-m.paid:0,
-      mInt:m.interest,mPaid:m.paid,mBal:m.bal,w,tax});
+    rows.push({yr,age,salary:working?salary:0,contrib,spend,left:working?salary-contrib-m.net:0,
+      mInt:m.interest,mPaid:m.paid,mRef:m.refund,mBal:m.bal,w,tax});
     w=Math.max(0,w+div+gain-tax+contrib-spend);
     if(w<=0&&broke==null&&!working) broke=age;
     if(working) salary*=1+inp.raise/100;
@@ -170,7 +182,7 @@ function simulate(regime,inp,investPct,mort){
 
 function analyse(regime,inp,mort){
   const yrs=inp.retire-inp.age, yr=NOW_YEAR+yrs, f=Math.pow(1+inp.infl/100,yrs);
-  const m=mort.get(yr), mPaid=m?m.paid:0, costYear=inp.cost*12*f;
+  const m=mort.get(yr), mPaid=m?m.net:0, costYear=inp.cost*12*f;
   const need=needed(regime,inp,costYear+mPaid,f), needNoMort=needed(regime,inp,costYear,f);
   const atRetire=s=>{ const row=s.rows.find(r=>r.age===inp.retire); return row?row.w:s.rows.length?s.rows[s.rows.length-1].w:inp.start; };
   const sim=simulate(regime,inp,inp.invest,mort), have=atRetire(sim);
@@ -187,8 +199,16 @@ function analyse(regime,inp,mort){
 }
 
 /* ---------- output ---------- */
+// First mortgage year's interest deduction, worked out.
+function mortCalc(inp,mort){
+  const first=[...mort].find(([,m])=>m.interest>0); if(!first) return "";
+  const [yr,m]=first, pc=v=>Number(v.toFixed(2))+"%";
+  return `<div class="calc"><div>${esc(yr)}: ${esc(pc(inp.mDed))} × (${esc(money(m.interest))} − ${esc(money(m.forfait))}) = ${esc(money(m.refund))} back</div>
+<div>${esc(money(m.paid))} paid − ${esc(money(m.refund))} = ${esc(money(m.net))} real cost (${esc(money(m.net/12))} a month)</div></div>`;
+}
+
 // Step-by-step working with the user's own numbers.
-function explain(inp,o,nw){
+function explain(inp,o,nw,mort){
   const pc=v=>Number(v.toFixed(2))+"%", m2=v=>new Intl.NumberFormat("en-GB",{style:"currency",currency:"EUR",minimumFractionDigits:2,maximumFractionDigits:2}).format(v);
   const yrs=inp.retire-inp.age, f=Math.pow(1+inp.infl/100,yrs), people=inp.partner?2:1;
   const cost=o.costYear+o.mPaid, oFree=inp.oFree*people*f, nFree=inp.nFree*people*f;
@@ -216,7 +236,7 @@ ${step(t("x.s3"),t("x.s3t",{year:o.yr,oFree:money(oFree),nFree:money(nFree),part
   calc(needLine("old",o))+calc(needLine("new",nw)))}
 ${step(t("x.s4"),t("x.s4t",{p:pc(inp.invest),r:pc(inp.raise),age:inp.retire}))}
 ${step(t("x.s5"),t("x.s5t",{age:inp.retire}))}
-${step(t("x.s6"),t("x.s6t"))}
+${step(t("x.s6"),t("x.s6t",{forfait:pc(inp.mForfait)}),mortCalc(inp,mort))}
 </details>`;
 }
 
@@ -258,9 +278,9 @@ ${line(rowsO,"ch-old")}${line(rowsN,"ch-new")}${dot(o.need,"ch-need-old")}${dot(
 }
 
 function table(o,nw){
-  const cols=["c.year","c.age","c.salary","c.contrib","c.left","c.spend","c.mInt","c.mPaid","c.mBal","c.wOld","c.taxOld","c.wNew","c.taxNew"];
+  const cols=["c.year","c.age","c.salary","c.contrib","c.left","c.spend","c.mInt","c.mPaid","c.mRef","c.mBal","c.wOld","c.taxOld","c.wNew","c.taxNew"];
   const body=o.sim.rows.map((r,i)=>{ const n=nw.sim.rows[i];
-    const cells=[r.yr,r.age,money(r.salary),money(r.contrib),money(r.left),money(r.spend),money(r.mInt),money(r.mPaid),money(r.mBal),money(r.w),money(r.tax),money(n.w),money(n.tax)];
+    const cells=[r.yr,r.age,money(r.salary),money(r.contrib),money(r.left),money(r.spend),money(r.mInt),money(r.mPaid),money(r.mRef),money(r.mBal),money(r.w),money(r.tax),money(n.w),money(n.tax)];
     return `<tr${r.spend>0?' class="ret"':""}>${cells.map(c=>`<td>${esc(c)}</td>`).join("")}</tr>`; }).join("");
   return `<div class="tblwrap"><table class="rtable"><thead><tr>${cols.map(c=>`<th>${esc(t(c))}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table></div>`;
 }
@@ -270,7 +290,7 @@ function recalc(){
   document.querySelectorAll(".r-preset").forEach(b=>b.setAttribute("aria-pressed",String(Number(b.dataset.yield)===inp.yield&&Number(b.dataset.growth)===inp.growth)));
   if(inp.retire<inp.age) inp.retire=inp.age;
   if(inp.until<inp.retire) inp.until=inp.retire;
-  const mort=mortgageYears(inp.mBal,inp.mort);
+  const mort=applyDeduction(mortgageYears(inp.mBal,inp.mort),inp);
   const o=analyse("old",inp,mort), nw=analyse("new",inp,mort);
   const head=t("r.atRetire",{age:inp.retire,year:o.yr,cost:money(o.costYear+o.mPaid),month:money((o.costYear+o.mPaid)/12),
     mort:o.mPaid>0?t("r.atRetireMort",{m:money(o.mPaid)}):""});
@@ -282,7 +302,7 @@ function recalc(){
   $("#r-out").innerHTML=`<p class="rhead">${esc(head+left)}</p>
 <div class="rcards">${card("old",o,inp)}${card("new",nw,inp)}</div>
 <section><h2 class="rsec">${esc(t("r.chart"))}</h2>${chart(inp,o,nw)}</section>
-${explain(inp,o,nw)}
+${explain(inp,o,nw,mort)}
 <details><summary>${esc(t("r.table"))}</summary>${table(o,nw)}</details>
 <p class="sub">${esc(t("r.disc"))}</p>`;
 }

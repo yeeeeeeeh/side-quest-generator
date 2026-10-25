@@ -350,9 +350,12 @@
           </fieldset>
           <fieldset class="r-set"><legend>Mortgage</legend>
             <label class="r-field"><span class="filter-label">Mortgage balance today</span><input class="gw-search" id="r-mBal" type="number" inputmode="decimal" step="1000" /></label>
+            <p class="r-sub">Interest deduction (hypotheekrenteaftrek)</p>
+            <div class="r-grid3"><label class="r-field"><span class="filter-label">Deduction rate %</span><input class="gw-search" id="r-mDed" type="number" inputmode="decimal" step="0.01" /></label><label class="r-field"><span class="filter-label">Home WOZ value</span><input class="gw-search" id="r-mWoz" type="number" inputmode="decimal" step="1000" /></label><label class="r-field"><span class="filter-label">Eigenwoning&shy;forfait %</span><input class="gw-search" id="r-mForfait" type="number" inputmode="decimal" step="0.01" /></label></div>
+            <p class="r-hint">You get back deduction rate × (interest − WOZ × forfait) each year. Defaults are 2025: 37.48% and 0.35%. Set the rate to 0 to leave it out.</p>
             <table class="r-mtable"><thead><tr><th>From year</th><th>To year</th><th>Interest %</th><th>Per month</th><th></th></tr></thead><tbody id="r-mRows"></tbody></table>
             <div><button type="button" class="btn r-add" id="r-mAdd">+ Add period</button></div>
-            <p class="r-hint">Leave "per month" empty for a standard annuity that is paid off by the last year. Payments come from your salary while you work, and from the portfolio after you retire.</p>
+            <p class="r-hint">Leave "per month" empty for a standard annuity that is paid off by the last year. Payments, minus the interest deduction, come from your salary while you work and from the portfolio after you retire.</p>
           </fieldset>
           <div class="r-sticky">
             <div class="r-summary" id="r-summary" aria-live="polite"></div>
@@ -383,7 +386,7 @@
   <script src="greenwheels.js?v=2"></script>
   <script src="ikea.js?v=1"></script>
   <script src="shop.js?v=1"></script>
-  <script src="retire.js?v=4"></script>
+  <script src="retire.js?v=5"></script>
   <script src="script.js?v=8"></script>
 </body>
 </html>

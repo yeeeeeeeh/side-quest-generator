@@ -1405,6 +1405,3 @@ body.webview-open { overflow: hidden; }
 .r-summary b { color: var(--text); }
 .r-summary .ok { color: var(--success); font-weight: 600; }
 .r-summary .bad { color: var(--danger); font-weight: 600; }
-.r-update { width: 100%; justify-content: center; padding: 10px 16px; }
-@keyframes r-flash { from { box-shadow: 0 0 0 3px var(--primary); } to { box-shadow: 0 0 0 3px transparent; } }
-.r-out.r-flash { border-radius: var(--radius); animation: r-flash 1.2s ease-out; }

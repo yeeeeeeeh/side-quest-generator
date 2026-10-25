@@ -293,12 +293,6 @@ window.retireInit = function () {
     ready = true;
     loadInputs();
     $("#r-form").addEventListener("input", recalc);
-    $("#r-update").addEventListener("click", () => {
-      recalc();
-      const out = $("#r-out");
-      out.scrollIntoView({behavior: "smooth", block: "start"});
-      out.classList.remove("r-flash"); void out.offsetWidth; out.classList.add("r-flash");
-    });
     document.querySelectorAll(".r-preset").forEach(b => b.addEventListener("click", () => {
       $("#r-yield").value = b.dataset.yield;
       $("#r-growth").value = b.dataset.growth;

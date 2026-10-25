@@ -16,7 +16,7 @@ const TEXT = {
   "r.old":"Old box 3 (deemed return)","r.new":"New box 3 (actual return)",
   "r.oRate":"Tax rate %","r.oDeemed":"Deemed return %","r.oFree":"Tax-free wealth per person",
   "r.nRate":"Tax rate %","r.nFree":"Tax-free return per person",
-  "r.box3Hint":"Defaults are the 2025 rules and the new-system bill. Tax-free amounts and your monthly cost rise with inflation. Dividend withholding tax is assumed to be credited.",
+  "r.box3Hint":"Defaults are the 2026 rules and the new-system bill. Tax-free amounts and your monthly cost rise with inflation. Dividend withholding tax is assumed to be credited.",
   "r.mort":"Mortgage","r.mBal":"Mortgage balance today",
   "r.mFrom":"From year","r.mTo":"To year","r.mRate":"Interest %","r.mPay":"Per month",
   "r.mPayPh":"auto","r.mAdd":"Add period","r.mDel":"Remove period",
@@ -59,7 +59,7 @@ const TEXT = {
   "x.s5":"5. How much to invest (reverse calculation)",
   "x.s5t":"The projection is run again with different amounts until the portfolio at age {age} just reaches the amount needed. \"Invest each month\" is what you put in every month from now, rising {r} a year with your raises (shown as a % of your salary too). \"Or have invested today\" is the lump sum you would need now instead of {start}, while still investing {p} of your salary.",
   "x.s6":"6. Mortgage",
-  "x.s6t":"Month by month: interest = balance × rate ÷ 12, and the rest of the payment pays off the loan. A period with no payment filled in uses an annuity, payment = balance × r ÷ (1 − (1 + r)^−n), where r is the monthly rate and n is the months left until the last period ends. Interest deduction (hypotheekrenteaftrek): each year you get back deduction rate × (mortgage interest − imputed rental value), where the imputed rental value (eigenwoningforfait) = WOZ value × {forfait}, and the WOZ value rises with inflation. This refund lowers what the mortgage costs you, both from your salary and from the portfolio. The Hillen phase-out and the 30-year limit are not modelled."
+  "x.s6t":"Month by month: interest = balance × rate ÷ 12, and the rest of the payment pays off the loan. A period with no payment filled in uses an annuity, payment = balance × r ÷ (1 − (1 + r)^−n), where r is the monthly rate and n is the months left until the last period ends. Interest deduction (hypotheekrenteaftrek): each year you get back deduction rate × (mortgage interest − imputed rental value), where the imputed rental value (eigenwoningforfait) = WOZ value × {forfait}, and the WOZ value rises with inflation. This refund lowers what the mortgage costs you while you work. It is a reduction of income tax on your salary (box 1), so once you retire and live on box 3 dividends there is no tax left to reduce and the refund stops. The Hillen phase-out and the 30-year limit are not modelled."
 };
 const t = (key, params) => String(TEXT[key] ?? key).replace(/\{(\w+)\}/g, (_, k) => params && params[k] != null ? params[k] : "");
 const $ = s => document.querySelector(s);
@@ -67,7 +67,7 @@ const esc = s => String(s ?? "").replace(/[<>&'"]/g, c => ({"<":"&lt;",">":"&gt;
 
 const NOW_YEAR = new Date().getFullYear();
 const R_FIELDS = {age:35,retire:60,until:95,salary:50000,raise:2.5,invest:20,start:25000,
-  cost:3000,infl:2.5,wYield:2,wGrowth:8.3,yield:3.5,growth:3,oRate:36,oDeemed:5.88,oFree:57684,nRate:36,nFree:1800,mBal:250000,mDed:37.48,mWoz:400000,mForfait:0.35};
+  cost:3000,infl:2.5,wYield:2,wGrowth:8.3,yield:3.5,growth:3,oRate:36,oDeemed:6,oFree:59357,nRate:36,nFree:1800,mBal:250000,mDed:37.56,mWoz:400000,mForfait:0.35};
 const R_DEFAULT_MORT = [{from:NOW_YEAR,to:NOW_YEAR+9,rate:3.8,pay:""},{from:NOW_YEAR+10,to:NOW_YEAR+24,rate:4.2,pay:""}];
 
 const rNum = id => { const v = Number($("#r-"+id).value); return Number.isFinite(v) ? v : 0; };
@@ -99,6 +99,8 @@ function readInputs(){
 function saveInputs(o){ try{ localStorage.setItem("retire",JSON.stringify(o)); }catch(_){} }
 function loadInputs(){
   let o=null; try{ o=JSON.parse(localStorage.getItem("retire")||"null"); }catch(_){}
+  // Saved 2025 defaults move to the 2026 figures; values the user changed are kept.
+  if(o){ for(const [k,from,to] of [["oDeemed",5.88,6],["oFree",57684,59357],["mDed",37.48,37.56]]) if(o[k]===from) o[k]=to; }
   for(const k in R_FIELDS) $("#r-"+k).value = o&&Number.isFinite(o[k]) ? o[k] : R_FIELDS[k];
   $("#r-partner").checked=!!(o&&o.partner);
   $("#r-showNew").checked=!!(o&&o.showNew);
@@ -129,12 +131,14 @@ function mortgageYears(bal,periods){
 }
 
 // Mortgage interest deduction per year: rate × (interest − WOZ × eigenwoningforfait), WOZ rising with inflation.
+// It only lowers income tax on box 1 income (salary), so there is no refund once you retire on box 3 dividends.
 // net = what the mortgage really costs that year after the refund.
 function applyDeduction(mort,inp){
+  const retireYear=NOW_YEAR+inp.retire-inp.age;
   for(const [yr,m] of mort){
     const woz=inp.mWoz*Math.pow(1+inp.infl/100,yr-NOW_YEAR);
     m.forfait=m.interest>0?woz*inp.mForfait/100:0;
-    m.refund=inp.mDed/100*Math.max(0,m.interest-m.forfait);
+    m.refund=yr<retireYear?inp.mDed/100*Math.max(0,m.interest-m.forfait):0;
     m.net=m.paid-m.refund;
   }
   return mort;

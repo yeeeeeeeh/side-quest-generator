@@ -1405,3 +1405,9 @@ body.webview-open { overflow: hidden; }
 .r-summary b { color: var(--text); }
 .r-summary .ok { color: var(--success); font-weight: 600; }
 .r-summary .bad { color: var(--danger); font-weight: 600; }
+.r-newbox { display: flex; flex-direction: column; gap: 10px; }
+.r-newbox[hidden] { display: none; }
+.r-reverse { margin: 10px 0 8px; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.r-reverse h4 { margin: 0 0 6px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--primary); }
+.r-reverse .kv:last-child { border-bottom: 0; }
+.r-reverse small { display: block; margin-top: 2px; font-size: 0.75rem; color: var(--text-muted); }

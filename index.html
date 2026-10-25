@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=11" />
+  <link rel="stylesheet" href="style.css?v=12" />
 </head>
 <body>
   <!-- Header -->
@@ -342,10 +342,13 @@
           </fieldset>
           <fieldset class="r-set"><legend>Box 3 tax</legend>
             <label class="r-chk"><input type="checkbox" id="r-partner" /> Fiscal partner (doubles the tax-free amounts)</label>
+            <label class="r-chk"><input type="checkbox" id="r-showNew" /> Also show new box 3 (planned from 2028)</label>
             <p class="r-sub">Old box 3 (deemed return)</p>
             <div class="r-grid3"><label class="r-field"><span class="filter-label">Tax rate %</span><input class="gw-search" id="r-oRate" type="number" inputmode="decimal" step="0.1" /></label><label class="r-field"><span class="filter-label">Deemed return %</span><input class="gw-search" id="r-oDeemed" type="number" inputmode="decimal" step="0.01" /></label><label class="r-field"><span class="filter-label">Tax-free wealth per person</span><input class="gw-search" id="r-oFree" type="number" inputmode="decimal" step="100" /></label></div>
+            <div id="r-newBox" class="r-newbox" hidden>
             <p class="r-sub">New box 3 (actual return)</p>
             <div class="r-grid2"><label class="r-field"><span class="filter-label">Tax rate %</span><input class="gw-search" id="r-nRate" type="number" inputmode="decimal" step="0.1" /></label><label class="r-field"><span class="filter-label">Tax-free return per person</span><input class="gw-search" id="r-nFree" type="number" inputmode="decimal" step="100" /></label></div>
+            </div>
             <p class="r-hint">Defaults are the 2025 rules and the new-system bill. Tax-free amounts and your monthly cost rise with inflation. Dividend withholding tax is assumed to be credited.</p>
           </fieldset>
           <fieldset class="r-set"><legend>Mortgage</legend>
@@ -386,7 +389,7 @@
   <script src="greenwheels.js?v=2"></script>
   <script src="ikea.js?v=1"></script>
   <script src="shop.js?v=1"></script>
-  <script src="retire.js?v=5"></script>
+  <script src="retire.js?v=6"></script>
   <script src="script.js?v=8"></script>
 </body>
 </html>

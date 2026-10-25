@@ -48,7 +48,7 @@ const TEXT = {
   "x.div":"dividend","x.tax":"tax","x.left":"left to spend",
   "x.s2new":"The new box 3 also taxes the {g} price growth per €100, even though you don't sell, so that tax comes out of the dividends too.",
   "x.s3":"3. Portfolio needed at retirement",
-  "x.s3t":"The smallest portfolio whose dividends, after box 3 tax, pay the yearly cost from step 1. In {year} the tax-free amounts have grown with inflation to {oFree} (old) and {nFree} (new){partner}.",
+  "x.s3t":"The smallest portfolio whose dividends, after box 3 tax, pay the yearly cost from step 1. In {year} the tax-free amounts have grown with inflation to {free}{partner}.",
   "x.partner":", for two partners",
   "x.fOld":"needed = (yearly cost − tax rate × deemed return × tax-free wealth) ÷ (dividend yield − tax rate × deemed return)",
   "x.fNew":"needed = (yearly cost − tax rate × tax-free return) ÷ (dividend yield − tax rate × (dividend yield + price growth))",
@@ -56,8 +56,8 @@ const TEXT = {
   "x.never":"The bottom of the formula is zero or less: box 3 takes all of the dividends, so no portfolio is big enough.",
   "x.s4":"4. Year-by-year projection",
   "x.s4t":"Each year: next year's portfolio = portfolio + dividends + price growth − box 3 tax + invested − spent. While you work, invested = salary × {p}, and the salary rises {r} a year. After you retire, spent = the yearly cost (rising with inflation) plus any mortgage payments after interest deduction. When the dividends after tax fall short, the rest comes from selling shares. \"You will have\" is the portfolio at the start of age {age}. The year-by-year table shows every step.",
-  "x.s5":"5. % of salary needed",
-  "x.s5t":"The projection is run again with different percentages until the portfolio at age {age} just reaches the amount needed.",
+  "x.s5":"5. How much to invest (reverse calculation)",
+  "x.s5t":"The projection is run again with different amounts until the portfolio at age {age} just reaches the amount needed. \"Invest each month\" is what you put in every month from now, rising {r} a year with your raises (shown as a % of your salary too). \"Or have invested today\" is the lump sum you would need now instead of {start}, while still investing {p} of your salary.",
   "x.s6":"6. Mortgage",
   "x.s6t":"Month by month: interest = balance × rate ÷ 12, and the rest of the payment pays off the loan. A period with no payment filled in uses an annuity, payment = balance × r ÷ (1 − (1 + r)^−n), where r is the monthly rate and n is the months left until the last period ends. Interest deduction (hypotheekrenteaftrek): each year you get back deduction rate × (mortgage interest − imputed rental value), where the imputed rental value (eigenwoningforfait) = WOZ value × {forfait}, and the WOZ value rises with inflation. This refund lowers what the mortgage costs you, both from your salary and from the portfolio. The Hillen phase-out and the 30-year limit are not modelled."
 };
@@ -94,13 +94,14 @@ function readMort(){
 }
 function readInputs(){
   const o={}; for(const k in R_FIELDS) o[k]=rNum(k);
-  o.partner=$("#r-partner").checked; o.mort=readMort(); return o;
+  o.partner=$("#r-partner").checked; o.showNew=$("#r-showNew").checked; o.mort=readMort(); return o;
 }
 function saveInputs(o){ try{ localStorage.setItem("retire",JSON.stringify(o)); }catch(_){} }
 function loadInputs(){
   let o=null; try{ o=JSON.parse(localStorage.getItem("retire")||"null"); }catch(_){}
   for(const k in R_FIELDS) $("#r-"+k).value = o&&Number.isFinite(o[k]) ? o[k] : R_FIELDS[k];
   $("#r-partner").checked=!!(o&&o.partner);
+  $("#r-showNew").checked=!!(o&&o.showNew);
   (o&&Array.isArray(o.mort)?o.mort:R_DEFAULT_MORT).forEach(mortRow);
 }
 
@@ -162,8 +163,8 @@ function needed(regime,inp,spend,f){
   return den>0?(spend-r*free)/den:Infinity;
 }
 
-function simulate(regime,inp,investPct,mort){
-  const rows=[]; let w=inp.start, salary=inp.salary, firstSell=null, broke=null;
+function simulate(regime,inp,investPct,mort,start=inp.start){
+  const rows=[]; let w=start, salary=inp.salary, firstSell=null, broke=null;
   for(let age=inp.age, yr=NOW_YEAR; age<=inp.until; age++, yr++){
     const f=Math.pow(1+inp.infl/100,yr-NOW_YEAR), working=age<inp.retire;
     const m=mort.get(yr)||{interest:0,paid:0,refund:0,net:0,bal:mort.size?[...mort.values()].pop().bal:Math.max(0,inp.mBal)};
@@ -186,16 +187,17 @@ function analyse(regime,inp,mort){
   const need=needed(regime,inp,costYear+mPaid,f), needNoMort=needed(regime,inp,costYear,f);
   const atRetire=s=>{ const row=s.rows.find(r=>r.age===inp.retire); return row?row.w:s.rows.length?s.rows[s.rows.length-1].w:inp.start; };
   const sim=simulate(regime,inp,inp.invest,mort), have=atRetire(sim);
-  let pct=null;
+  // Reverse: what gets you to `need` by retirement. Both searches are bisections on a monotonic result.
+  const reach=(pct,start)=>atRetire(simulate(regime,inp,pct,mort,start))>=need;
+  const solve=(ok,hi)=>{ let lo=0; while(!ok(hi)&&hi<1e12) { lo=hi; hi*=2; } if(!ok(hi)) return Infinity;
+    for(let i=0;i<50;i++){ const mid=(lo+hi)/2; if(ok(mid)) hi=mid; else lo=mid; } return hi; };
+  let pct=null, monthly=null, lump=null;
   if(Number.isFinite(need)){
-    if(atRetire(simulate(regime,inp,100,mort))>=need){
-      let lo=0, hi=100;
-      for(let i=0;i<40;i++){ const mid=(lo+hi)/2; if(atRetire(simulate(regime,inp,mid,mort))>=need) hi=mid; else lo=mid; }
-      pct=hi;
-    } else pct=Infinity;
+    if(inp.salary>0){ pct=reach(0,inp.start)?0:solve(p=>reach(p,inp.start),100); monthly=pct*inp.salary/100/12; }
+    lump=reach(inp.invest,0)?0:solve(st=>reach(inp.invest,st),Math.max(1000,need));
   }
   const div=have*inp.yield/100, netDiv=div-box3(regime,inp,have,div,have*inp.growth/100,f);
-  return {need,needNoMort,have,pct,sim,yr,costYear,mPaid,mortLeft:m?m.bal+m.paid-m.interest:0,netDiv};
+  return {need,needNoMort,have,pct,monthly,lump,sim,yr,costYear,mPaid,mortLeft:m?m.bal+m.paid-m.interest:0,netDiv};
 }
 
 /* ---------- output ---------- */
@@ -230,12 +232,12 @@ function explain(inp,o,nw,mort){
 ${step(t("x.s1"),t("x.s1t",{year:o.yr,n:yrs}),calc([s1]))}
 ${step(t("x.s2"),t("x.s2t"),calc([
   `${t("r.old")}: ${t("x.tax")} = ${pc(inp.oRate)} × ${pc(inp.oDeemed)} × €100 = ${m2(rd)}`, per(rd),
-  `${t("r.new")}: ${t("x.tax")} = ${pc(inp.nRate)} × (${pc(y)} + ${pc(inp.growth)}) × €100 = ${m2(rn)}`, per(rn)])
-  +`<p>${esc(t("x.s2new",{g:m2(inp.growth)}))}</p>`)}
-${step(t("x.s3"),t("x.s3t",{year:o.yr,oFree:money(oFree),nFree:money(nFree),partner:inp.partner?t("x.partner"):""}),
-  calc(needLine("old",o))+calc(needLine("new",nw)))}
+  ...(nw?[`${t("r.new")}: ${t("x.tax")} = ${pc(inp.nRate)} × (${pc(y)} + ${pc(inp.growth)}) × €100 = ${m2(rn)}`, per(rn)]:[])])
+  +(nw?`<p>${esc(t("x.s2new",{g:m2(inp.growth)}))}</p>`:""))}
+${step(t("x.s3"),t("x.s3t",{year:o.yr,free:nw?`${money(oFree)} (old) and ${money(nFree)} (new)`:money(oFree),partner:inp.partner?t("x.partner"):""}),
+  calc(needLine("old",o))+(nw?calc(needLine("new",nw)):""))}
 ${step(t("x.s4"),t("x.s4t",{p:pc(inp.invest),r:pc(inp.raise),age:inp.retire}))}
-${step(t("x.s5"),t("x.s5t",{age:inp.retire}))}
+${step(t("x.s5"),t("x.s5t",{age:inp.retire,r:pc(inp.raise),start:money(inp.start),p:pc(inp.invest)}))}
 ${step(t("x.s6"),t("x.s6t",{forfait:pc(inp.mForfait)}),mortCalc(inp,mort))}
 </details>`;
 }
@@ -245,7 +247,9 @@ function card(regime,a,inp){
   if(!Number.isFinite(a.need)) return `<div class="rcard"><h3>${esc(legend)}</h3><p class="rwarn">${esc(t("r.never"))}</p>
 <div class="kv"><span>${esc(t("r.have"))}</span><b>${esc(money(a.have))}</b></div></div>`;
   const diff=a.have-a.need;
-  const pctTxt=a.pct===Infinity?t("r.pctNo"):a.pct!=null?t("r.pct",{p:a.pct.toFixed(1)}):"";
+  const rev=[];
+  if(a.monthly!=null) rev.push(`<div class="kv"><span>Invest each month from now<small>${esc(Number.isFinite(a.pct)?a.pct.toFixed(1)+"% of salary, rising "+inp.raise+"% a year with your raises":"")}</small></span><b>${esc(Number.isFinite(a.monthly)?money(a.monthly):"—")}</b></div>`);
+  if(a.lump!=null) rev.push(`<div class="kv"><span>Or have invested today<small>instead of ${esc(money(inp.start))}, keeping ${esc(inp.invest)}% of salary</small></span><b>${esc(Number.isFinite(a.lump)?money(a.lump):"—")}</b></div>`);
   const notes=[];
   if(a.mPaid>0&&Number.isFinite(a.needNoMort)) notes.push(t("r.afterMort",{v:money(a.needNoMort)}));
   notes.push(t("r.netDiv",{v:money(a.netDiv)}));
@@ -255,14 +259,14 @@ function card(regime,a,inp){
 <div class="kv"><span>${esc(t("r.need"))}</span><b>${esc(money(a.need))}</b></div>
 <div class="kv"><span>${esc(t("r.have"))}</span><b>${esc(money(a.have))}</b></div>
 <div class="kv ${diff>=0?"ok":"bad"}"><span>${esc(t(diff>=0?"r.surplus":"r.gap"))}</span><b>${esc(money(Math.abs(diff)))}</b></div>
-<p class="rpct ${diff>=0?"ok":"bad"}">${esc(pctTxt)}</p>
+<div class="r-reverse"><h4>${diff>=0?"On track. Enough would be":"To have enough"}</h4>${rev.join("")}</div>
 <ul class="rnotes">${notes.map(n=>`<li>${esc(n)}</li>`).join("")}</ul></div>`;
 }
 
 function chart(inp,o,nw){
   const W=640,H=260,L=52,R=10,T=12,B=28;
-  const rowsO=o.sim.rows, rowsN=nw.sim.rows; if(!rowsO.length) return "";
-  const pts=[...rowsO.map(r=>r.w),...rowsN.map(r=>r.w),...[o.need,nw.need].filter(Number.isFinite)];
+  const rowsO=o.sim.rows, rowsN=nw?nw.sim.rows:[]; if(!rowsO.length) return "";
+  const pts=[...rowsO.map(r=>r.w),...rowsN.map(r=>r.w),...[o.need,nw&&nw.need].filter(Number.isFinite)];
   const maxY=Math.max(1,...pts)*1.05, a0=inp.age, a1=Math.max(inp.age+1,inp.until);
   const x=a=>L+(a-a0)/(a1-a0)*(W-L-R), y=v=>T+(1-v/maxY)*(H-T-B);
   const line=(rows,cls)=>`<polyline class="${cls}" fill="none" stroke-width="2.5" stroke-linejoin="round" points="${rows.map(r=>x(r.age).toFixed(1)+","+y(r.w).toFixed(1)).join(" ")}"/>`;
@@ -273,14 +277,14 @@ function chart(inp,o,nw){
   const dot=(v,cls)=>Number.isFinite(v)?`<circle class="${cls}" cx="${rx}" cy="${y(v)}" r="5" stroke-width="2"/>`:"";
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t("r.chartAlt"))}">${ticks.join("")}
 <line class="ch-retire" x1="${rx}" x2="${rx}" y1="${T}" y2="${H-B}" stroke-dasharray="4 4"/>
-${line(rowsO,"ch-old")}${line(rowsN,"ch-new")}${dot(o.need,"ch-need-old")}${dot(nw.need,"ch-need-new")}</svg>
-<div class="legend"><span class="sw old"></span>${esc(t("r.legOld"))}<span class="sw new"></span>${esc(t("r.legNew"))}<span class="sw need"></span>${esc(t("r.legNeed"))}<span class="sw retire"></span>${esc(t("r.legRetire"))}</div>`;
+${line(rowsO,"ch-old")}${nw?line(rowsN,"ch-new")+dot(nw.need,"ch-need-new"):""}${dot(o.need,"ch-need-old")}</svg>
+<div class="legend"><span class="sw old"></span>${esc(t("r.legOld"))}${nw?`<span class="sw new"></span>${esc(t("r.legNew"))}`:""}<span class="sw need"></span>${esc(t("r.legNeed"))}<span class="sw retire"></span>${esc(t("r.legRetire"))}</div>`;
 }
 
 function table(o,nw){
-  const cols=["c.year","c.age","c.salary","c.contrib","c.left","c.spend","c.mInt","c.mPaid","c.mRef","c.mBal","c.wOld","c.taxOld","c.wNew","c.taxNew"];
-  const body=o.sim.rows.map((r,i)=>{ const n=nw.sim.rows[i];
-    const cells=[r.yr,r.age,money(r.salary),money(r.contrib),money(r.left),money(r.spend),money(r.mInt),money(r.mPaid),money(r.mRef),money(r.mBal),money(r.w),money(r.tax),money(n.w),money(n.tax)];
+  const cols=["c.year","c.age","c.salary","c.contrib","c.left","c.spend","c.mInt","c.mPaid","c.mRef","c.mBal","c.wOld","c.taxOld",...(nw?["c.wNew","c.taxNew"]:[])];
+  const body=o.sim.rows.map((r,i)=>{ const n=nw&&nw.sim.rows[i];
+    const cells=[r.yr,r.age,money(r.salary),money(r.contrib),money(r.left),money(r.spend),money(r.mInt),money(r.mPaid),money(r.mRef),money(r.mBal),money(r.w),money(r.tax),...(n?[money(n.w),money(n.tax)]:[])];
     return `<tr${r.spend>0?' class="ret"':""}>${cells.map(c=>`<td>${esc(c)}</td>`).join("")}</tr>`; }).join("");
   return `<div class="tblwrap"><table class="rtable"><thead><tr>${cols.map(c=>`<th>${esc(t(c))}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table></div>`;
 }
@@ -291,16 +295,17 @@ function recalc(){
   if(inp.retire<inp.age) inp.retire=inp.age;
   if(inp.until<inp.retire) inp.until=inp.retire;
   const mort=applyDeduction(mortgageYears(inp.mBal,inp.mort),inp);
-  const o=analyse("old",inp,mort), nw=analyse("new",inp,mort);
+  $("#r-newBox").hidden=!inp.showNew;
+  const o=analyse("old",inp,mort), nw=inp.showNew?analyse("new",inp,mort):null;
   const head=t("r.atRetire",{age:inp.retire,year:o.yr,cost:money(o.costYear+o.mPaid),month:money((o.costYear+o.mPaid)/12),
     mort:o.mPaid>0?t("r.atRetireMort",{m:money(o.mPaid)}):""});
   const left=o.mortLeft>0.5?" "+t("r.mortLeft",{v:money(o.mortLeft)}):"";
   const sum=(label,a)=>!Number.isFinite(a.need)
     ? `<div><b>${esc(label)}</b> <span class="bad">not possible on dividends</span> · have ${esc(short(a.have))}</div>`
-    : `<div><b>${esc(label)}</b> need ${esc(short(a.need))} · have ${esc(short(a.have))} · <span class="${a.have>=a.need?"ok":"bad"}">${a.have>=a.need?"ahead":"short"} ${esc(short(Math.abs(a.have-a.need)))}</span></div>`;
-  $("#r-summary").innerHTML=sum("Old box 3",o)+sum("New box 3",nw);
+    : `<div><b>${esc(label)}</b> need ${esc(short(a.need))} · have ${esc(short(a.have))} · <span class="${a.have>=a.need?"ok":"bad"}">${a.have>=a.need?"ahead":"short"} ${esc(short(Math.abs(a.have-a.need)))}</span>${a.monthly!=null&&Number.isFinite(a.monthly)?` · invest ${esc(short(a.monthly))}/mo`:""}</div>`;
+  $("#r-summary").innerHTML=sum(nw?"Old box 3":"Box 3",o)+(nw?sum("New box 3",nw):"");
   $("#r-out").innerHTML=`<p class="rhead">${esc(head+left)}</p>
-<div class="rcards">${card("old",o,inp)}${card("new",nw,inp)}</div>
+<div class="rcards">${card("old",o,inp)}${nw?card("new",nw,inp):""}</div>
 <section><h2 class="rsec">${esc(t("r.chart"))}</h2>${chart(inp,o,nw)}</section>
 ${explain(inp,o,nw,mort)}
 <details><summary>${esc(t("r.table"))}</summary>${table(o,nw)}</details>

@@ -294,7 +294,7 @@ function explain(inp,o,nw,mort){
     return lines;
   };
   const wrLine=a=>`${money(a.divSpend)} ÷ ${pc(inp.wr)}${a.bridge>0?` + bridge ${money(a.bridge)}`:""} = ${money(a.wrNeed)}`;
-  return `<details class="explain" open><summary>${esc(t("x.h"))}</summary><p class="sub">${esc(t("x.intro"))}${inp.today?" The steps use future euros; the results above are shown in today's money.":""}</p>
+  return `<details class="explain"><summary>${esc(t("x.h"))}</summary><p class="sub">${esc(t("x.intro"))}${inp.today?" The steps use future euros; the results above are shown in today's money.":""}</p>
 ${step(t("x.s1"),t("x.s1t",{year:o.yr,n:yrs}),calc(s1))}
 ${step(t("x.s2"),t("x.s2t",{leak:pc(inp.leak)}),calc([
   `${t("r.old")}: ${t("x.tax")} = ${pc(inp.oRate)} × ${pc(inp.oDeemed)} × €100 = ${m2(rd)}`, per(rd),
@@ -407,6 +407,15 @@ window.retireInit = function () {
       $(w ? "#r-wGrowth" : "#r-growth").value = b.dataset.growth;
       recalc();
     }));
+    // Form sections: only "You" starts open; remember what the viewer opens or closes.
+    let openSecs = null; try { openSecs = JSON.parse(localStorage.getItem("retireOpen") || "null"); } catch (_) {}
+    document.querySelectorAll("#r-form details[data-sec]").forEach(d => {
+      if (openSecs) d.open = openSecs.includes(d.dataset.sec);
+      d.addEventListener("toggle", () => {
+        const open = [...document.querySelectorAll("#r-form details[data-sec]")].filter(x => x.open).map(x => x.dataset.sec);
+        try { localStorage.setItem("retireOpen", JSON.stringify(open)); } catch (_) {}
+      });
+    });
     document.querySelectorAll(".r-aowp").forEach(b => b.addEventListener("click", () => {
       $("#r-aow").value = b.dataset.aow;
       recalc();

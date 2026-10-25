@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=17" />
+  <link rel="stylesheet" href="style.css?v=18" />
 </head>
 <body>
   <!-- Header -->
@@ -330,14 +330,28 @@
             <div class="r-grid2"><label class="r-field"><span class="filter-label">Net salary per year</span><input class="gw-search" id="r-salary" type="number" inputmode="decimal" step="100" /></label><label class="r-field"><span class="filter-label">Salary raise per year %</span><input class="gw-search" id="r-raise" type="number" inputmode="decimal" step="0.1" /></label><label class="r-field"><span class="filter-label">Invest % of salary</span><input class="gw-search" id="r-invest" type="number" inputmode="decimal" step="0.5" /></label><label class="r-field"><span class="filter-label">Invested today</span><input class="gw-search" id="r-start" type="number" inputmode="decimal" step="100" /></label></div>
           </div></details>
           <details class="r-set" data-sec="costs"><summary>Costs <span class="r-sum-state" id="r-costState"></span></summary><div class="r-set-body">
-            <div class="r-grid2"><label class="r-field"><span class="filter-label">Daily living per month</span><input class="gw-search" id="r-living" type="number" inputmode="decimal" step="50" /></label><label class="r-field"><span class="filter-label">Travel per year</span><input class="gw-search" id="r-travel" type="number" inputmode="decimal" step="100" /></label></div>
             <label class="r-chk"><input type="checkbox" id="r-costSplit" /> Different costs in retirement</label>
-            <div class="r-costr" id="r-costRFields" hidden>
-              <p class="r-sub">In retirement</p>
-              <div class="r-grid2"><label class="r-field"><span class="filter-label">Daily living per month</span><input class="gw-search" id="r-livingR" type="number" inputmode="decimal" step="50" /></label><label class="r-field"><span class="filter-label">Travel per year</span><input class="gw-search" id="r-travelR" type="number" inputmode="decimal" step="100" /></label></div>
-            </div>
-            <div class="r-costout" id="r-costOut" aria-live="polite"></div>
-            <p class="r-hint">In today's money; rises with inflation. The mortgage is filled in from the Mortgage section (after interest deduction) and can't be edited here.</p>
+            <table class="r-ctable" id="r-ctable">
+              <thead><tr><th>Per month</th><th>Now</th><th class="rc">Retirement</th></tr></thead>
+              <tbody>
+                <tr><td>Groceries</td><td><input id="r-c_groc" type="number" inputmode="decimal" step="10" /></td><td class="rc"><input id="r-cr_groc" type="number" inputmode="decimal" step="10" /></td></tr>
+                <tr><td>Energy &amp; water</td><td><input id="r-c_energy" type="number" inputmode="decimal" step="10" /></td><td class="rc"><input id="r-cr_energy" type="number" inputmode="decimal" step="10" /></td></tr>
+                <tr><td>Health insurance</td><td><input id="r-c_health" type="number" inputmode="decimal" step="10" /></td><td class="rc"><input id="r-cr_health" type="number" inputmode="decimal" step="10" /></td></tr>
+                <tr><td>Municipal taxes</td><td><input id="r-c_munic" type="number" inputmode="decimal" step="10" /></td><td class="rc"><input id="r-cr_munic" type="number" inputmode="decimal" step="10" /></td></tr>
+                <tr><td>Other insurance</td><td><input id="r-c_insure" type="number" inputmode="decimal" step="10" /></td><td class="rc"><input id="r-cr_insure" type="number" inputmode="decimal" step="10" /></td></tr>
+                <tr><td>Internet &amp; phone</td><td><input id="r-c_net" type="number" inputmode="decimal" step="10" /></td><td class="rc"><input id="r-cr_net" type="number" inputmode="decimal" step="10" /></td></tr>
+                <tr><td>Transport (car, OV)</td><td><input id="r-c_transport" type="number" inputmode="decimal" step="10" /></td><td class="rc"><input id="r-cr_transport" type="number" inputmode="decimal" step="10" /></td></tr>
+                <tr><td>Subscriptions</td><td><input id="r-c_subs" type="number" inputmode="decimal" step="10" /></td><td class="rc"><input id="r-cr_subs" type="number" inputmode="decimal" step="10" /></td></tr>
+                <tr><td>Eating out &amp; leisure</td><td><input id="r-c_leisure" type="number" inputmode="decimal" step="10" /></td><td class="rc"><input id="r-cr_leisure" type="number" inputmode="decimal" step="10" /></td></tr>
+                <tr><td>Clothing &amp; personal care</td><td><input id="r-c_cloth" type="number" inputmode="decimal" step="10" /></td><td class="rc"><input id="r-cr_cloth" type="number" inputmode="decimal" step="10" /></td></tr>
+                <tr><td>Home maintenance</td><td><input id="r-c_home" type="number" inputmode="decimal" step="10" /></td><td class="rc"><input id="r-cr_home" type="number" inputmode="decimal" step="10" /></td></tr>
+                <tr><td>Other</td><td><input id="r-c_other" type="number" inputmode="decimal" step="10" /></td><td class="rc"><input id="r-cr_other" type="number" inputmode="decimal" step="10" /></td></tr>
+                <tr><td>Travel <em>per year</em></td><td><input id="r-travel" type="number" inputmode="decimal" step="100" /></td><td class="rc"><input id="r-travelR" type="number" inputmode="decimal" step="100" /></td></tr>
+              </tbody>
+              <tbody id="r-costCalc"></tbody>
+            </table>
+            <p class="r-costret" id="r-costRet"></p>
+            <p class="r-hint">In today's money; rises with inflation. Everything is editable except the mortgage, which comes from the Mortgage section (after interest deduction while you work, none once retired).</p>
           </div></details>
           <details class="r-set" data-sec="retirement"><summary>Retirement</summary><div class="r-set-body">
             <div class="r-grid2"><label class="r-field"><span class="filter-label">Inflation per year %</span><input class="gw-search" id="r-infl" type="number" inputmode="decimal" step="0.1" /></label><label class="r-field"><span class="filter-label">Compare: withdrawal rate %</span><input class="gw-search" id="r-wr" type="number" inputmode="decimal" step="0.1" /></label></div>
@@ -421,7 +435,7 @@
   <script src="greenwheels.js?v=2"></script>
   <script src="ikea.js?v=1"></script>
   <script src="shop.js?v=1"></script>
-  <script src="retire.js?v=14"></script>
+  <script src="retire.js?v=15"></script>
   <script src="script.js?v=8"></script>
 </body>
 </html>

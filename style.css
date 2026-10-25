@@ -1457,3 +1457,10 @@ body.webview-open { overflow: hidden; }
 .c-tog { flex: 0 0 auto; width: 22px; height: 28px; padding: 0; font-size: 0.8rem; color: var(--primary); background: transparent; border: 0; cursor: pointer; }
 .r-ctable tr.c-grp td { color: var(--text); font-weight: 600; }
 .r-ctable tr.c-grp input.c-name { font-weight: 600; color: var(--text); }
+/* Read-only mode */
+.r-lock { padding: 6px 12px; font: inherit; font-size: 0.8rem; font-weight: 600; white-space: nowrap; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; cursor: pointer; }
+.r-lock[aria-pressed="false"] { color: #111; background: var(--primary); border-color: var(--primary); }
+.r-locked .r-del, .r-locked .r-add, .r-locked tr.c-subadd, .r-locked tr.r-cadd { display: none !important; }
+.r-locked #r-form input:read-only:not([type=checkbox]) { background: transparent; border-color: transparent; cursor: default; }
+.r-locked #r-form input:disabled, .r-locked .r-preset:disabled { opacity: 0.6; cursor: default; }
+.r-locked .r-preset:disabled[aria-pressed="true"] { opacity: 1; }

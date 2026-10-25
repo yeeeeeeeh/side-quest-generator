@@ -509,6 +509,17 @@ function costOverview(inp,mort){
   $("#r-costState").textContent=`${money(inp.cost)}/mo`;
 }
 
+// Read-only mode (default on, remembered): nothing in the form can be changed by an accidental tap. Sections and the
+// Insurance group can still be opened; add/remove buttons are hidden by CSS.
+let locked=true;
+try{ locked=localStorage.getItem("retireLock")!=="0"; }catch(_){}
+function applyLock(){
+  $("#retire-panel").classList.toggle("r-locked",locked);
+  const b=$("#r-lock"); b.setAttribute("aria-pressed",String(locked)); b.textContent=locked?"🔒 Read only":"✏️ Editing";
+  document.querySelectorAll("#r-form input").forEach(i=>{ if(i.type==="checkbox") i.disabled=locked; else i.readOnly=locked; });
+  document.querySelectorAll("#r-form button:not(.c-tog)").forEach(btn=>{ btn.disabled=locked; });
+}
+
 function recalc(){
   const inp=readInputs(); saveInputs(inp);
   document.querySelectorAll(".r-preset").forEach(b=>{ const w=b.dataset.phase==="w";
@@ -552,12 +563,18 @@ ${explain(inp,o,nw,mort)}
 <details><summary>${esc(t("r.table"))}</summary>${table(o,nw)}</details>
 <p class="sub">${esc(t("r.disc"))}</p>`;
   if(wasOpen.length) document.querySelectorAll("#r-out details").forEach((d,i)=>{ d.open=wasOpen[i]; });
+  applyLock();
 }
 
 let ready = false;
 window.retireInit = function () {
   if (!ready) {
     ready = true;
+    $("#r-lock").addEventListener("click", () => {
+      locked = !locked;
+      try { localStorage.setItem("retireLock", locked ? "1" : "0"); } catch (_) {}
+      applyLock();
+    });
     loadInputs();
     $("#r-form").addEventListener("input", recalc);
     document.querySelectorAll(".r-preset").forEach(b => b.addEventListener("click", () => {

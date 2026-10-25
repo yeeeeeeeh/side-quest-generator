@@ -1395,3 +1395,8 @@ body.webview-open { overflow: hidden; }
 }
 .update-bar[hidden] { display: none; }
 .update-bar .btn { flex-shrink: 0; padding: 8px 16px; }
+.r-presets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.r-preset { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 12px; font: inherit; font-size: 0.85rem; font-weight: 600; text-align: left; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; }
+.r-preset small { font-size: 0.72rem; font-weight: 400; color: var(--text-muted); }
+.r-preset:hover, .r-preset[aria-pressed="true"] { border-color: var(--primary); }
+.r-preset[aria-pressed="true"] { background: rgba(245, 158, 11, 0.1); }

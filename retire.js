@@ -266,6 +266,7 @@ function table(o,nw){
 
 function recalc(){
   const inp=readInputs(); saveInputs(inp);
+  document.querySelectorAll(".r-preset").forEach(b=>b.setAttribute("aria-pressed",String(Number(b.dataset.yield)===inp.yield&&Number(b.dataset.growth)===inp.growth)));
   if(inp.retire<inp.age) inp.retire=inp.age;
   if(inp.until<inp.retire) inp.until=inp.retire;
   const mort=mortgageYears(inp.mBal,inp.mort);
@@ -287,6 +288,11 @@ window.retireInit = function () {
     ready = true;
     loadInputs();
     $("#r-form").addEventListener("input", recalc);
+    document.querySelectorAll(".r-preset").forEach(b => b.addEventListener("click", () => {
+      $("#r-yield").value = b.dataset.yield;
+      $("#r-growth").value = b.dataset.growth;
+      recalc();
+    }));
     $("#r-form").addEventListener("submit", e => e.preventDefault());
     $("#r-mAdd").addEventListener("click", () => {
       const rows = readMort(), lastTo = rows.length ? Math.max(...rows.map(r => r.to)) : NOW_YEAR - 1;

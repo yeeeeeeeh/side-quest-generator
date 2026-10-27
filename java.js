@@ -58,8 +58,53 @@ function readiness() {
 }
 const objScore = id => { const a = P.answers[id]; return a && a.total ? a.right / a.total : null; };
 const lessonDone = l => !!(P.lessons[l.id] && P.lessons[l.id].done);
+// Lessons unlock in order within a unit; the first lesson of every unit is open.
+const lessonUnlocked = (u, i) => i === 0 || lessonDone(u.lessons[i]) || lessonDone(u.lessons[i - 1]);
+// Next lesson: the first not done in the unit of the last lesson played, else the first not done anywhere.
 function nextLesson() {
+  const last = P.lastLesson && C.units.find(u => u.lessons.some(l => l.id === P.lastLesson));
+  if (last) { const l = last.lessons.find(x => !lessonDone(x)); if (l) return { u: last, l }; }
   for (const u of C.units) for (const l of u.lessons) if (!lessonDone(l)) return { u, l };
+  return null;
+}
+
+// XP, daily goal and streak, as in the app: lesson 10 XP (+5 when perfect), reviews 1 XP per right answer.
+const LESSON_XP = 10, PERFECT_XP = 5, MOCK_XP = 20, GOALS = [10, 20, 30, 50];
+P.xpByDay = P.xpByDay || {}; P.goalMet = P.goalMet || []; P.goal = P.goal || 20;
+const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const todayXP = () => P.xpByDay[dayKey()] || 0;
+const totalXP = () => Object.values(P.xpByDay).reduce((n, v) => n + v, 0);
+function addXP(n) {
+  if (!n) return;
+  const k = dayKey(); P.xpByDay[k] = (P.xpByDay[k] || 0) + n;
+  if (P.xpByDay[k] >= P.goal && !P.goalMet.includes(k)) P.goalMet.push(k);
+  save();
+}
+// Days in a row with the goal met, ending today, or yesterday while today is still open.
+function streak() {
+  const met = k => P.goalMet.includes(k) || (k === dayKey() && todayXP() >= P.goal);
+  const d = new Date(); if (!met(dayKey(d))) d.setDate(d.getDate() - 1);
+  let n = 0; while (met(dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function completeLesson(l, score) {
+  const st = P.lessons[l.id] || {};
+  P.lessons[l.id] = { done: true, best: Math.max(st.best ?? 0, score), at: Date.now() };
+  P.lastLesson = l.id;
+  const xp = LESSON_XP + (score >= 1 ? PERFECT_XP : 0);
+  addXP(xp); save();
+  return xp;
+}
+// Marks a lesson done without playing it: the next one unlocks, but there is no XP or score.
+function skipLesson(l) {
+  if (lessonDone(l)) return;
+  P.lessons[l.id] = { done: true, skipped: true, at: Date.now() }; P.lastLesson = l.id; save();
+}
+const PAUSE_KEY = "javaPaused";
+function pausedLesson() {
+  let p = null; try { p = JSON.parse(localStorage.getItem(PAUSE_KEY) || "null"); } catch (_) {}
+  if (!p) return null;
+  for (const u of C.units) { const l = u.lessons.find(x => x.id === p.lessonId); if (l && p.items.every(([k]) => l.steps[k])) return { u, l, state: p }; }
   return null;
 }
 
@@ -144,7 +189,13 @@ function home(body) {
   const done = C.units.reduce((n, u) => n + u.lessons.filter(lessonDone).length, 0), all = C.units.reduce((n, u) => n + u.lessons.length, 0);
   const weak = C.catalog.objectives.map(o => ({ o, s: objScore(o.id), n: (P.answers[o.id] || {}).total || 0 }))
     .filter(x => x.s != null && x.n >= 3).sort((a, b) => a.s - b.s).slice(0, 3);
+  const paused = pausedLesson(), today = todayXP(), stk = streak();
   body.innerHTML = `
+  <div class="j-xphead">
+    <div class="j-xpstat"><b>🔥 ${stk}</b><span>day streak</span></div>
+    <button class="j-goal" id="j-goal" title="Change daily goal"><span class="j-ring" style="--p:${Math.min(1, today / P.goal)}"><i>${today >= P.goal ? "✓" : today}</i></span><span><b>${today}/${P.goal} XP</b><small>today's goal ✎</small></span></button>
+    <div class="j-xpstat"><b>⚡ ${totalXP()}</b><span>total XP</span></div>
+  </div>
   <div class="j-hero">
     <div class="j-kicker">${esc(ex.code)}</div>
     <h2 class="j-h">${esc(ex.title)}</h2>
@@ -154,7 +205,8 @@ function home(body) {
       <div><b>${r.covered}/${r.of}</b><span>objectives tried</span></div>
       <div><b>${done}/${all}</b><span>lessons</span></div>
     </div>
-    ${next ? `<button class="btn btn-primary j-wide" id="j-cont">▶ ${done ? "Continue" : "Start"}: ${esc(next.l.title)}<small>Unit ${next.u.info.number} · ${next.l.minutes} min</small></button>` : `<p class="j-sub">Every lesson is done. Keep sharp with mock exams and drills.</p>`}
+    ${paused ? `<button class="btn btn-primary j-wide" id="j-resume">⏸ Resume: ${esc(paused.l.title)}<small>Unit ${paused.u.info.number} · ${Math.round(paused.state.index / paused.state.items.length * 100)}% done</small></button>`
+      : next ? `<button class="btn btn-primary j-wide" id="j-cont">▶ ${done ? "Continue" : "Start"}: ${esc(next.l.title)}<small>Unit ${next.u.info.number} · ${next.l.minutes} min</small></button>` : `<p class="j-sub">Every lesson is done. Keep sharp with reviews, mock exams and drills.</p>`}
   </div>
   ${weak.length ? `<h3 class="j-sec">Weakest objectives</h3><div class="j-list">${weak.map(x => `<div class="j-row"><span>${esc(x.o.id)} · ${esc(x.o.title)}</span><b class="${x.s >= 0.68 ? "ok" : "bad"}">${pct(x.s)}</b></div>`).join("")}</div>` : ""}
   <h3 class="j-sec">Practice</h3>
@@ -173,24 +225,47 @@ function home(body) {
       <span class="j-bar"><i style="width:${u.lessons.length ? (d / u.lessons.length * 100) : 0}%"></i></span></span><span class="j-cnt">${d}/${u.lessons.length}</span></button>`;
   }).join("")}</div>
   <p class="j-foot">Content from the vocab app. The community quiz is from <a href="https://github.com/Anasss/java21docCards" target="_blank" rel="noopener">java21docCards</a> (MIT, see <a href="java/THIRD_PARTY_NOTICES.txt" target="_blank" rel="noopener">notices</a>).</p>`;
-  const cont = $("#j-cont"); if (cont) cont.onclick = () => go(lesson, next.u, next.l);
+  const cont = $("#j-cont"); if (cont) cont.onclick = () => openLesson(next.u, next.l);
+  const res = $("#j-resume"); if (res) res.onclick = () => go(lesson, paused.u, paused.l, paused.state);
+  $("#j-goal").onclick = () => {
+    const g = prompt(`Daily goal in XP (${GOALS.join(", ")}). A lesson gives ${LESSON_XP} XP, ${LESSON_XP + PERFECT_XP} when perfect.`, P.goal);
+    const v = parseInt(g, 10); if (!v || v < 1) return;
+    P.goal = v; if (todayXP() >= v && !P.goalMet.includes(dayKey())) P.goalMet.push(dayKey()); save(); show();
+  };
   on(body, "[data-unit]", "click", b => go(unit, C.units[+b.dataset.unit]));
   const views = { mocks, fixbug: drillMenu, write: drillMenu, trace: traceMenu, tips, ready: readinessView };
   on(body, "[data-go]", "click", b => go(views[b.dataset.go], b.dataset.go));
 }
 
 // ---------- unit ----------
+// A path of lesson circles like Duolingo: done (gold), current (pulsing), locked (grey). The current lesson can be
+// skipped: it is marked done without XP and the next one unlocks.
 function unit(body, u) {
+  const offsets = [0, 34, 52, 34, 0, -34, -52, -34];
+  const cur = u.lessons.findIndex((l, i) => lessonUnlocked(u, i) && !lessonDone(l));
+  const paused = pausedLesson();
   body.innerHTML = `<div class="j-kicker">Unit ${u.info.number}</div><h2 class="j-h">${esc(u.info.title)}</h2>
   <p class="j-sub">${esc(u.info.summary)}</p>
   <div class="j-chips">${u.info.objectives.map(id => `<span class="j-chip" title="${esc((C.objectives[id] || {}).title)}">Obj ${esc(id)}${objScore(id) != null ? " · " + pct(objScore(id)) : ""}</span>`).join("")}</div>
-  <div class="j-list">${u.lessons.map((l, i) => {
-    const st = P.lessons[l.id];
-    return `<button class="j-lesson${st && st.done ? " done" : ""}" data-i="${i}"><span class="j-check">${st && st.done ? "✓" : i + 1}</span>
-      <span class="j-ut"><b>${esc(l.title)}</b><small>${esc(l.summary)}</small></span>
-      <span class="j-cnt">${l.minutes} min${st && st.best != null ? `<br>best ${pct(st.best)}` : ""}</span></button>`;
+  <div class="j-path">${u.lessons.map((l, i) => {
+    const st = P.lessons[l.id] || {}, open = lessonUnlocked(u, i), isCur = i === cur, dx = offsets[i % offsets.length];
+    const cls = st.done ? (st.skipped ? "skip" : "done") : isCur ? "cur" : open ? "open" : "lock";
+    const icon = st.done ? (st.skipped ? "⤼" : st.best >= 1 ? "★" : "✓") : open ? (paused && paused.l.id === l.id ? "⏸" : "▶") : "🔒";
+    return `<div class="j-node ${cls}" style="--dx:${dx}px">
+      <button class="j-dot" data-i="${i}" aria-label="${esc(l.title)}">${icon}</button>
+      <div class="j-nlabel"><b>${esc(l.title)}</b><small>${l.minutes} min${st.skipped ? " · skipped" : st.best != null ? ` · best ${pct(st.best)}` : ""}${paused && paused.l.id === l.id ? " · in progress" : ""}</small>
+      ${isCur && !(paused && paused.l.id === l.id) ? `<button class="j-skip" data-skip="${i}">Skip lesson</button>` : ""}</div></div>`;
   }).join("")}</div>`;
-  on(body, "[data-i]", "click", b => go(lesson, u, u.lessons[+b.dataset.i]));
+  on(body, "[data-i]", "click", b => {
+    const i = +b.dataset.i;
+    if (!lessonUnlocked(u, i)) { alert("Finish or skip the lesson before this one to unlock it."); return; }
+    openLesson(u, u.lessons[i]);
+  });
+  on(body, "[data-skip]", "click", b => {
+    const l = u.lessons[+b.dataset.skip];
+    if (!confirm(`"${l.title}" will be marked done without XP and the next lesson unlocks. You can still play it later.`)) return;
+    skipLesson(l); show();
+  });
 }
 
 // ---------- exercises ----------
@@ -285,58 +360,96 @@ function exercise(box, ex) {
 }
 
 // ---------- lesson player ----------
-function lesson(body, u, l) {
-  // Exercises answered wrong come back once at the end, like the app's session.
-  const queue = l.steps.map(s => ({ s, retry: false }));
-  let i = 0, firstTry = {}, current = null, checked = false;
-  const exCount = l.steps.filter(s => s.type === "exercise").length;
-  body.innerHTML = `<div class="j-lhead"><div class="j-kicker">Unit ${u.info.number} · ${esc(l.title)}</div><div class="j-bar big"><i id="j-prog"></i></div></div>
+// Like the app's session: pages and exercises in order; a missed exercise comes back at the end until it is answered
+// right. Back is always allowed (answered exercises show read-only). The session is saved after every step, so a
+// lesson can be left and resumed. A first-try right answer can be marked "I guessed": review then treats it as a miss.
+function lesson(body, u, l, resume) {
+  const S = resume || { lessonId: l.id, items: l.steps.map((_, k) => [k, 0]), index: 0, results: {}, firstTry: {}, guessed: [] };
+  const persist = () => { try { localStorage.setItem(PAUSE_KEY, JSON.stringify(S)); } catch (_) {} };
+  persist();
+  const exercises = l.steps.filter(st => st.type === "exercise"), pages = l.steps.length - exercises.length;
+  let current = null, checked = false;
+  body.innerHTML = `<div class="j-lhead"><div class="j-lrow"><button class="j-lback" id="j-lprev" aria-label="Previous step">‹</button>
+      <div class="j-bar big"><i id="j-prog"></i></div><span class="j-xpchip">⚡${todayXP()}</span></div>
+      <div class="j-kicker">Unit ${u.info.number} · ${esc(l.title)}</div></div>
     <div class="j-card" id="j-step"></div><div class="j-feedback" id="j-fb" hidden></div>
     <div class="j-actions"><button class="btn btn-primary j-wide" id="j-next">Continue</button></div>`;
   const step = $("#j-step"), fb = $("#j-fb"), nextBtn = $("#j-next");
+  const progress = () => {
+    const passedPages = new Set(), doneEx = new Set();
+    S.items.forEach(([k], idx) => { const st = l.steps[k]; if (st.type === "page" && idx < S.index) passedPages.add(k); if (st.type === "exercise" && S.results[idx]) doneEx.add(st.id); });
+    return (passedPages.size + doneEx.size) / (pages + exercises.length || 1);
+  };
+  const feedback = (st, correct, idx) => {
+    const canGuess = correct && !S.items[idx][1] && S.firstTry[st.id] === true;
+    fb.className = "j-feedback " + (correct ? "ok" : "bad"); fb.hidden = false;
+    fb.innerHTML = `<b>${correct ? "✓ Correct" : "✗ Not quite, it comes back at the end"}</b>${mdP(st.explanation)}
+      ${canGuess ? `<button class="j-guess${S.guessed.includes(st.id) ? " on" : ""}" id="j-guess">🎲 I guessed</button>` : ""}`;
+    const g = $("#j-guess");
+    if (g) g.onclick = () => {
+      const k = S.guessed.indexOf(st.id); k < 0 ? S.guessed.push(st.id) : S.guessed.splice(k, 1);
+      g.classList.toggle("on", k < 0); persist();
+    };
+  };
   function render() {
-    $("#j-prog").style.width = (i / queue.length * 100) + "%";
-    fb.hidden = true; checked = false;
-    const { s, retry } = queue[i];
-    if (s.type === "page") {
-      step.innerHTML = `<h3 class="j-pt">${esc(s.title)}</h3>${s.blocks.map(blockHtml).join("")}`;
-      current = null; nextBtn.textContent = "Continue";
+    $("#j-prog").style.width = (progress() * 100) + "%";
+    $("#j-lprev").style.visibility = S.index > 0 ? "visible" : "hidden";
+    fb.hidden = true; checked = false; current = null;
+    const [k, retry] = S.items[S.index], st = l.steps[k], done = S.results[S.index];
+    if (st.type === "page") {
+      step.innerHTML = `<h3 class="j-pt">${esc(st.title)}</h3>${st.blocks.map(blockHtml).join("")}`;
+      nextBtn.textContent = "Continue";
+    } else if (done != null) {
+      // Revisited after going back: read-only.
+      step.innerHTML = `<div class="j-prompt">${md(st.prompt)}</div>${st.code ? codeView(st.code) : ""}`;
+      feedback(st, done, S.index); checked = true; nextBtn.textContent = "Continue";
     } else {
       step.innerHTML = retry ? '<div class="j-retry">↻ Try this one again</div>' : "";
       const box = h("div"); step.appendChild(box);
-      current = exercise(box, s); nextBtn.textContent = "Check";
+      current = exercise(box, st); nextBtn.textContent = "Check";
     }
-    body.scrollTop = 0;
+    $("#j-body").scrollTop = 0;
   }
+  $("#j-lprev").onclick = () => { if (S.index > 0) { S.index--; persist(); render(); } };
   nextBtn.onclick = () => {
-    const { s, retry } = queue[i];
+    const [k] = S.items[S.index], st = l.steps[k];
     if (current && !checked) {
       const r = current.check();
       if (!r.ready) { nextBtn.classList.add("shake"); setTimeout(() => nextBtn.classList.remove("shake"), 400); return; }
       checked = true;
-      if (!retry) { firstTry[s.id] = r.correct; recordAnswer(s.objective, r.correct); save(); }
-      if (!r.correct && !retry) queue.push({ s, retry: true });
-      fb.className = "j-feedback " + (r.correct ? "ok" : "bad"); fb.hidden = false;
-      fb.innerHTML = `<b>${r.correct ? "✓ Correct" : "✗ Not quite"}</b>${mdP(s.explanation)}`;
+      S.results[S.index] = r.correct;
+      if (S.firstTry[st.id] == null) { S.firstTry[st.id] = r.correct; recordAnswer(st.objective, r.correct); save(); }
+      if (!r.correct) S.items.push([k, 1]);
+      persist();
+      feedback(st, r.correct, S.index);
       nextBtn.textContent = "Continue";
+      $("#j-prog").style.width = (progress() * 100) + "%";
       fb.scrollIntoView({ behavior: "smooth", block: "nearest" });
       return;
     }
-    i++;
-    if (i < queue.length) return render();
-    // Done: score is the share of exercises right on the first try.
-    const right = Object.values(firstTry).filter(Boolean).length, score = exCount ? right / exCount : 1;
-    const st = P.lessons[l.id] || {};
-    P.lessons[l.id] = { done: true, best: Math.max(st.best ?? 0, score), at: Date.now() }; save();
-    const nx = nextLesson();
-    body.innerHTML = `<div class="j-done"><div class="j-big">🎉</div><h2 class="j-h">${esc(l.title)} done</h2>
-      <p class="j-sub">${exCount ? `${right} of ${exCount} right on the first try (${pct(score)}).` : "Lesson read."}</p>
-      ${nx ? `<button class="btn btn-primary j-wide" id="j-nx">Next: ${esc(nx.l.title)}</button>` : ""}
-      <button class="btn j-wide j-ghost" id="j-home">Back to unit</button></div>`;
+    S.index++; persist();
+    if (S.index < S.items.length) return render();
+    finish();
+  };
+  function finish() {
+    try { localStorage.removeItem(PAUSE_KEY); } catch (_) {}
+    const ids = Object.keys(S.firstTry), right = ids.filter(id => S.firstTry[id]).length, score = ids.length ? right / ids.length : 1;
+    if (typeof reviewRecord === "function") ids.forEach(id => reviewRecord(id, S.firstTry[id] && !S.guessed.includes(id)));
+    const before = streak(), xp = completeLesson(l, score), after = streak(), nx = nextLesson();
+    body.innerHTML = `<div class="j-done"><div class="j-big">${score >= 1 ? "🌟" : "🎉"}</div><h2 class="j-h">${score >= 1 ? "Perfect lesson!" : "Lesson complete"}</h2>
+      <div class="j-stats"><div><b class="j-xpc">+${xp}</b><span>XP earned</span></div><div><b>${ids.length ? pct(score) : "—"}</b><span>first try</span></div><div><b>🔥 ${after}</b><span>day streak</span></div></div>
+      ${after > before ? `<p class="j-sub">Daily goal reached. Your streak is now ${after} day${after === 1 ? "" : "s"}!</p>` : todayXP() < P.goal ? `<p class="j-sub">${P.goal - todayXP()} XP to today's goal.</p>` : ""}
+      ${nx ? `<button class="btn btn-primary j-wide" id="j-nx">Next: ${esc(nx.l.title)}<small>Unit ${nx.u.info.number} · ${nx.l.minutes} min</small></button>` : ""}
+      <button class="btn j-wide j-ghost" id="j-home">Done</button></div>`;
     if (nx) $("#j-nx").onclick = () => { stack.pop(); go(lesson, nx.u, nx.l); };
     $("#j-home").onclick = back;
-  };
+  }
   render();
+}
+// Opens a lesson, resuming it when it was left part-way.
+function openLesson(u, l) {
+  const p = pausedLesson();
+  go(lesson, u, l, p && p.l.id === l.id ? p.state : null);
 }
 
 // ---------- mock exams ----------
@@ -407,7 +520,7 @@ function exam(body, m, resume) {
     });
     const score = results.filter(r => r.correct).length / results.length;
     const st = P.mocks[m.setId] || { best: 0, attempts: 0 };
-    P.mocks[m.setId] = { best: Math.max(st.best, score), last: score, attempts: st.attempts + 1, at: Date.now() }; save();
+    P.mocks[m.setId] = { best: Math.max(st.best, score), last: score, attempts: st.attempts + 1, at: Date.now() }; save(); addXP(MOCK_XP);
     stack.pop(); go(examResult, m, results, score);
   }
   $("#j-flag").onclick = () => { const id = q().id; run.flags[id] = !run.flags[id]; persist(); render(); grid(); };
@@ -471,7 +584,7 @@ function drillRound(body, mode, items) {
       $("#j-back2").onclick = back;
       return;
     }
-    const it = items[k], done = ok => { P.drills[mode][it.id] = { ok, at: Date.now() }; recordAnswer(it.objective, ok); save(); if (ok) score++; k++; };
+    const it = items[k], done = ok => { P.drills[mode][it.id] = { ok, at: Date.now() }; recordAnswer(it.objective, ok); save(); if (ok) { score++; addXP(mode === "write" ? 2 : 1); } k++; };
     body.innerHTML = `<div class="j-kicker">${mode === "fixbug" ? "Fix the bug" : "Write it"} · ${k + 1} of ${items.length} · Obj ${esc(it.objective)}</div><div id="j-dr"></div>`;
     (mode === "fixbug" ? fixBugCard : writeCard)($("#j-dr"), it, ok => { done(ok); }, next);
     body.scrollTop = 0;
@@ -633,7 +746,7 @@ function trace(body, p) {
     $("#j-tq").scrollIntoView({ behavior: "smooth", block: "nearest" });
     on($("#j-tq"), "[data-c]", "click", b => {
       if (asked[cp.step] != null) return;
-      const ok = +b.dataset.c === cp.answer; asked[cp.step] = ok; if (ok) right++;
+      const ok = +b.dataset.c === cp.answer; asked[cp.step] = ok; if (ok) { right++; addXP(1); }
       recordAnswer(p.objective, ok); save();
       $("#j-tq").querySelectorAll("[data-c]").forEach(x => { const i = +x.dataset.c; x.classList.toggle("right", i === cp.answer); x.classList.toggle("wrong", i === +b.dataset.c && !ok); });
       $("#j-tn").textContent = "Reveal ›";
@@ -678,8 +791,8 @@ function readinessView(body) {
     <button class="btn j-wide j-ghost" id="j-reset">Reset all Java progress</button>`;
   $("#j-reset").onclick = () => {
     if (!confirm("Erase all lesson, exam and drill progress for the Java course?")) return;
-    P = { lessons: {}, answers: {}, mocks: {}, drills: { fixbug: {}, write: {}, trace: {} } }; save();
-    try { localStorage.removeItem(MOCK_KEY); } catch (_) {}
+    P = { lessons: {}, answers: {}, mocks: {}, drills: { fixbug: {}, write: {}, trace: {} }, xpByDay: {}, goalMet: [], goal: P.goal }; save();
+    try { localStorage.removeItem(MOCK_KEY); localStorage.removeItem(PAUSE_KEY); } catch (_) {}
     stack.length = 0; go(home);
   };
 }

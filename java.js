@@ -128,6 +128,71 @@ function nextDue() {
   return later.length ? Math.min(...later) : null;
 }
 
+// ---------- saved (bookmarks and notes) ----------
+// A page or question the learner bookmarked or wrote a note on. Questions are keyed by exercise id so the same
+// question saved from a lesson or a review is one item; pages by lesson id and step index.
+P.saved = P.saved || {};
+const savedKey = (l, k) => { const st = l.steps[k]; return st.type === "exercise" ? st.id : `${l.id}#${k}`; };
+function savedEntry(l, k) { return P.saved[savedKey(l, k)]; }
+function updateSaved(l, k, change) {
+  const key = savedKey(l, k), cur = P.saved[key] || { lessonId: l.id, step: k, at: Date.now() };
+  Object.assign(cur, change, { at: Date.now() });
+  if (!cur.bookmark && !cur.note) delete P.saved[key]; else P.saved[key] = cur;
+  save();
+}
+function findLesson(id) { for (const u of C.units) { const l = u.lessons.find(x => x.id === id); if (l) return { u, l }; } return null; }
+// The right answer to a question, as text, for read-only views.
+function solutionHtml(ex) {
+  switch (ex.kind) {
+    case "singleChoice": return ex.codeOptions ? codeView(ex.options[ex.answer]) : mdP(ex.options[ex.answer]);
+    case "multiChoice": return ex.answers.map(i => ex.codeOptions ? codeView(ex.options[i]) : mdP(ex.options[i])).join("");
+    case "trueFalse": return `<p><b>${ex.answer ? "True" : "False"}</b></p>`;
+    case "tapLine": return codeView(ex.code, { lineClass: n => n === ex.answer ? "right" : "" });
+    case "fillBlanks": { let k = 0; return codeView(ex.code.replace(/___/g, () => ex.answers[k++])); }
+    case "orderLines": return codeView(ex.lines.join("\n"));
+  }
+  return "";
+}
+// One saved page or question, read-only, with its note.
+function savedItem(body, key) {
+  const it = P.saved[key], f = it && findLesson(it.lessonId);
+  if (!f) { body.innerHTML = '<p class="j-sub">This item is no longer in the course.</p>'; return; }
+  const st = f.l.steps[it.step];
+  body.innerHTML = `<div class="j-kicker">Unit ${f.u.info.number} · ${esc(f.l.title)}</div>
+    <div class="j-card">${st.type === "page" ? `<h3 class="j-pt">${esc(st.title)}</h3>${st.blocks.map(blockHtml).join("")}`
+      : `<div class="j-prompt">${md(st.prompt)}</div>${st.kind !== "tapLine" && st.code ? codeView(st.code) : ""}<div class="j-hint">Answer</div>${solutionHtml(st)}<div class="j-feedback ok">${mdP(st.explanation)}</div>`}</div>
+    <h3 class="j-sec">Note</h3><textarea class="j-code j-note-edit" id="j-note" rows="4" placeholder="Your note">${esc(it.note || "")}</textarea>
+    <div class="j-actions j-two"><button class="btn j-ghost" id="j-unbm">${it.bookmark ? "★ Remove bookmark" : "☆ Bookmark"}</button><button class="btn btn-primary" id="j-open">Open lesson</button></div>`;
+  $("#j-note").onchange = e => updateSaved(f.l, it.step, { note: e.target.value.trim() });
+  $("#j-unbm").onclick = () => { updateSaved(f.l, it.step, { bookmark: !it.bookmark }); P.saved[key] ? show() : back(); };
+  $("#j-open").onclick = () => { if (lessonUnlocked(f.u, f.u.lessons.indexOf(f.l))) openLesson(f.u, f.l); else alert("That lesson is still locked."); };
+}
+function savedList(body, kind) {
+  const items = Object.entries(P.saved).filter(([, v]) => kind === "bookmark" ? v.bookmark : v.note).sort((a, b) => b[1].at - a[1].at);
+  body.innerHTML = `<h2 class="j-h">${kind === "bookmark" ? "★ Bookmarks" : "✎ Notes"}</h2>
+    ${items.length ? `<div class="j-list">${items.map(([key, v]) => { const f = findLesson(v.lessonId), st = f && f.l.steps[v.step]; if (!st) return "";
+      return `<button class="j-lesson" data-key="${esc(key)}"><span class="j-check">${st.type === "page" ? "📄" : "❓"}</span><span class="j-ut"><b>${esc(st.type === "page" ? st.title : st.prompt.replace(/[`*]/g, "").slice(0, 90))}</b>
+        <small>${kind === "note" ? esc(v.note.slice(0, 120)) : `Unit ${f.u.info.number} · ${esc(f.l.title)}`}</small></span></button>`; }).join("")}</div>`
+      : `<p class="j-sub">${kind === "bookmark" ? "Tap ☆ on a lesson page or question to save it here." : "Tap ✎ on a lesson page or question to write a note."}</p>`}`;
+  on(body, "[data-key]", "click", b => go(savedItem, b.dataset.key));
+}
+
+// ---------- unit essentials ----------
+// The exam-critical points of a unit in one place: its objectives, then every "On the exam" and trap callout from its
+// lessons, grouped by lesson.
+function essentials(body, u) {
+  let filter = "all";
+  const render = () => {
+    const groups = u.lessons.map(l => ({ l, pts: l.steps.flatMap(st => st.type === "page" ? st.blocks.filter(b => b.type === "callout" && (b.kind === "exam" || b.kind === "trap") && (filter === "all" || b.kind === filter)) : []) })).filter(g => g.pts.length);
+    body.innerHTML = `<div class="j-kicker">Unit ${u.info.number} essentials</div><h2 class="j-h">${esc(u.info.title)}</h2>
+      <div class="j-list">${u.info.objectives.map(id => `<div class="j-row"><span><b>${esc(id)}</b> · ${esc((C.objectives[id] || {}).title || "")}</span></div>`).join("")}</div>
+      <div class="j-seg" style="margin-top:14px">${[["all", "All"], ["exam", "🎯 On the exam"], ["trap", "⚠️ Traps"]].map(([k, t]) => `<button data-k="${k}" class="${k === filter ? "on" : ""}">${t}</button>`).join("")}</div>
+      ${groups.map(g => `<h3 class="j-sec">${esc(g.l.title)}</h3>${g.pts.map(blockHtml).join("")}`).join("") || '<p class="j-sub">Nothing here.</p>'}`;
+    on(body, "[data-k]", "click", b => { filter = b.dataset.k; render(); });
+  };
+  render();
+}
+
 const PAUSE_KEY = "javaPaused";
 function pausedLesson() {
   let p = null; try { p = JSON.parse(localStorage.getItem(PAUSE_KEY) || "null"); } catch (_) {}
@@ -248,6 +313,11 @@ function home(body) {
     <button class="j-tile" data-go="tips">💡<b>Tips &amp; traps</b><small>${C.tips.length} short notes</small></button>
     <button class="j-tile" data-go="ready">🎯<b>Readiness</b><small>by objective</small></button>
   </div>
+  <h3 class="j-sec">Saved</h3>
+  <div class="j-grid">
+    <button class="j-tile" data-saved="bookmark">★<b>Bookmarks</b><small>${Object.values(P.saved).filter(v => v.bookmark).length} saved</small></button>
+    <button class="j-tile" data-saved="note">✎<b>Notes</b><small>${Object.values(P.saved).filter(v => v.note).length} written</small></button>
+  </div>
   <h3 class="j-sec">Units</h3>
   <div class="j-list">${C.units.map((u, i) => {
     const d = u.lessons.filter(lessonDone).length;
@@ -265,6 +335,7 @@ function home(body) {
   on(body, "[data-unit]", "click", b => go(unit, C.units[+b.dataset.unit]));
   const views = { mocks, fixbug: drillMenu, write: drillMenu, trace: traceMenu, tips, ready: readinessView, review };
   const rv = $("#j-review"); if (rv) rv.onclick = () => go(review);
+  on(body, "[data-saved]", "click", b => go(savedList, b.dataset.saved));
   on(body, "[data-go]", "click", b => go(views[b.dataset.go], b.dataset.go));
 }
 
@@ -278,6 +349,7 @@ function unit(body, u) {
   body.innerHTML = `<div class="j-kicker">Unit ${u.info.number}</div><h2 class="j-h">${esc(u.info.title)}</h2>
   <p class="j-sub">${esc(u.info.summary)}</p>
   <div class="j-chips">${u.info.objectives.map(id => `<span class="j-chip" title="${esc((C.objectives[id] || {}).title)}">Obj ${esc(id)}${objScore(id) != null ? " · " + pct(objScore(id)) : ""}</span>`).join("")}</div>
+  <button class="btn j-wide j-ghost" id="j-ess">⚡ Unit essentials<small>Objectives, exam points and traps on one page</small></button>
   <div class="j-path">${u.lessons.map((l, i) => {
     const st = P.lessons[l.id] || {}, open = lessonUnlocked(u, i), isCur = i === cur, dx = offsets[i % offsets.length];
     const cls = st.done ? (st.skipped ? "skip" : "done") : isCur ? "cur" : open ? "open" : "lock";
@@ -292,6 +364,7 @@ function unit(body, u) {
     if (!lessonUnlocked(u, i)) { alert("Finish or skip the lesson before this one to unlock it."); return; }
     openLesson(u, u.lessons[i]);
   });
+  $("#j-ess").onclick = () => go(essentials, u);
   on(body, "[data-skip]", "click", b => {
     const l = u.lessons[+b.dataset.skip];
     if (!confirm(`"${l.title}" will be marked done without XP and the next lesson unlocks. You can still play it later.`)) return;
@@ -401,11 +474,23 @@ function lesson(body, u, l, resume) {
   const exercises = l.steps.filter(st => st.type === "exercise"), pages = l.steps.length - exercises.length;
   let current = null, checked = false;
   body.innerHTML = `<div class="j-lhead"><div class="j-lrow"><button class="j-lback" id="j-lprev" aria-label="Previous step">‹</button>
-      <div class="j-bar big"><i id="j-prog"></i></div><span class="j-xpchip">⚡${todayXP()}</span></div>
+      <div class="j-bar big"><i id="j-prog"></i></div><button class="j-mini" id="j-bm" aria-label="Bookmark">☆</button><button class="j-mini" id="j-nt" aria-label="Note">✎</button><span class="j-xpchip">⚡${todayXP()}</span></div>
       <div class="j-kicker">Unit ${u.info.number} · ${esc(l.title)}</div></div>
-    <div class="j-card" id="j-step"></div><div class="j-feedback" id="j-fb" hidden></div>
+    <div class="j-card" id="j-step"></div><div class="j-notebox" id="j-notebox" hidden></div><div class="j-feedback" id="j-fb" hidden></div>
     <div class="j-actions"><button class="btn btn-primary j-wide" id="j-next">Continue</button></div>`;
   const step = $("#j-step"), fb = $("#j-fb"), nextBtn = $("#j-next");
+  const savedUi = () => {
+    const k = S.items[S.index][0], e = savedEntry(l, k) || {};
+    $("#j-bm").textContent = e.bookmark ? "★" : "☆"; $("#j-bm").classList.toggle("on", !!e.bookmark);
+    $("#j-nt").classList.toggle("on", !!e.note);
+    $("#j-notebox").hidden = !e.note; $("#j-notebox").innerHTML = e.note ? `✎ ${esc(e.note)}` : "";
+  };
+  $("#j-bm").onclick = () => { const k = S.items[S.index][0]; updateSaved(l, k, { bookmark: !(savedEntry(l, k) || {}).bookmark }); savedUi(); };
+  $("#j-nt").onclick = () => {
+    const k = S.items[S.index][0], cur = (savedEntry(l, k) || {}).note || "";
+    const note = prompt("Note for this step (empty to delete):", cur); if (note == null) return;
+    updateSaved(l, k, { note: note.trim() }); savedUi();
+  };
   const progress = () => {
     const passedPages = new Set(), doneEx = new Set();
     S.items.forEach(([k], idx) => { const st = l.steps[k]; if (st.type === "page" && idx < S.index) passedPages.add(k); if (st.type === "exercise" && S.results[idx]) doneEx.add(st.id); });
@@ -425,7 +510,7 @@ function lesson(body, u, l, resume) {
   function render() {
     $("#j-prog").style.width = (progress() * 100) + "%";
     $("#j-lprev").style.visibility = S.index > 0 ? "visible" : "hidden";
-    fb.hidden = true; checked = false; current = null;
+    fb.hidden = true; checked = false; current = null; savedUi();
     const [k, retry] = S.items[S.index], st = l.steps[k], done = S.results[S.index];
     if (st.type === "page") {
       step.innerHTML = `<h3 class="j-pt">${esc(st.title)}</h3>${st.blocks.map(blockHtml).join("")}`;

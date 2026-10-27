@@ -1029,7 +1029,7 @@ a { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transpar
 
 body { padding-bottom: calc(var(--tab-bar-height) + env(safe-area-inset-bottom)); }
 body.webview-open { overflow: hidden; }
-
+body
 .tab-bar {
   position: fixed;
   left: 0;
@@ -1086,13 +1086,6 @@ body.webview-open { overflow: hidden; }
   border-bottom: 1px solid var(--border);
 }
 .webview-title { font-family: 'Cinzel', serif; font-weight: 600; color: var(--text); }
-.webview-open {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--primary);
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-}
 
 .gw-body {
   flex: 1;

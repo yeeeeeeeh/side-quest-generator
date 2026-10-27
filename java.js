@@ -100,6 +100,34 @@ function skipLesson(l) {
   if (lessonDone(l)) return;
   P.lessons[l.id] = { done: true, skipped: true, at: Date.now() }; P.lastLesson = l.id; save();
 }
+// ---------- review (spaced repetition) ----------
+// Leitner boxes like the app: right moves an exercise up a box (due again in 1, 3, 7, 14 or 30 days), a miss moves
+// it down one box and brings it back tomorrow. Guesses count as misses.
+const INTERVAL_DAYS = [1, 3, 7, 14, 30], REVIEW_SIZE = 10;
+P.ex = P.ex || {};
+function reviewRecord(id, correct) {
+  const prev = P.ex[id] || { a: 0, c: 0, box: 0 };
+  const box = correct ? Math.min(prev.box + 1, INTERVAL_DAYS.length) : Math.max(prev.box - 1, 1);
+  const due = new Date(); due.setHours(0, 0, 0, 0); due.setDate(due.getDate() + (correct ? INTERVAL_DAYS[box - 1] : 1));
+  P.ex[id] = { a: prev.a + 1, c: prev.c + (correct ? 1 : 0), box, due: due.getTime(), last: Date.now() };
+  save();
+}
+let EXERCISES = null; // id -> {ex, u, l}
+function exerciseIndex() {
+  if (!EXERCISES) { EXERCISES = {}; C.units.forEach(u => u.lessons.forEach(l => l.steps.forEach(st => { if (st.type === "exercise") EXERCISES[st.id] = { ex: st, u, l }; }))); }
+  return EXERCISES;
+}
+// Due exercises that still exist in the course, lowest box first, then the longest overdue.
+function dueExercises() {
+  const idx = exerciseIndex(), now = Date.now();
+  return Object.entries(P.ex).filter(([id, st]) => idx[id] && st.due <= now)
+    .sort((a, b) => a[1].box - b[1].box || a[1].due - b[1].due).map(([id]) => idx[id]);
+}
+function nextDue() {
+  const idx = exerciseIndex(), later = Object.entries(P.ex).filter(([id, st]) => idx[id] && st.due > Date.now()).map(([, st]) => st.due);
+  return later.length ? Math.min(...later) : null;
+}
+
 const PAUSE_KEY = "javaPaused";
 function pausedLesson() {
   let p = null; try { p = JSON.parse(localStorage.getItem(PAUSE_KEY) || "null"); } catch (_) {}
@@ -189,7 +217,7 @@ function home(body) {
   const done = C.units.reduce((n, u) => n + u.lessons.filter(lessonDone).length, 0), all = C.units.reduce((n, u) => n + u.lessons.length, 0);
   const weak = C.catalog.objectives.map(o => ({ o, s: objScore(o.id), n: (P.answers[o.id] || {}).total || 0 }))
     .filter(x => x.s != null && x.n >= 3).sort((a, b) => a.s - b.s).slice(0, 3);
-  const paused = pausedLesson(), today = todayXP(), stk = streak();
+  const paused = pausedLesson(), today = todayXP(), stk = streak(), dueCount = dueExercises().length;
   body.innerHTML = `
   <div class="j-xphead">
     <div class="j-xpstat"><b>🔥 ${stk}</b><span>day streak</span></div>
@@ -209,8 +237,10 @@ function home(body) {
       : next ? `<button class="btn btn-primary j-wide" id="j-cont">▶ ${done ? "Continue" : "Start"}: ${esc(next.l.title)}<small>Unit ${next.u.info.number} · ${next.l.minutes} min</small></button>` : `<p class="j-sub">Every lesson is done. Keep sharp with reviews, mock exams and drills.</p>`}
   </div>
   ${weak.length ? `<h3 class="j-sec">Weakest objectives</h3><div class="j-list">${weak.map(x => `<div class="j-row"><span>${esc(x.o.id)} · ${esc(x.o.title)}</span><b class="${x.s >= 0.68 ? "ok" : "bad"}">${pct(x.s)}</b></div>`).join("")}</div>` : ""}
+  ${dueCount ? `<button class="j-review" id="j-review"><span class="j-big2">🔁</span><span><b>Review ${Math.min(dueCount, REVIEW_SIZE)} exercise${dueCount === 1 ? "" : "s"}</b><small>${dueCount} due · +1 XP each</small></span><span class="j-go">›</span></button>` : ""}
   <h3 class="j-sec">Practice</h3>
   <div class="j-grid">
+    <button class="j-tile" data-go="review">🔁<b>Review</b><small>${dueCount ? `${dueCount} due now` : `${Object.keys(P.ex).length} scheduled`}</small></button>
     <button class="j-tile" data-go="mocks">📝<b>Mock exams</b><small>${C.mocks.length} sets, timed</small></button>
     <button class="j-tile" data-go="fixbug">🐞<b>Fix the bug</b><small>${C.fixbug.length} programs</small></button>
     <button class="j-tile" data-go="write">⌨️<b>Write it</b><small>${C.write.length} from memory</small></button>
@@ -233,7 +263,8 @@ function home(body) {
     P.goal = v; if (todayXP() >= v && !P.goalMet.includes(dayKey())) P.goalMet.push(dayKey()); save(); show();
   };
   on(body, "[data-unit]", "click", b => go(unit, C.units[+b.dataset.unit]));
-  const views = { mocks, fixbug: drillMenu, write: drillMenu, trace: traceMenu, tips, ready: readinessView };
+  const views = { mocks, fixbug: drillMenu, write: drillMenu, trace: traceMenu, tips, ready: readinessView, review };
+  const rv = $("#j-review"); if (rv) rv.onclick = () => go(review);
   on(body, "[data-go]", "click", b => go(views[b.dataset.go], b.dataset.go));
 }
 
@@ -434,7 +465,7 @@ function lesson(body, u, l, resume) {
   function finish() {
     try { localStorage.removeItem(PAUSE_KEY); } catch (_) {}
     const ids = Object.keys(S.firstTry), right = ids.filter(id => S.firstTry[id]).length, score = ids.length ? right / ids.length : 1;
-    if (typeof reviewRecord === "function") ids.forEach(id => reviewRecord(id, S.firstTry[id] && !S.guessed.includes(id)));
+    ids.forEach(id => reviewRecord(id, S.firstTry[id] && !S.guessed.includes(id)));
     const before = streak(), xp = completeLesson(l, score), after = streak(), nx = nextLesson();
     body.innerHTML = `<div class="j-done"><div class="j-big">${score >= 1 ? "🌟" : "🎉"}</div><h2 class="j-h">${score >= 1 ? "Perfect lesson!" : "Lesson complete"}</h2>
       <div class="j-stats"><div><b class="j-xpc">+${xp}</b><span>XP earned</span></div><div><b>${ids.length ? pct(score) : "—"}</b><span>first try</span></div><div><b>🔥 ${after}</b><span>day streak</span></div></div>
@@ -446,6 +477,59 @@ function lesson(body, u, l, resume) {
   }
   render();
 }
+// ---------- review session ----------
+// Up to 10 due exercises, each shown once (no repeats), 1 XP per right answer, then rescheduled.
+function review(body) {
+  const items = dueExercises().slice(0, REVIEW_SIZE);
+  if (!items.length) return reviewEmpty(body);
+  let i = 0, right = 0, current = null, checked = false, guessed = false;
+  body.innerHTML = `<div class="j-lhead"><div class="j-lrow"><div class="j-bar big"><i id="j-prog"></i></div><span class="j-xpchip">🔁 ${items.length}</span></div>
+    <div class="j-kicker" id="j-rk"></div></div><div class="j-card" id="j-step"></div><div class="j-feedback" id="j-fb" hidden></div>
+    <div class="j-actions"><button class="btn btn-primary j-wide" id="j-next">Check</button></div>`;
+  const step = $("#j-step"), fb = $("#j-fb"), nextBtn = $("#j-next");
+  const render = () => {
+    const it = items[i];
+    $("#j-prog").style.width = (i / items.length * 100) + "%";
+    $("#j-rk").textContent = `Review ${i + 1} of ${items.length} · Unit ${it.u.info.number} · ${it.l.title}`;
+    fb.hidden = true; checked = false; guessed = false;
+    step.innerHTML = ""; const box = h("div"); step.appendChild(box);
+    current = exercise(box, it.ex); nextBtn.textContent = "Check";
+    $("#j-body").scrollTop = 0;
+  };
+  nextBtn.onclick = () => {
+    const it = items[i];
+    if (!checked) {
+      const r = current.check();
+      if (!r.ready) { nextBtn.classList.add("shake"); setTimeout(() => nextBtn.classList.remove("shake"), 400); return; }
+      checked = true; it.correct = r.correct;
+      recordAnswer(it.ex.objective, r.correct);
+      fb.className = "j-feedback " + (r.correct ? "ok" : "bad"); fb.hidden = false;
+      fb.innerHTML = `<b>${r.correct ? "✓ Correct" : "✗ Not quite, it comes back tomorrow"}</b>${mdP(it.ex.explanation)}${r.correct ? '<button class="j-guess" id="j-guess">🎲 I guessed</button>' : ""}`;
+      const g = $("#j-guess"); if (g) g.onclick = () => { guessed = !guessed; g.classList.toggle("on", guessed); };
+      nextBtn.textContent = "Continue";
+      fb.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      return;
+    }
+    const ok = it.correct && !guessed;
+    reviewRecord(it.ex.id, ok); if (it.correct) { right++; addXP(1); }
+    if (++i < items.length) return render();
+    const left = dueExercises().length;
+    body.innerHTML = `<div class="j-done"><div class="j-big">🔁</div><h2 class="j-h">Review done</h2>
+      <div class="j-stats"><div><b class="j-xpc">+${right}</b><span>XP earned</span></div><div><b>${right}/${items.length}</b><span>right</span></div><div><b>🔥 ${streak()}</b><span>day streak</span></div></div>
+      ${left ? `<button class="btn btn-primary j-wide" id="j-more">Review ${Math.min(left, REVIEW_SIZE)} more<small>${left} still due</small></button>` : `<p class="j-sub">Nothing else is due today.</p>`}
+      <button class="btn j-wide j-ghost" id="j-home">Done</button></div>`;
+    const more = $("#j-more"); if (more) more.onclick = () => { stack.pop(); go(review); };
+    $("#j-home").onclick = back;
+  };
+  render();
+}
+function reviewEmpty(body) {
+  const nd = nextDue(), boxes = [1, 2, 3, 4, 5].map(b => Object.values(P.ex).filter(st => st.box === b).length);
+  body.innerHTML = `<div class="j-done"><div class="j-big">✅</div><h2 class="j-h">Nothing to review</h2>
+    <p class="j-sub">${Object.keys(P.ex).length ? `Next review ${nd ? new Date(nd).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "short" }) : "later"}.` : "Exercises you answer in lessons come back here on a schedule."}</p></div>
+    <h3 class="j-sec">Your exercises by box</h3><div class="j-boxes">${boxes.map((n, k) => `<div><b>${n}</b><span>box ${k + 1} · ${INTERVAL_DAYS[k]}d</span></div>`).join("")}</div>`;
+}
+
 // Opens a lesson, resuming it when it was left part-way.
 function openLesson(u, l) {
   const p = pausedLesson();
@@ -791,7 +875,7 @@ function readinessView(body) {
     <button class="btn j-wide j-ghost" id="j-reset">Reset all Java progress</button>`;
   $("#j-reset").onclick = () => {
     if (!confirm("Erase all lesson, exam and drill progress for the Java course?")) return;
-    P = { lessons: {}, answers: {}, mocks: {}, drills: { fixbug: {}, write: {}, trace: {} }, xpByDay: {}, goalMet: [], goal: P.goal }; save();
+    P = { lessons: {}, answers: {}, mocks: {}, drills: { fixbug: {}, write: {}, trace: {} }, xpByDay: {}, goalMet: [], goal: P.goal, ex: {} }; save();
     try { localStorage.removeItem(MOCK_KEY); localStorage.removeItem(PAUSE_KEY); } catch (_) {}
     stack.length = 0; go(home);
   };

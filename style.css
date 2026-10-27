@@ -1630,3 +1630,13 @@ body
 .j-node.lock .j-nlabel b { color: var(--text-muted); }
 .j-skip { align-self: flex-start; margin-top: 4px; padding: 2px 10px; font: inherit; font-size: 0.72rem; color: var(--text-muted); background: transparent; border: 1px solid var(--border); border-radius: 999px; cursor: pointer; }
 @media (max-width: 420px) { .j-path { padding-left: 28px; } .j-node { transform: translateX(calc(var(--dx) * 0.5)); } }
+/* Java: review */
+.j-review { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 14px; padding: 14px; font: inherit; text-align: left; color: var(--text); background: rgba(96,165,250,0.12); border: 1.5px solid #60A5FA; border-radius: var(--radius); cursor: pointer; }
+.j-review span:nth-child(2) { flex: 1; display: flex; flex-direction: column; }
+.j-review small { font-size: 0.78rem; color: var(--text-muted); }
+.j-big2 { font-size: 1.6rem; }
+.j-go { font-size: 1.4rem; color: #60A5FA; }
+.j-boxes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.j-boxes div { padding: 10px 4px; text-align: center; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.j-boxes b { display: block; font-size: 1.1rem; color: var(--text); }
+.j-boxes span { font-size: 0.65rem; color: var(--text-muted); }

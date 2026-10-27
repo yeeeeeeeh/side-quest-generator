@@ -1,0 +1,2641 @@
+{
+  "unitId": "u10",
+  "lessons": [
+    {
+      "id": "u10-l01",
+      "title": "LocalDate, LocalTime, LocalDateTime",
+      "summary": "Create dates and times, and never forget that they are immutable.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Three local types",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "The `java.time` package has three **local** types. Local means: no time zone, just what a wall calendar or clock shows."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Type",
+                "Holds",
+                "toString()"
+              ],
+              "rows": [
+                [
+                  "`LocalDate`",
+                  "year, month, day",
+                  "`2024-01-05`"
+                ],
+                [
+                  "`LocalTime`",
+                  "hour, minute, second, nano",
+                  "`09:30`"
+                ],
+                [
+                  "`LocalDateTime`",
+                  "both",
+                  "`2024-01-05T09:30`"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "LocalDate d = LocalDate.of(2024, 1, 5);\nLocalTime t = LocalTime.of(9, 30);\nLocalDateTime dt = LocalDateTime.of(d, t);\nSystem.out.println(d);\nSystem.out.println(t);\nSystem.out.println(dt);",
+              "caption": "Prints 2024-01-05, 09:30, 2024-01-05T09:30",
+              "verify": {
+                "expect": "stdout",
+                "value": "2024-01-05\n09:30\n2024-01-05T09:30"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Seconds are hidden when zero",
+              "text": "`LocalTime.of(9, 30, 0)` prints `09:30`. Seconds show only when non-zero: `LocalTime.of(9, 30, 5)` prints `09:30:05`."
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python's `date(2024, 1, 5)` uses a constructor. Java's date types have **no public constructor**: `new LocalDate(...)` does not compile. Use static factories: `of()`, `parse()`, `now()`."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Months start at 1",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Months are numbered **1 to 12**. You can also pass the `Month` enum: `LocalDate.of(2024, Month.MARCH, 1)`."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`getMonth()` returns the enum (`FEBRUARY`).",
+                "`getMonthValue()` returns the int (`2`).",
+                "`getDayOfWeek()` returns a `DayOfWeek` enum (`MONDAY`)."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Invalid values **compile** but throw `DateTimeException` at runtime: `LocalDate.of(2024, 13, 1)`, `LocalTime.of(24, 0)`, or February 29 in a non-leap year."
+            },
+            {
+              "type": "paragraph",
+              "text": "`LocalDate.parse(\"2024-02-05\")` reads the ISO format. It needs two-digit month and day: `\"2024-2-5\"` throws `DateTimeParseException`."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Compiles is not the same as valid",
+              "text": "The compiler only sees `int` arguments. It can't know that 13 is not a month, so the error happens when the line runs."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l01-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "LocalDate d = LocalDate.of(2024, 2, 1);\nSystem.out.println(d.getMonth() + \" \"\n    + d.getDayOfMonth());",
+          "options": [
+            "FEBRUARY 1",
+            "MARCH 1",
+            "2 1",
+            "JANUARY 1"
+          ],
+          "answer": 0,
+          "explanation": "Months are 1-based, so `2` is February. `getMonth()` returns the `Month` enum, whose `toString()` is the constant name `FEBRUARY`. You'd need `getMonthValue()` to get `2`.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "FEBRUARY 1"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l01-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "LocalDate d = LocalDate.of(2023, 2, 29);\nSystem.out.println(d);",
+          "options": [
+            "2023-02-29",
+            "2023-03-01",
+            "2023-02-28",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 4,
+          "explanation": "2023 is not a leap year, so February 29 doesn't exist. The code compiles (the arguments are just ints), but `LocalDate.of` throws a `DateTimeException`. Java never silently rolls an invalid date over to March.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "exception",
+            "value": "DateTimeException"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Immutable: keep the result",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Every java.time object is **immutable**. Methods like `plusDays()`, `minusMonths()` and `withYear()` return a **new** object. The original never changes."
+            },
+            {
+              "type": "code",
+              "code": "LocalDate d = LocalDate.of(2024, 1, 1);\nd.plusDays(1);          // result ignored!\nSystem.out.println(d);  // 2024-01-01\nd = d.plusDays(1).plusMonths(1);\nSystem.out.println(d);  // 2024-02-02",
+              "verify": {
+                "expect": "stdout",
+                "value": "2024-01-01\n2024-02-02"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "`withXxx()` replaces one field: `d.withDayOfMonth(15)`, `d.withYear(2020)`. Calls can be chained because each returns a new object."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "The ignored result",
+              "text": "A line like `d.plusDays(1);` on its own does nothing useful. On the exam, look for calls whose result isn't assigned. They are there to trick you."
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Same idea as Python's `date.replace()`: it returns a new date. The difference is that Java's `plusDays` *sounds* like it changes the object, so it's easy to forget to assign it."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l01-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "LocalDate d = LocalDate.of(2024, 3, 31);\nd.plusDays(1);\nd = d.minusMonths(1);\nd.withYear(2020);\nSystem.out.println(d);",
+          "options": [
+            "2024-02-29",
+            "2020-02-29",
+            "2024-03-01",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "Line 2 and line 4 throw their results away. Only `d = d.minusMonths(1)` sticks. March 31 minus one month would be February 31, which doesn't exist, so java.time **clamps** to the last valid day: 2024-02-29 (2024 is a leap year). No exception.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "2024-02-29"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Comparing and leap years",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "`a.isBefore(b)`, `a.isAfter(b)`, `a.isEqual(b)` compare dates on the timeline.",
+                "`isLeapYear()` and `Year.isLeap(y)` check leap years.",
+                "`plusMonths` and `plusYears` clamp the day to the end of the month: `2024-01-31` plus one month is `2024-02-29`."
+              ]
+            },
+            {
+              "type": "table",
+              "header": [
+                "Year",
+                "Leap?",
+                "Why"
+              ],
+              "rows": [
+                [
+                  "2024",
+                  "yes",
+                  "divisible by 4"
+                ],
+                [
+                  "1900",
+                  "no",
+                  "divisible by 100"
+                ],
+                [
+                  "2000",
+                  "yes",
+                  "divisible by 400"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "Expect month-end questions: Jan 31 + 1 month, Mar 31 - 1 month, Feb 29 + 1 year (gives Feb 28). The result is always the last valid day, never an exception."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l01-e04",
+          "kind": "trueFalse",
+          "prompt": "This code prints `1900-02-29`.",
+          "code": "System.out.println(\n    LocalDate.of(1900, 2, 29));",
+          "answer": false,
+          "explanation": "1900 is divisible by 100 but not by 400, so it is **not** a leap year. `LocalDate.of` throws a `DateTimeException` for February 29, 1900.",
+          "objective": "1.3",
+          "verify": {
+            "expect": "exception",
+            "value": "DateTimeException"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l01-e05",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code so it prints `2024-05-04 true`.",
+          "code": "LocalDate a = LocalDate.of(2024, 5, 1);\nLocalDate b = a.___(3);\nSystem.out.println(b + \" \" + b.___(a));",
+          "bank": [
+            "plusDays",
+            "minusDays",
+            "addDays",
+            "isAfter",
+            "isBefore",
+            "after"
+          ],
+          "answers": [
+            "plusDays",
+            "isAfter"
+          ],
+          "explanation": "`plusDays(3)` moves from May 1 to May 4. May 4 is after May 1, so `b.isAfter(a)` is `true`. There is no `addDays` or `after` method on `LocalDate`.",
+          "objective": "1.3",
+          "verify": {
+            "expect": "stdout",
+            "value": "2024-05-04 true"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l01-e06",
+          "kind": "multiChoice",
+          "prompt": "Which two lines compile and run without throwing an exception? Choose two.",
+          "options": [
+            "LocalDate.of(2024, Month.JANUARY, 31);",
+            "new LocalDate(2024, 1, 31);",
+            "LocalDate.of(2024, 13, 1);",
+            "LocalTime.of(23, 59, 59);",
+            "LocalTime.of(24, 0);",
+            "LocalDate.parse(\"2024-1-31\");"
+          ],
+          "answers": [
+            0,
+            3
+          ],
+          "explanation": "`new LocalDate(...)` doesn't compile: there's no public constructor. Month 13 and hour 24 compile but throw `DateTimeException`. `\"2024-1-31\"` isn't ISO format (month needs two digits), so `parse` throws `DateTimeParseException`.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "2024-01-31\n23:59:59",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nSystem.out.println(LocalDate.of(2024, Month.JANUARY, 31));\nSystem.out.println(LocalTime.of(23, 59, 59));\n}}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u10-l02",
+      "title": "Period vs Duration",
+      "summary": "Date-based amounts, time-based amounts, and which types accept which.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Two kinds of amount",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Class",
+                "Measures",
+                "Example",
+                "toString()"
+              ],
+              "rows": [
+                [
+                  "`Period`",
+                  "years, months, days",
+                  "`Period.of(1, 2, 3)`",
+                  "`P1Y2M3D`"
+                ],
+                [
+                  "`Duration`",
+                  "hours, minutes, seconds, nanos",
+                  "`Duration.ofMinutes(90)`",
+                  "`PT1H30M`"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Both print in ISO-8601 format. `P` starts every amount. Duration adds `T` (for time) before hours: **PT**."
+            },
+            {
+              "type": "code",
+              "code": "System.out.println(Period.ofWeeks(2));\nSystem.out.println(Period.ofMonths(14));\nSystem.out.println(Duration.ofDays(1));\nSystem.out.println(Duration.ofSeconds(90));",
+              "caption": "P14D, P14M, PT24H, PT1M30S",
+              "verify": {
+                "expect": "stdout",
+                "value": "P14D\nP14M\nPT24H\nPT1M30S"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "No weeks, no days in Duration",
+              "text": "`Period.ofWeeks(2)` is stored as days: `P14D`. `Period` never normalizes months to years on its own (`P14M`). `Duration.ofDays(1)` prints `PT24H`: Duration only shows hours, minutes and seconds."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "The chaining trap",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`Period.ofYears`, `ofMonths`, `ofDays` and `ofWeeks` are **static** factory methods. Java lets you call a static method through an instance, so this compiles:"
+            },
+            {
+              "type": "code",
+              "code": "Period p = Period.ofYears(1).ofMonths(2);\nSystem.out.println(p);  // P2M",
+              "verify": {
+                "expect": "stdout",
+                "value": "P2M"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "Each `ofXxx` call ignores the object before it and builds a brand-new Period. Only the **last** call counts."
+            },
+            {
+              "type": "paragraph",
+              "text": "To combine, use `Period.of(1, 2, 0)` or the instance methods: `Period.ofYears(1).plusMonths(2)` gives `P1Y2M`."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Only the last one survives",
+              "text": "Chained `ofXxx` calls on Period (and on Duration) are a classic exam trick. The code compiles and runs, but everything before the last call is lost."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l02-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Period p = Period.ofDays(5)\n    .ofWeeks(1).ofMonths(3);\nSystem.out.println(p);",
+          "options": [
+            "P3M",
+            "P3M1W5D",
+            "P3M12D",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`ofDays`, `ofWeeks` and `ofMonths` are static. Calling them on an instance compiles, but each call ignores the previous Period. Only `ofMonths(3)` matters: `P3M`.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "P3M"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l02-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "System.out.println(\n    Duration.ofSeconds(3661));",
+          "options": [
+            "PT1H1M1S",
+            "P1H1M1S",
+            "PT3661S",
+            "01:01:01"
+          ],
+          "answer": 0,
+          "explanation": "3661 seconds = 1 hour + 1 minute + 1 second. Duration's `toString()` breaks it into hours, minutes and seconds after `PT`. Without the `T`, `P1H...` isn't valid ISO-8601.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "PT1H1M1S"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Which types accept what",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Type",
+                "+ Period",
+                "+ Duration"
+              ],
+              "rows": [
+                [
+                  "`LocalDate`",
+                  "yes",
+                  "no (exception)"
+                ],
+                [
+                  "`LocalTime`",
+                  "no (exception)",
+                  "yes"
+                ],
+                [
+                  "`LocalDateTime`",
+                  "yes",
+                  "yes"
+                ],
+                [
+                  "`ZonedDateTime`",
+                  "yes",
+                  "yes"
+                ],
+                [
+                  "`Instant`",
+                  "days only",
+                  "yes"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "`plus(TemporalAmount)` accepts either type, so a wrong combination **compiles**. At runtime it throws `UnsupportedTemporalTypeException` (a subclass of `DateTimeException`)."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "A date has no hours",
+              "text": "`LocalDate.plus(Duration.ofDays(1))` throws, even though one day sounds like a date amount. A Duration is always stored as seconds, and a LocalDate has no seconds field."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l02-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "LocalDate d = LocalDate.of(2024, 1, 1);\nd = d.plus(Duration.ofDays(1));\nSystem.out.println(d);",
+          "options": [
+            "2024-01-02",
+            "2024-01-01",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 3,
+          "explanation": "`plus` takes any `TemporalAmount`, so it compiles. But a Duration is seconds-based and `LocalDate` doesn't support seconds: `UnsupportedTemporalTypeException`. Use `plusDays(1)` or `Period.ofDays(1)` instead.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "exception",
+            "value": "UnsupportedTemporalTypeException"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l02-e04",
+          "kind": "trueFalse",
+          "prompt": "This code compiles and prints `2024-01-02T11:00`.",
+          "code": "var t = LocalDateTime.of(2024, 1, 1, 10, 0);\nt = t.plus(Period.ofDays(1));\nt = t.plus(Duration.ofHours(1));\nSystem.out.println(t);",
+          "answer": true,
+          "explanation": "`LocalDateTime` has both date and time fields, so it accepts a Period (one day) and a Duration (one hour).",
+          "objective": "1.3",
+          "verify": {
+            "expect": "stdout",
+            "value": "2024-01-02T11:00"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Measuring the gap",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "`Period.between(d1, d2)` gives years, months and days between two `LocalDate`s.",
+                "`Duration.between(t1, t2)` gives the exact time between two times (not plain `LocalDate`s: that throws).",
+                "`ChronoUnit.DAYS.between(d1, d2)` returns a single `long` count. Works for any unit: `HOURS`, `MONTHS`..."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "var a = LocalDate.of(2024, 1, 15);\nvar b = LocalDate.of(2024, 3, 1);\nSystem.out.println(Period.between(a, b));\nSystem.out.println(ChronoUnit.DAYS.between(a, b));",
+              "caption": "ChronoUnit lives in java.time.temporal",
+              "verify": {
+                "expect": "stdout",
+                "value": "P1M15D\n46",
+                "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar a = LocalDate.of(2024, 1, 15);\nvar b = LocalDate.of(2024, 3, 1);\nSystem.out.println(Period.between(a, b));\nSystem.out.println(ChronoUnit.DAYS.between(a, b));\n}}"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Order matters",
+              "text": "`between(a, b)` is negative when `b` is before `a`: `P-1M-15D`."
+            },
+            {
+              "type": "code",
+              "code": "var night = LocalTime.of(23, 0);\nvar early = LocalTime.of(2, 0);\nSystem.out.println(\n    Duration.between(night, early));\nSystem.out.println(Period.between(\n    LocalDate.of(2024, 1, 31),\n    LocalDate.of(2024, 3, 1)));\nSystem.out.println(\n    Period.of(0, 15, 40).normalized());",
+              "verify": {
+                "expect": "stdout",
+                "value": "PT-21H\nP1M1D\nP1Y3M40D",
+                "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar night = LocalTime.of(23, 0);\nvar early = LocalTime.of(2, 0);\nSystem.out.println(\n    Duration.between(night, early));\nSystem.out.println(Period.between(\n    LocalDate.of(2024, 1, 31),\n    LocalDate.of(2024, 3, 1)));\nSystem.out.println(\n    Period.of(0, 15, 40).normalized());\n}}"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`LocalTime` has no date, so `Duration.between` never wraps past midnight: 23:00 to 02:00 is `PT-21H`.",
+                "`Period.between` counts **whole months** first, then the leftover days: Jan 31 + 1 month is Feb 29, plus 1 day.",
+                "`normalized()` folds 12 months into a year but **never touches days**: `P1Y3M40D`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l02-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var a = LocalDate.of(2024, 1, 31);\nvar b = LocalDate.of(2024, 3, 1);\nSystem.out.println(Period.between(a, b)\n    + \" \" + ChronoUnit.DAYS.between(a, b));",
+          "options": [
+            "P1M1D 30",
+            "P1M 30",
+            "P1M1D 29",
+            "P30D 30"
+          ],
+          "answer": 0,
+          "explanation": "Period counts whole months first: Jan 31 + 1 month clamps to Feb 29, then 1 more day reaches Mar 1, so `P1M1D`. Counting days: 29 to reach Feb 29, plus 1 = **30**. The two methods measure differently.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "P1M1D 30",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar a = LocalDate.of(2024, 1, 31);\nvar b = LocalDate.of(2024, 3, 1);\nSystem.out.println(Period.between(a, b)\n    + \" \" + ChronoUnit.DAYS.between(a, b));\n}}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l02-e06",
+          "kind": "tapLine",
+          "prompt": "Tap the first line that throws an exception at runtime.",
+          "code": "LocalDate d = LocalDate.of(2024, 5, 1);\nLocalTime t = LocalTime.of(8, 0);\nd = d.plus(Period.ofWeeks(1));\nt = t.plus(Duration.ofMinutes(30));\nt = t.plus(Period.ofDays(1));\nd = d.plus(Duration.ofHours(1));",
+          "answer": 5,
+          "explanation": "Lines 3 and 4 match the right amount to the right type. Line 5 adds a Period (days) to a `LocalTime`, which has no day field: `UnsupportedTemporalTypeException`. Line 6 would also throw, but it is never reached.",
+          "objective": "1.3",
+          "verify": {
+            "expect": "exception",
+            "value": "UnsupportedTemporalTypeException"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u10-l03",
+      "title": "Instant & ZonedDateTime",
+      "summary": "Points on the global timeline, zones, offsets and converting between them.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Instant: a moment in UTC",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "An `Instant` is a point on the timeline, counted from the **epoch**: 1970-01-01T00:00:00Z. The `Z` means UTC. It has no zone and no calendar fields."
+            },
+            {
+              "type": "code",
+              "code": "System.out.println(Instant.ofEpochSecond(0));\nSystem.out.println(Instant.ofEpochSecond(86400));",
+              "verify": {
+                "expect": "stdout",
+                "value": "1970-01-01T00:00:00Z\n1970-01-02T00:00:00Z"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`Instant.now()` is the current moment.",
+                "You can add seconds, minutes, hours and days.",
+                "Months and years throw `UnsupportedTemporalTypeException`: their length depends on a calendar and zone, which Instant doesn't have."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Zones and offsets",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A `ZoneId` is a region with rules, like `\"Europe/Paris\"`. A `ZoneOffset` is a fixed shift from UTC, like `+02:00`. A region's offset can change during the year (summer time)."
+            },
+            {
+              "type": "code",
+              "code": "ZoneId paris = ZoneId.of(\"Europe/Paris\");\nvar z = ZonedDateTime.of(\n    2024, 6, 1, 12, 0, 0, 0, paris);\nSystem.out.println(z);",
+              "caption": "Offset, then the zone in brackets",
+              "verify": {
+                "expect": "stdout",
+                "value": "2024-06-01T12:00+02:00[Europe/Paris]"
+              }
+            },
+            {
+              "type": "table",
+              "header": [
+                "Type",
+                "Has"
+              ],
+              "rows": [
+                [
+                  "`LocalDateTime`",
+                  "date + time"
+                ],
+                [
+                  "`OffsetDateTime`",
+                  "date + time + offset"
+                ],
+                [
+                  "`ZonedDateTime`",
+                  "date + time + offset + zone rules"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "An unknown ID such as `ZoneId.of(\"Mars/Base\")` throws `ZoneRulesException`, a subclass of `DateTimeException`."
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Converting",
+              "text": "`z.toInstant()` gives the UTC moment. `instant.atZone(zone)` and `localDateTime.atZone(zone)` go the other way."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l03-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "ZoneId paris = ZoneId.of(\"Europe/Paris\");\nvar z = ZonedDateTime.of(\n    2024, 6, 1, 12, 0, 0, 0, paris);\nSystem.out.println(z.toInstant());",
+          "options": [
+            "2024-06-01T10:00:00Z",
+            "2024-06-01T14:00:00Z",
+            "2024-06-01T12:00:00Z",
+            "2024-06-01T12:00+02:00"
+          ],
+          "answer": 0,
+          "explanation": "In June, Paris is at UTC+02:00. Noon in Paris is two hours **earlier** in UTC: 10:00. `toInstant()` always prints UTC with a `Z`.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "2024-06-01T10:00:00Z"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Same instant or same local time?",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Changing a ZonedDateTime's zone has two meanings:"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`withZoneSameInstant(zone)`: same moment, different wall clock. Use it to answer \"what time is it in Tokyo now?\"",
+                "`withZoneSameLocal(zone)`: same wall clock, different moment. The local date and time stay, only the zone changes."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "var p = ZonedDateTime.of(2024, 6, 1, 12, 0,\n    0, 0, ZoneId.of(\"Europe/Paris\"));\nvar tokyo = ZoneId.of(\"Asia/Tokyo\");\nSystem.out.println(p.withZoneSameInstant(tokyo));\nSystem.out.println(p.withZoneSameLocal(tokyo));",
+              "verify": {
+                "expect": "stdout",
+                "value": "2024-06-01T19:00+09:00[Asia/Tokyo]\n2024-06-01T12:00+09:00[Asia/Tokyo]"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "equals vs isEqual",
+              "text": "`equals()` compares date, time, offset **and** zone. Two ZonedDateTimes for the same moment in different zones are not `equals`. Use `isEqual()` (or `compareTo`) to compare moments."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l03-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "ZoneId paris = ZoneId.of(\"Europe/Paris\");\nZoneId tokyo = ZoneId.of(\"Asia/Tokyo\");\nvar p = ZonedDateTime.of(\n    2024, 6, 1, 12, 0, 0, 0, paris);\nvar t = p.withZoneSameInstant(tokyo);\nSystem.out.println(t.getHour() + \" \"\n    + t.isEqual(p));",
+          "options": [
+            "19 true",
+            "19 false",
+            "12 true",
+            "5 false"
+          ],
+          "answer": 0,
+          "explanation": "Paris is +02:00 and Tokyo +09:00 in June, so 12:00 in Paris is 19:00 in Tokyo. `withZoneSameInstant` keeps the moment, so `isEqual` is `true`.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "19 true"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l03-e03",
+          "kind": "trueFalse",
+          "prompt": "This code prints `true true`.",
+          "code": "var utc = ZonedDateTime.of(2024, 1, 1,\n    12, 0, 0, 0, ZoneOffset.UTC);\nvar ny = utc.withZoneSameInstant(\n    ZoneId.of(\"America/New_York\"));\nSystem.out.println(utc.equals(ny)\n    + \" \" + utc.isEqual(ny));",
+          "answer": false,
+          "explanation": "Both objects represent the same moment, so `isEqual` is `true`. But `equals` also compares the zone, and UTC is not America/New_York, so `equals` is `false`. The output is `false true`.",
+          "objective": "1.3",
+          "verify": {
+            "expect": "stdout",
+            "value": "false true"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l03-e04",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code so it prints `9`.",
+          "code": "Instant i = Instant.ofEpochSecond(0);\nZonedDateTime z =\n    i.___(ZoneId.of(\"Asia/Tokyo\"));\nSystem.out.println(z.___());",
+          "bank": [
+            "atZone",
+            "inZone",
+            "ofZone",
+            "getHour",
+            "getOffset",
+            "getMinute"
+          ],
+          "answers": [
+            "atZone",
+            "getHour"
+          ],
+          "explanation": "`Instant.atZone(zone)` returns a `ZonedDateTime`. The epoch is midnight UTC, which is 09:00 in Tokyo (+09:00), so `getHour()` prints 9. `getOffset()` would print `+09:00`.",
+          "objective": "1.3",
+          "verify": {
+            "expect": "stdout",
+            "value": "9"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l03-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "Instant i = Instant.ofEpochSecond(0);\ni = i.plus(1, ChronoUnit.DAYS);\ni = i.plus(1, ChronoUnit.MONTHS);\nSystem.out.println(i);",
+          "options": [
+            "1970-02-02T00:00:00Z",
+            "1970-01-02T00:00:00Z",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 3,
+          "explanation": "Adding one day to an Instant is fine. Adding a month is not: a month's length depends on the calendar, and Instant has none. It throws `UnsupportedTemporalTypeException`.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "exception",
+            "value": "UnsupportedTemporalTypeException",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nInstant i = Instant.ofEpochSecond(0);\ni = i.plus(1, ChronoUnit.DAYS);\ni = i.plus(1, ChronoUnit.MONTHS);\nSystem.out.println(i);\n}}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l03-e06",
+          "kind": "multiChoice",
+          "prompt": "Which two statements are true? Choose two.",
+          "options": [
+            "An Instant always represents a moment in UTC.",
+            "withZoneSameLocal keeps the same moment on the timeline.",
+            "ZonedDateTime's toString() shows the offset and the zone ID in brackets.",
+            "LocalDateTime stores a time zone.",
+            "ZoneId.of with an unknown ID returns null."
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "`withZoneSameLocal` keeps the wall-clock time, so the moment changes. `LocalDateTime` has no zone at all. An unknown zone ID throws `ZoneRulesException`; java.time factories don't return null.",
+          "objective": "1.3",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "1970-01-01T00:00:00Z\n2024-01-01T12:00Z[UTC]\nZoneRulesException",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nSystem.out.println(Instant.ofEpochSecond(0));\nSystem.out.println(ZonedDateTime.of(2024, 1, 1, 12, 0, 0, 0, ZoneId.of(\"UTC\")));\ntry { ZoneId.of(\"Mars/Base\"); } catch (java.time.zone.ZoneRulesException e) { System.out.println(\"ZoneRulesException\"); }\n}}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u10-l04",
+      "title": "Daylight saving time",
+      "summary": "Gaps, overlaps and why a day isn't always 24 hours.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Clocks jump twice a year",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A region like `America/New_York` changes its offset for summer time. The exam loves these days because local times behave strangely."
+            },
+            {
+              "type": "table",
+              "header": [
+                "2024 date",
+                "At 2:00 local",
+                "Offset"
+              ],
+              "rows": [
+                [
+                  "March 10",
+                  "jumps to 3:00",
+                  "-05:00 (EST) → -04:00 (EDT)"
+                ],
+                [
+                  "November 3",
+                  "falls back to 1:00",
+                  "-04:00 (EDT) → -05:00 (EST)"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Spring forward, fall back",
+              "text": "In spring an hour is **skipped** (a gap). In fall an hour is **repeated** (an overlap). You'll always be given the dates on the exam."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "The spring gap",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "On March 10, 2024 the local times 2:00 to 2:59 never happen in New York. If you create one anyway, `ZonedDateTime` does not throw. It moves the time **forward by the length of the gap** (one hour)."
+            },
+            {
+              "type": "code",
+              "code": "ZoneId ny = ZoneId.of(\"America/New_York\");\nvar t = LocalDateTime.of(2024, 3, 10, 2, 30);\nSystem.out.println(ZonedDateTime.of(t, ny));",
+              "caption": "2:30 doesn't exist, so you get 3:30 EDT",
+              "verify": {
+                "expect": "stdout",
+                "value": "2024-03-10T03:30-04:00[America/New_York]"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "No exception in the gap",
+              "text": "A non-existent local time is adjusted, not rejected. Only truly invalid values (hour 25, February 30) throw."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l04-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "ZoneId ny = ZoneId.of(\"America/New_York\");\nvar t = LocalDateTime.of(2024, 3, 10, 2, 15);\nSystem.out.println(ZonedDateTime.of(t, ny));",
+          "options": [
+            "2024-03-10T03:15-04:00[America/New_York]",
+            "2024-03-10T02:15-05:00[America/New_York]",
+            "2024-03-10T01:15-05:00[America/New_York]",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "2:15 falls in the spring gap. `ZonedDateTime.of` shifts it forward by one hour to 3:15, and after the jump New York is at -04:00.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "2024-03-10T03:15-04:00[America/New_York]"
+          }
+        },
+        {
+          "type": "page",
+          "title": "The fall overlap",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "On November 3, 2024 the hour from 1:00 to 1:59 happens **twice**: first at -04:00, then again at -05:00."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`ZonedDateTime.of` picks the **earlier** offset (-04:00).",
+                "`withLaterOffsetAtOverlap()` switches to the second one (-05:00).",
+                "Adding one hour to 1:30-04:00 gives 1:30-05:00: same wall clock, one real hour later."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "ZoneId ny = ZoneId.of(\"America/New_York\");\nvar t = LocalDateTime.of(2024, 11, 3, 1, 30);\nvar z = ZonedDateTime.of(t, ny);\nSystem.out.println(z);\nSystem.out.println(z.plusHours(1));",
+              "verify": {
+                "expect": "stdout",
+                "value": "2024-11-03T01:30-04:00[America/New_York]\n2024-11-03T01:30-05:00[America/New_York]"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l04-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "ZoneId ny = ZoneId.of(\"America/New_York\");\nvar t = LocalDateTime.of(2024, 11, 3, 1, 30);\nvar z = ZonedDateTime.of(t, ny);\nSystem.out.println(z.plusHours(1));",
+          "options": [
+            "2024-11-03T01:30-05:00[America/New_York]",
+            "2024-11-03T02:30-05:00[America/New_York]",
+            "2024-11-03T02:30-04:00[America/New_York]",
+            "2024-11-03T01:30-04:00[America/New_York]"
+          ],
+          "answer": 0,
+          "explanation": "1:30 is in the overlap, so `of` picks the earlier offset, -04:00. One real hour later the clocks have fallen back, so the wall clock shows 1:30 again, now at -05:00.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "2024-11-03T01:30-05:00[America/New_York]"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Days vs hours across DST",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "`plusDays(1)` keeps the **local time** and adjusts the offset. The real elapsed time can be 23 or 25 hours.",
+                "`plusHours(24)` adds exactly 24 real hours. The wall clock may then show a different hour.",
+                "`Duration.between` measures real time, so a DST day is `PT23H` or `PT25H`."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "ZoneId ny = ZoneId.of(\"America/New_York\");\nvar a = ZonedDateTime.of(2024, 3, 10,\n    0, 0, 0, 0, ny);\nSystem.out.println(\n    Duration.between(a, a.plusDays(1)));",
+              "caption": "The spring day has only 23 hours",
+              "verify": {
+                "expect": "stdout",
+                "value": "PT23H"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "When a question crosses a DST date, ask: is it adding a **date** amount (days, Period) or a **time** amount (hours, Duration)? Date amounts keep the clock time; time amounts keep the real elapsed time."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l04-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "ZoneId ny = ZoneId.of(\"America/New_York\");\nvar a = ZonedDateTime.of(2024, 3, 9,\n    12, 0, 0, 0, ny);\nvar b = a.plusHours(24);\nSystem.out.println(b.toLocalTime() + \" \"\n    + Duration.between(a, a.plusDays(1)));",
+          "options": [
+            "13:00 PT23H",
+            "12:00 PT24H",
+            "12:00 PT23H",
+            "13:00 PT24H"
+          ],
+          "answer": 0,
+          "explanation": "Clocks jump forward overnight, so 24 real hours after noon on March 9 the clock shows 13:00. `plusDays(1)` keeps 12:00 local, but only 23 real hours pass, so the Duration is `PT23H`.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "13:00 PT23H"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l04-e04",
+          "kind": "trueFalse",
+          "prompt": "This code prints `PT24H`.",
+          "code": "ZoneId ny = ZoneId.of(\"America/New_York\");\nvar a = ZonedDateTime.of(2024, 11, 3,\n    0, 0, 0, 0, ny);\nSystem.out.println(\n    Duration.between(a, a.plusDays(1)));",
+          "answer": false,
+          "explanation": "November 3 has the repeated hour, so from midnight to the next midnight 25 real hours pass: `PT25H`.",
+          "objective": "1.3",
+          "verify": {
+            "expect": "stdout",
+            "value": "PT25H"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l04-e05",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code so it prints `-05:00`.",
+          "code": "ZoneId ny = ZoneId.of(\"America/New_York\");\nvar t = LocalDateTime.of(2024, 11, 3, 1, 30);\nvar z = ZonedDateTime.of(t, ny)\n    .___();\nSystem.out.println(z.getOffset());",
+          "bank": [
+            "withLaterOffsetAtOverlap",
+            "withEarlierOffsetAtOverlap",
+            "normalized",
+            "withFixedOffsetZone"
+          ],
+          "answers": [
+            "withLaterOffsetAtOverlap"
+          ],
+          "explanation": "1:30 on November 3 happens twice. `of` picks the earlier offset (-04:00), and `withLaterOffsetAtOverlap()` picks the second occurrence at -05:00. `withFixedOffsetZone()` would keep -04:00.",
+          "objective": "1.3",
+          "verify": {
+            "expect": "stdout",
+            "value": "-05:00"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l04-e06",
+          "kind": "multiChoice",
+          "prompt": "In zone America/New_York, which two statements are true? Choose two.",
+          "options": [
+            "The local time 2024-03-10T02:30 never happens.",
+            "The local time 2024-11-03T01:30 happens twice.",
+            "plusDays(1) always adds exactly 24 hours.",
+            "ZonedDateTime.of throws an exception for a time in the spring gap.",
+            "The offset in July is -05:00."
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "Spring creates a gap and fall creates an overlap. `plusDays` keeps local time, so it can add 23 or 25 real hours. A gap time is shifted forward, not rejected. In July New York is on EDT, -04:00.",
+          "objective": "1.3",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "0\n2\n-04:00",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nZoneId ny = ZoneId.of(\"America/New_York\");\nvar r = ny.getRules();\nSystem.out.println(r.getValidOffsets(LocalDateTime.of(2024, 3, 10, 2, 30)).size());\nSystem.out.println(r.getValidOffsets(LocalDateTime.of(2024, 11, 3, 1, 30)).size());\nSystem.out.println(ZonedDateTime.of(2024, 7, 1, 12, 0, 0, 0, ny).getOffset());\n}}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u10-l05",
+      "title": "Formatting & parsing dates",
+      "summary": "DateTimeFormatter patterns, ISO formats and the exceptions they throw.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Pattern letters",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`DateTimeFormatter.ofPattern(...)` builds a formatter from letters. It lives in `java.time.format`."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Letter",
+                "Means",
+                "Example"
+              ],
+              "rows": [
+                [
+                  "`y`",
+                  "year",
+                  "`yyyy` 2024, `yy` 24"
+                ],
+                [
+                  "`M`",
+                  "month",
+                  "`M` 7, `MM` 07, `MMM` Jul, `MMMM` July"
+                ],
+                [
+                  "`d`",
+                  "day of month",
+                  "`d` 4, `dd` 04"
+                ],
+                [
+                  "`E`",
+                  "day of week",
+                  "`E` Thu, `EEEE` Thursday"
+                ],
+                [
+                  "`H`",
+                  "hour 0-23",
+                  "`HH` 15"
+                ],
+                [
+                  "`h`",
+                  "hour 1-12",
+                  "`hh` 03"
+                ],
+                [
+                  "`m`",
+                  "minute",
+                  "`mm` 05"
+                ],
+                [
+                  "`s`",
+                  "second",
+                  "`ss` 09"
+                ],
+                [
+                  "`a`",
+                  "AM/PM",
+                  "PM"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "var dt = LocalDateTime.of(2024, 7, 4, 15, 5);\nvar f = DateTimeFormatter.ofPattern(\n    \"MMMM d, yyyy 'at' HH:mm\");\nSystem.out.println(dt.format(f));",
+              "caption": "July 4, 2024 at 15:05",
+              "verify": {
+                "expect": "stdout",
+                "value": "July 4, 2024 at 15:05",
+                "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar dt = LocalDateTime.of(2024, 7, 4, 15, 5);\nvar f = DateTimeFormatter.ofPattern(\n    \"MMMM d, yyyy 'at' HH:mm\");\nSystem.out.println(dt.format(f));\n}}"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "You don't always need a pattern. `ofLocalizedDate`, `ofLocalizedTime` and `ofLocalizedDateTime` take a `FormatStyle` (`SHORT`, `MEDIUM`, `LONG`, `FULL`) and format the way a locale expects. `withLocale` picks the locale."
+            },
+            {
+              "type": "code",
+              "code": "var d = LocalDate.of(2024, 7, 4);\nvar f = DateTimeFormatter\n    .ofLocalizedDate(FormatStyle.MEDIUM)\n    .withLocale(Locale.US);\nSystem.out.println(d.format(f));",
+              "verify": {
+                "expect": "stdout",
+                "value": "Jul 4, 2024",
+                "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar d = LocalDate.of(2024, 7, 4);\nvar f = DateTimeFormatter\n    .ofLocalizedDate(FormatStyle.MEDIUM)\n    .withLocale(Locale.US);\nSystem.out.println(d.format(f));\n}}"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Localized styles need the right fields",
+              "text": "A time style on a `LocalDate` throws. `LONG` and `FULL` **time** styles print a zone, so formatting a `LocalDateTime` with `ofLocalizedDateTime(FormatStyle.LONG)` throws `DateTimeException`. An `Instant` has no date fields at all: give the formatter a zone with `withZone(...)`."
+            },
+            {
+              "type": "code",
+              "code": "var dt = LocalDateTime.of(2024, 7, 4, 9, 30);\nvar f = DateTimeFormatter\n    .ofLocalizedDateTime(FormatStyle.LONG)\n    .withLocale(Locale.US);\nSystem.out.println(dt.format(f));",
+              "caption": "No zone to print",
+              "verify": {
+                "expect": "exception",
+                "value": "DateTimeException",
+                "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar dt = LocalDateTime.of(2024, 7, 4, 9, 30);\nvar f = DateTimeFormatter\n    .ofLocalizedDateTime(FormatStyle.LONG)\n    .withLocale(Locale.US);\nSystem.out.println(dt.format(f));\n}}"
+              }
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Case matters",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "`MM` is month, `mm` is minute.",
+                "`HH` is 0-23, `hh` is 1-12 (use with `a`).",
+                "Text that isn't a pattern goes in **single quotes**: `'at'`. Two single quotes `''` print one quote.",
+                "Unknown letters throw `IllegalArgumentException` when `ofPattern` runs."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Unquoted words",
+              "text": "`ofPattern(\"HH:mm at\")` doesn't print \"at\". Every letter is a pattern letter: `a` is AM/PM and `t` is unknown, so `ofPattern` throws `IllegalArgumentException`."
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python's `strftime` uses `%` codes (`%Y-%m-%d`). Java has no `%`: plain letters are codes, and literal text must be quoted."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "y vs Y",
+              "text": "`y` is the calendar year. `Y` is the **week-based** year, which differs in the last days of December and the first days of January. `Q` is the quarter (`Q` 4, `QQQ` Q4). For ISO week numbers use `IsoFields.WEEK_OF_WEEK_BASED_YEAR` or `DateTimeFormatter.ISO_WEEK_DATE`."
+            },
+            {
+              "type": "code",
+              "code": "var d = LocalDate.of(2024, 12, 30);\nvar f = DateTimeFormatter.ofPattern(\n    \"yyyy YYYY QQQ\", Locale.US);\nSystem.out.println(d.format(f));\nSystem.out.println(\n    d.format(DateTimeFormatter.ISO_WEEK_DATE));\nSystem.out.println(\n    d.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR));",
+              "caption": "Dec 30, 2024 is in week 1 of 2025",
+              "verify": {
+                "expect": "stdout",
+                "value": "2024 2025 Q4\n2025-W01-1\n1",
+                "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar d = LocalDate.of(2024, 12, 30);\nvar f = DateTimeFormatter.ofPattern(\n    \"yyyy YYYY QQQ\", Locale.US);\nSystem.out.println(d.format(f));\nSystem.out.println(\n    d.format(DateTimeFormatter.ISO_WEEK_DATE));\nSystem.out.println(\n    d.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR));\n}}"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l05-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var dt = LocalDateTime.of(2024, 7, 4, 15, 5);\nvar f = DateTimeFormatter.ofPattern(\n    \"hh:mm dd/MM\");\nSystem.out.println(dt.format(f));",
+          "options": [
+            "03:05 04/07",
+            "15:05 04/07",
+            "03:07 04/05",
+            "15:07 07/04"
+          ],
+          "answer": 0,
+          "explanation": "`hh` is the 12-hour clock, so 15 becomes `03`. `mm` is minutes (`05`), `dd` the day (`04`) and `MM` the month (`07`).",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "03:05 04/07",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar dt = LocalDateTime.of(2024, 7, 4, 15, 5);\nvar f = DateTimeFormatter.ofPattern(\n    \"hh:mm dd/MM\");\nSystem.out.println(dt.format(f));\n}}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l05-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "var t = LocalTime.of(15, 5);\nvar f = DateTimeFormatter.ofPattern(\n    \"HH:mm at\");\nSystem.out.println(t.format(f));",
+          "options": [
+            "15:05 at",
+            "15:05 PMt",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 3,
+          "explanation": "The pattern is just a String, so it compiles. When `ofPattern` parses it, `a` is AM/PM and `t` is not a pattern letter: `IllegalArgumentException`. Write `'at'` in quotes to print literal text.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "exception",
+            "value": "IllegalArgumentException",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar t = LocalTime.of(15, 5);\nvar f = DateTimeFormatter.ofPattern(\n    \"HH:mm at\");\nSystem.out.println(t.format(f));\n}}"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Missing fields",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A formatter can only print fields the object has. Formatting a `LocalDate` with `HH` or a `LocalTime` with `yyyy` compiles but throws `UnsupportedTemporalTypeException`."
+            },
+            {
+              "type": "paragraph",
+              "text": "You can format in either direction; both do the same thing:"
+            },
+            {
+              "type": "code",
+              "code": "var d = LocalDate.of(2024, 7, 4);\nvar f = DateTimeFormatter.ofPattern(\"MMM d\");\nSystem.out.println(d.format(f));\nSystem.out.println(f.format(d));",
+              "verify": {
+                "expect": "stdout",
+                "value": "Jul 4\nJul 4",
+                "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar d = LocalDate.of(2024, 7, 4);\nvar f = DateTimeFormatter.ofPattern(\"MMM d\");\nSystem.out.println(d.format(f));\nSystem.out.println(f.format(d));\n}}"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "When you see a pattern, check each letter against the type. `mm` on a `LocalDate` is a sneaky one: it asks for minutes, which a date doesn't have."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l05-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "var d = LocalDate.of(2024, 7, 4);\nvar f = DateTimeFormatter.ofPattern(\n    \"yyyy-MM-dd HH:mm\");\nSystem.out.println(d.format(f));",
+          "options": [
+            "2024-07-04 00:00",
+            "2024-07-04",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 3,
+          "explanation": "`LocalDate` has no hour or minute. The formatter asks for `HH`, so `format` throws `UnsupportedTemporalTypeException`. Java never fills in midnight for you.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "exception",
+            "value": "UnsupportedTemporalTypeException",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar d = LocalDate.of(2024, 7, 4);\nvar f = DateTimeFormatter.ofPattern(\n    \"yyyy-MM-dd HH:mm\");\nSystem.out.println(d.format(f));\n}}"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Parsing",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "`LocalDate.parse(\"2024-07-04\")` uses ISO format by default.",
+                "`LocalDate.parse(text, formatter)` uses your pattern.",
+                "Text that doesn't match, or lacks a needed field, throws `DateTimeParseException`.",
+                "Built-in ISO formatters: `ISO_LOCAL_DATE` (2024-07-04), `ISO_LOCAL_TIME`, `ISO_LOCAL_DATE_TIME`."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "var f = DateTimeFormatter.ofPattern(\n    \"dd/MM/yyyy\");\nLocalDate d = LocalDate.parse(\"04/07/2024\", f);\nSystem.out.println(d);",
+              "verify": {
+                "expect": "stdout",
+                "value": "2024-07-04",
+                "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar f = DateTimeFormatter.ofPattern(\n    \"dd/MM/yyyy\");\nLocalDate d = LocalDate.parse(\"04/07/2024\", f);\nSystem.out.println(d);\n}}"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "format vs parse",
+              "text": "`format` turns an object into text. `parse` is static on the target type and turns text into an object."
+            },
+            {
+              "type": "paragraph",
+              "text": "`LocalTime.parse(\"09:30\")` and `LocalDateTime.parse(\"2024-07-04T09:30\")` work the same way: ISO by default, `DateTimeParseException` otherwise."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l05-e04",
+          "kind": "fillBlanks",
+          "prompt": "Complete the pattern so the code prints `2024-07-04T15:05`.",
+          "code": "var f = DateTimeFormatter.ofPattern(\n    \"dd.___.yyyy ___:mm\");\nvar dt = LocalDateTime.parse(\n    \"04.07.2024 15:05\", f);\nSystem.out.println(dt);",
+          "bank": [
+            "MM",
+            "mm",
+            "HH",
+            "hh",
+            "yy"
+          ],
+          "answers": [
+            "MM",
+            "HH"
+          ],
+          "explanation": "The month needs `MM` (`mm` means minutes). Hour 15 needs `HH`: `hh` only accepts 1-12, so parsing 15 would throw `DateTimeParseException`.",
+          "objective": "1.3",
+          "verify": {
+            "expect": "stdout",
+            "value": "2024-07-04T15:05",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar f = DateTimeFormatter.ofPattern(\n    \"dd.MM.yyyy HH:mm\");\nvar dt = LocalDateTime.parse(\n    \"04.07.2024 15:05\", f);\nSystem.out.println(dt);\n}}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l05-e05",
+          "kind": "multiChoice",
+          "prompt": "Given `d = LocalDate.of(2024, 7, 4)` and `t = LocalTime.of(9, 5)`, which two lines throw an exception at runtime? `ofPattern` and `ISO_LOCAL_DATE` are statically imported from `DateTimeFormatter`. Choose two.",
+          "options": [
+            "d.format(ofPattern(\"MMM d\"));",
+            "t.format(ofPattern(\"HH:mm:ss\"));",
+            "d.format(ofPattern(\"d 'at' H\"));",
+            "LocalDate.parse(\"2024/07/04\");",
+            "ISO_LOCAL_DATE.format(d);"
+          ],
+          "answers": [
+            2,
+            3
+          ],
+          "explanation": "`H` asks a LocalDate for an hour: `UnsupportedTemporalTypeException`. The default `parse` expects ISO dashes, so slashes give `DateTimeParseException`. The other lines only use fields the type has.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ok\nok\nex\nex\nok",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar d = LocalDate.of(2024, 7, 4);\nvar t = LocalTime.of(9, 5);\nRunnable[] rs = {\n () -> d.format(DateTimeFormatter.ofPattern(\"MMM d\")),\n () -> t.format(DateTimeFormatter.ofPattern(\"HH:mm:ss\")),\n () -> d.format(DateTimeFormatter.ofPattern(\"d 'at' H\")),\n () -> LocalDate.parse(\"2024/07/04\"),\n () -> DateTimeFormatter.ISO_LOCAL_DATE.format(d) };\nfor (Runnable r : rs) { try { r.run(); System.out.println(\"ok\"); } catch (DateTimeException e) { System.out.println(\"ex\"); } }\n}}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l05-e06",
+          "kind": "tapLine",
+          "prompt": "Tap the line that throws an exception.",
+          "code": "var d = LocalDate.of(2024, 1, 2);\nvar f1 = DateTimeFormatter.ISO_LOCAL_DATE;\nvar f2 = DateTimeFormatter.ofPattern(\"MM/dd\");\nSystem.out.println(d.format(f1));\nSystem.out.println(f2.format(d));\nSystem.out.println(\n    LocalDate.parse(\"01/02\", f2));",
+          "answer": 7,
+          "explanation": "Formatting only prints some fields, so `MM/dd` works for output (`01/02`). Parsing must build a full LocalDate, and the text has no year: `DateTimeParseException`.",
+          "objective": "1.3",
+          "verify": {
+            "expect": "exception",
+            "value": "DateTimeParseException",
+            "stdout": "2024-01-02\n01/02",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar d = LocalDate.of(2024, 1, 2);\nvar f1 = DateTimeFormatter.ISO_LOCAL_DATE;\nvar f2 = DateTimeFormatter.ofPattern(\"MM/dd\");\nSystem.out.println(d.format(f1));\nSystem.out.println(f2.format(d));\nSystem.out.println(\n    LocalDate.parse(\"01/02\", f2));\n}}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u10-l06",
+      "title": "Locale",
+      "summary": "Languages, regions, the default locale and its categories.",
+      "minutes": 6,
+      "steps": [
+        {
+          "type": "page",
+          "title": "What a Locale is",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A `java.util.Locale` describes a language and, optionally, a country or region. `toString()` joins them with an underscore: language **lowercase**, country **uppercase**."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Code",
+                "Locale",
+                "toString()"
+              ],
+              "rows": [
+                [
+                  "`Locale.US`",
+                  "English, United States",
+                  "`en_US`"
+                ],
+                [
+                  "`Locale.FRENCH`",
+                  "French, no country",
+                  "`fr`"
+                ],
+                [
+                  "`Locale.CANADA_FRENCH`",
+                  "French, Canada",
+                  "`fr_CA`"
+                ],
+                [
+                  "`Locale.of(\"es\", \"MX\")`",
+                  "Spanish, Mexico",
+                  "`es_MX`"
+                ]
+              ]
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`Locale.of(language)` and `Locale.of(language, country)` are the factories since Java 19.",
+                "`new Locale(\"en\", \"US\")` still compiles but is **deprecated** (only a warning).",
+                "`Locale.forLanguageTag(\"fr-CA\")` reads the IETF tag with a hyphen.",
+                "`new Locale.Builder().setLanguage(\"en\").setRegion(\"US\").build()`"
+              ]
+            },
+            {
+              "type": "code",
+              "code": "System.out.println(Locale.of(\"FR\", \"ca\"));\nSystem.out.println(Locale.GERMAN);",
+              "caption": "Case is normalized: fr_CA, then de",
+              "verify": {
+                "expect": "stdout",
+                "value": "fr_CA\nde"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Locale.ROOT",
+              "text": "`Locale.ROOT` has an empty language and country. It matches the **base** resource bundle, and is the safe choice for text that must not change by locale: `s.toUpperCase(Locale.ROOT)` behaves the same everywhere, while Turkish turns `i` into a dotted capital `İ`."
+            },
+            {
+              "type": "code",
+              "code": "System.out.println(\n    \"[\" + Locale.ROOT + \"]\");\nSystem.out.println(\n    \"title\".toUpperCase(Locale.ROOT));",
+              "verify": {
+                "expect": "stdout",
+                "value": "[]\nTITLE"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l06-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Locale a = Locale.of(\"FR\", \"ca\");\nLocale b = Locale.GERMAN;\nSystem.out.println(a + \" \" + b);",
+          "options": [
+            "fr_CA de",
+            "FR_ca de",
+            "fr_CA de_DE",
+            "fr-CA de"
+          ],
+          "answer": 0,
+          "explanation": "`Locale.of` normalizes case: language lowercase, country uppercase. `Locale.GERMAN` is language only (`de`); `Locale.GERMANY` would be `de_DE`. `toString` uses `_`, not `-`.",
+          "objective": "10.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "fr_CA de"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l06-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Locale l = new Locale.Builder()\n    .setRegion(\"US\")\n    .setLanguage(\"en\")\n    .build();\nSystem.out.println(l);",
+          "options": [
+            "en_US",
+            "US_en",
+            "en-US",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "Builder setters can be called in any order. `build()` produces language `en` and region `US`, printed as `en_US`.",
+          "objective": "10.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "en_US"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l06-e03",
+          "kind": "trueFalse",
+          "prompt": "`new Locale(\"en\", \"US\")` fails to compile in Java 21.",
+          "code": "Locale l = new Locale(\"en\", \"US\");\nSystem.out.println(l);",
+          "answer": false,
+          "explanation": "The constructors were deprecated in Java 19, but deprecation only causes a compiler **warning**. The code compiles and prints `en_US`. Prefer `Locale.of(\"en\", \"US\")` in new code.",
+          "objective": "10.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "en_US"
+          }
+        },
+        {
+          "type": "page",
+          "title": "The default locale",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`Locale.getDefault()` returns the JVM's default, taken from the OS. `Locale.setDefault(l)` changes it for the whole JVM."
+            },
+            {
+              "type": "paragraph",
+              "text": "There are two **categories**:"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`Locale.Category.FORMAT`: numbers, dates, currencies.",
+                "`Locale.Category.DISPLAY`: names shown to the user, like a language name."
+              ]
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`setDefault(Locale)` sets the default **and** both categories.",
+                "`setDefault(Category, Locale)` changes only that category.",
+                "`getDefault()` with no argument is not tied to either category."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "Locale.setDefault(Locale.US);\nLocale.setDefault(Locale.Category.FORMAT,\n    Locale.GERMANY);\nSystem.out.println(Locale.getDefault(\n    Locale.Category.DISPLAY));",
+              "caption": "DISPLAY is still en_US",
+              "verify": {
+                "expect": "stdout",
+                "value": "en_US"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Always pass a Locale",
+              "text": "Formatters without a Locale argument use the default, so output changes from machine to machine. Pass one explicitly when the output matters."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l06-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Locale.setDefault(Locale.US);\nLocale.setDefault(Locale.Category.FORMAT,\n    Locale.FRANCE);\nSystem.out.println(Locale.getDefault()\n    + \" \" + Locale.getDefault(\n        Locale.Category.FORMAT));",
+          "options": [
+            "en_US fr_FR",
+            "fr_FR fr_FR",
+            "en_US en_US",
+            "fr_FR en_US"
+          ],
+          "answer": 0,
+          "explanation": "The second call only changes the FORMAT category. `getDefault()` without an argument keeps returning `en_US`; `getDefault(FORMAT)` returns `fr_FR`.",
+          "objective": "10.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "en_US fr_FR"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l06-e05",
+          "kind": "multiChoice",
+          "prompt": "Which two expressions give a Locale for French as spoken in Canada? Choose two.",
+          "options": [
+            "Locale.of(\"fr\", \"CA\")",
+            "Locale.CANADA_FRENCH",
+            "Locale.CANADA",
+            "new Locale(\"CA\", \"fr\")",
+            "Locale.of(\"fr-CA\")"
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "`Locale.CANADA` is English (`en_CA`). Swapping the arguments gives language `ca` and country `FR`. `Locale.of(\"fr-CA\")` treats the whole string as a language (`fr-ca`); use `forLanguageTag` for hyphenated tags.",
+          "objective": "10.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "fr_CA fr_CA true",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nSystem.out.println(Locale.of(\"fr\", \"CA\") + \" \" + Locale.CANADA_FRENCH + \" \" + Locale.of(\"fr\", \"CA\").equals(Locale.CANADA_FRENCH));\n}}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l06-e06",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code so it prints `es_MX`.",
+          "code": "Locale l = new Locale.___()\n    .___(\"es\")\n    .setRegion(\"MX\")\n    .build();\nSystem.out.println(l);",
+          "bank": [
+            "Builder",
+            "Factory",
+            "Maker",
+            "setLanguage",
+            "language",
+            "setLang"
+          ],
+          "answers": [
+            "Builder",
+            "setLanguage"
+          ],
+          "explanation": "The nested class is `Locale.Builder` and the setter for the language is `setLanguage`. It pairs with `setRegion` for the country.",
+          "objective": "10.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "es_MX"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u10-l07",
+      "title": "Resource bundles",
+      "summary": "Look up translated text and know exactly which bundle Java picks.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Bundles hold translations",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A **resource bundle** is a set of key/value pairs for one locale. All bundles in a family share a **base name**, followed by the locale:"
+            },
+            {
+              "type": "code",
+              "code": "Labels.properties        (base, default text)\nLabels_fr.properties     (French)\nLabels_fr_CA.properties  (French, Canada)",
+              "caption": "baseName_language_COUNTRY.properties"
+            },
+            {
+              "type": "paragraph",
+              "text": "A `.properties` file is lines of `key=value`. You load a bundle and read keys:"
+            },
+            {
+              "type": "code",
+              "code": "ResourceBundle rb = ResourceBundle.getBundle(\n    \"Labels\", Locale.FRANCE);\nString s = rb.getString(\"hi\");"
+            },
+            {
+              "type": "paragraph",
+              "text": "A bundle can also be a Java class with the same name that extends `ListResourceBundle` and returns its pairs from `getContents()`. If a class and a properties file have the same name, the class wins."
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Think of each bundle as a dict, with Java walking a chain of dicts for you. `getString` on a missing key never returns `None` or `null`: it throws `MissingResourceException`."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Which bundle is picked",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`getBundle(\"Labels\", fr_CA)` with default locale `en_US` tries these names **in order** and stops at the first one that exists:"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`Labels_fr_CA` (requested language + country)",
+                "`Labels_fr` (requested language)",
+                "`Labels_en_US` (default language + country)",
+                "`Labels_en` (default language)",
+                "`Labels` (base)"
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "If none exists, `getBundle` throws `MissingResourceException`."
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "The default locale is only tried when **no** bundle for the requested locale exists. Requesting `de` with default `en_US` goes to `Labels_en` if it exists, before the base `Labels`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l07-e01",
+          "kind": "singleChoice",
+          "prompt": "The default locale is `en_US`. What is the output?",
+          "code": "// Labels.properties\nhi=Hello\nbye=Bye\n// Labels_en.properties\nhi=Hi\n// Labels_fr.properties\nhi=Salut\n// Main\nvar rb = ResourceBundle.getBundle(\n    \"Labels\", Locale.FRANCE);\nSystem.out.println(rb.getString(\"hi\")\n    + \" \" + rb.getString(\"bye\"));",
+          "options": [
+            "Salut Bye",
+            "Salut Hi",
+            "Hi Bye",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`Labels_fr` matches the requested language, so it's chosen. It has `hi`, but not `bye`, so `bye` comes from its parent, the base `Labels`. `Labels_en` is never consulted.",
+          "objective": "10.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "Salut Bye",
+            "source": "public class Main {\n  public static class Labels extends ListResourceBundle {\n    protected Object[][] getContents() { return new Object[][] {{\"hi\", \"Hello\"}, {\"bye\", \"Bye\"}}; }\n  }\n  public static class Labels_en extends ListResourceBundle {\n    protected Object[][] getContents() { return new Object[][] {{\"hi\", \"Hi\"}}; }\n  }\n  public static class Labels_fr extends ListResourceBundle {\n    protected Object[][] getContents() { return new Object[][] {{\"hi\", \"Salut\"}}; }\n  }\n  public static void main(String[] args) throws Exception {\nLocale.setDefault(Locale.US);\nvar rb = ResourceBundle.getBundle(\"Main$Labels\", Locale.FRANCE);\nSystem.out.println(rb.getString(\"hi\") + \" \" + rb.getString(\"bye\"));\n  }\n}\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l07-e02",
+          "kind": "singleChoice",
+          "prompt": "Same bundles, default locale `en_US`. What is the output?",
+          "code": "// Labels, Labels_en, Labels_fr as before\nvar rb = ResourceBundle.getBundle(\n    \"Labels\", Locale.GERMANY);\nSystem.out.println(rb.getString(\"hi\")\n    + \" \" + rb.getString(\"bye\"));",
+          "options": [
+            "Hello Bye",
+            "Hi Bye",
+            "Hi null",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 1,
+          "explanation": "There's no `Labels_de_DE` or `Labels_de`, so Java falls back to the default locale and finds `Labels_en`. Its `hi` is `Hi`; `bye` comes from the base `Labels`.",
+          "objective": "10.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "Hi Bye",
+            "source": "public class Main {\n  public static class Labels extends ListResourceBundle {\n    protected Object[][] getContents() { return new Object[][] {{\"hi\", \"Hello\"}, {\"bye\", \"Bye\"}}; }\n  }\n  public static class Labels_en extends ListResourceBundle {\n    protected Object[][] getContents() { return new Object[][] {{\"hi\", \"Hi\"}}; }\n  }\n  public static class Labels_fr extends ListResourceBundle {\n    protected Object[][] getContents() { return new Object[][] {{\"hi\", \"Salut\"}}; }\n  }\n  public static void main(String[] args) throws Exception {\nLocale.setDefault(Locale.US);\nvar rb = ResourceBundle.getBundle(\"Main$Labels\", Locale.GERMANY);\nSystem.out.println(rb.getString(\"hi\") + \" \" + rb.getString(\"bye\"));\n  }\n}\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l07-e03",
+          "kind": "orderLines",
+          "prompt": "The default locale is `en_US`. Put the bundle names in the order `getBundle(\"Labels\", Locale.of(\"fr\", \"CA\"))` tries them.",
+          "lines": [
+            "Labels_fr_CA",
+            "Labels_fr",
+            "Labels_en_US",
+            "Labels_en",
+            "Labels"
+          ],
+          "distractors": [
+            "Labels_CA"
+          ],
+          "explanation": "Most specific requested locale first, then the requested language, then the default locale (country, then language), and finally the base bundle. There is never a country-only name like `Labels_CA`.",
+          "objective": "10.1"
+        },
+        {
+          "type": "page",
+          "title": "Which value is used",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Once a bundle is chosen, a key is looked up in that bundle and then in its **parents**: `Labels_fr_CA` → `Labels_fr` → `Labels`."
+            },
+            {
+              "type": "paragraph",
+              "text": "The default-locale bundles are **not** parents. A key that exists only in `Labels_en` is invisible when `Labels_fr` was chosen."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Missing key = exception",
+              "text": "If no bundle in the parent chain has the key, `getString` throws `MissingResourceException` at runtime. It never returns null."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l07-e04",
+          "kind": "singleChoice",
+          "prompt": "The default locale is `en_US`. What is the result?",
+          "code": "// Labels.properties\nhi=Hello\n// Labels_en.properties\nbye=Bye\n// Labels_fr.properties\nhi=Salut\n// Main\nvar rb = ResourceBundle.getBundle(\n    \"Labels\", Locale.FRANCE);\nSystem.out.println(rb.getString(\"bye\"));",
+          "options": [
+            "Bye",
+            "null",
+            "An exception is thrown at runtime",
+            "Compilation fails"
+          ],
+          "answer": 2,
+          "explanation": "`Labels_fr` is chosen. Its parent chain is `Labels_fr` → `Labels`, and neither has `bye`. `Labels_en` has it, but default-locale bundles aren't parents, so `getString` throws `MissingResourceException`.",
+          "objective": "10.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "exception",
+            "value": "MissingResourceException",
+            "source": "public class Main {\n  public static class Labels extends ListResourceBundle {\n    protected Object[][] getContents() { return new Object[][] {{\"hi\", \"Hello\"}}; }\n  }\n  public static class Labels_en extends ListResourceBundle {\n    protected Object[][] getContents() { return new Object[][] {{\"bye\", \"Bye\"}}; }\n  }\n  public static class Labels_fr extends ListResourceBundle {\n    protected Object[][] getContents() { return new Object[][] {{\"hi\", \"Salut\"}}; }\n  }\n  public static void main(String[] args) throws Exception {\nLocale.setDefault(Locale.US);\nvar rb = ResourceBundle.getBundle(\"Main$Labels\", Locale.FRANCE);\nSystem.out.println(rb.getString(\"bye\"));\n  }\n}\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l07-e05",
+          "kind": "trueFalse",
+          "prompt": "Only `Labels` and `Labels_fr` exist and the default locale is `en_US`. `getBundle(\"Labels\", Locale.GERMAN)` returns the base bundle `Labels`.",
+          "answer": true,
+          "explanation": "Nothing matches German, and nothing matches the default `en_US` or `en`. The base bundle is the last candidate, so it's returned. Only if `Labels` were missing too would `getBundle` throw `MissingResourceException`.",
+          "objective": "10.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "Hello []",
+            "source": "public class Main {\n  public static class Labels extends ListResourceBundle {\n    protected Object[][] getContents() { return new Object[][] {{\"hi\", \"Hello\"}}; }\n  }\n  public static class Labels_fr extends ListResourceBundle {\n    protected Object[][] getContents() { return new Object[][] {{\"hi\", \"Salut\"}}; }\n  }\n  public static void main(String[] args) throws Exception {\nLocale.setDefault(Locale.US);\nvar rb = ResourceBundle.getBundle(\"Main$Labels\", Locale.GERMAN);\nSystem.out.println(rb.getString(\"hi\") + \" [\" + rb.getLocale() + \"]\");\n  }\n}\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l07-e06",
+          "kind": "multiChoice",
+          "prompt": "Which two are valid file names in the resource bundle family with base name `Labels`? Choose two.",
+          "options": [
+            "Labels_fr_CA.properties",
+            "Labels_de.properties",
+            "Labels-fr.properties",
+            "Labels.fr.properties",
+            "Labels_fr-CA.properties"
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "Bundle names join base name, language and country with **underscores**: `Labels_de`, `Labels_fr_CA`. Hyphens and dots are never part of the generated candidate names, so those files are never found.",
+          "objective": "10.1",
+          "examStyle": true,
+          "codeOptions": true
+        }
+      ]
+    },
+    {
+      "id": "u10-l08",
+      "title": "Number & message formatting",
+      "summary": "NumberFormat, DecimalFormat, MessageFormat and String.format.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "NumberFormat factories",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`java.text.NumberFormat` formats numbers for a locale. Pick a factory, then call `format`:"
+            },
+            {
+              "type": "table",
+              "header": [
+                "Factory",
+                "1234.5 / 0.125 (Locale.US)"
+              ],
+              "rows": [
+                [
+                  "`getInstance` / `getNumberInstance`",
+                  "`1,234.5`"
+                ],
+                [
+                  "`getCurrencyInstance`",
+                  "`$1,234.50`"
+                ],
+                [
+                  "`getPercentInstance`",
+                  "`12%` (for 0.125)"
+                ],
+                [
+                  "`getIntegerInstance`",
+                  "`1,234` (rounds)"
+                ],
+                [
+                  "`getCompactNumberInstance(l, SHORT)`",
+                  "`1K`"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "var us = Locale.US;\nSystem.out.println(NumberFormat\n    .getCurrencyInstance(us).format(1234.5));\nSystem.out.println(NumberFormat\n    .getPercentInstance(us).format(0.125));",
+              "verify": {
+                "expect": "stdout",
+                "value": "$1,234.50\n12%",
+                "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar us = Locale.US;\nSystem.out.println(NumberFormat\n    .getCurrencyInstance(us).format(1234.5));\nSystem.out.println(NumberFormat\n    .getPercentInstance(us).format(0.125));\n}}"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Rounding is half-even",
+              "text": "NumberFormat rounds **half-even** by default. 12.5% becomes `12%` (round to the even neighbour), not 13%."
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Compact numbers",
+              "text": "`getCompactNumberInstance(Locale.US, NumberFormat.Style.SHORT)` gives `1K`, `3K` (for 2,600), `1M`. `Style.LONG` spells it out: `2 million`."
+            },
+            {
+              "type": "paragraph",
+              "text": "`getInstance(locale)` shows at most **3** fraction digits (rounded half-even) and uses the locale's symbols. In German the grouping separator is `.` and the decimal separator is `,`."
+            },
+            {
+              "type": "code",
+              "code": "System.out.println(NumberFormat\n    .getInstance(Locale.GERMANY)\n    .format(1234567.89125));\nSystem.out.println(NumberFormat\n    .getInstance(Locale.US).format(1.23456));",
+              "verify": {
+                "expect": "stdout",
+                "value": "1.234.567,891\n1.235",
+                "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nSystem.out.println(NumberFormat\n    .getInstance(Locale.GERMANY)\n    .format(1234567.89125));\nSystem.out.println(NumberFormat\n    .getInstance(Locale.US).format(1.23456));\n}}"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "`java.util.Currency` describes a currency: `Currency.getInstance(\"JPY\")` by ISO code, or `Currency.getInstance(locale)` for a country's currency. `getCurrencyInstance(locale)` uses that locale's currency, separators and symbol position, e.g. `1.234,50 €` for Germany."
+            },
+            {
+              "type": "code",
+              "code": "Currency yen = Currency.getInstance(\"JPY\");\nSystem.out.println(yen.getCurrencyCode()\n    + \" \" + yen.getDefaultFractionDigits());\nSystem.out.println(\n    Currency.getInstance(Locale.GERMANY));\nSystem.out.println(Currency\n    .getInstance(Locale.US).getSymbol(Locale.US));",
+              "caption": "Yen has no minor unit",
+              "verify": {
+                "expect": "stdout",
+                "value": "JPY 0\nEUR\n$",
+                "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nCurrency yen = Currency.getInstance(\"JPY\");\nSystem.out.println(yen.getCurrencyCode()\n    + \" \" + yen.getDefaultFractionDigits());\nSystem.out.println(\n    Currency.getInstance(Locale.GERMANY));\nSystem.out.println(Currency\n    .getInstance(Locale.US).getSymbol(Locale.US));\n}}"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l08-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var nf = NumberFormat\n    .getCurrencyInstance(Locale.US);\nSystem.out.println(nf.format(1234.5));",
+          "options": [
+            "$1,234.50",
+            "$1234.5",
+            "1,234.50 $",
+            "USD 1,234.50"
+          ],
+          "answer": 0,
+          "explanation": "The US currency format puts `$` first, groups thousands with commas and always shows two decimals.",
+          "objective": "10.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "$1,234.50",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar nf = NumberFormat\n    .getCurrencyInstance(Locale.US);\nSystem.out.println(nf.format(1234.5));\n}}"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Parsing numbers",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "`nf.parse(text)` returns a `Number` (use `intValue()`, `doubleValue()`...).",
+                "It reads as far as it can and **ignores trailing text**: `\"1,234.5abc\"` gives 1234.5.",
+                "If the text doesn't **start** with a number, it throws `ParseException`, a **checked** exception."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "Because `ParseException` is checked, code calling `parse` must catch it or declare `throws`. Watch for that before reading the logic."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l08-e02",
+          "kind": "singleChoice",
+          "prompt": "This code is inside `main(...) throws Exception`. What is the output?",
+          "code": "var nf = NumberFormat.getInstance(Locale.US);\nNumber n = nf.parse(\"2,500.75kg\");\nSystem.out.println(n.intValue() + 1);",
+          "options": [
+            "2501",
+            "2501.75",
+            "3",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`parse` stops at `kg` and returns 2500.75. `intValue()` truncates to 2500, plus 1 is 2501. Trailing text is not an error; only text that doesn't start with a number is.",
+          "objective": "10.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "2501",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar nf = NumberFormat.getInstance(Locale.US);\nNumber n = nf.parse(\"2,500.75kg\");\nSystem.out.println(n.intValue() + 1);\n}}"
+          }
+        },
+        {
+          "type": "page",
+          "title": "DecimalFormat patterns",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Symbol",
+                "Meaning"
+              ],
+              "rows": [
+                [
+                  "`0`",
+                  "digit, padded with zero if missing"
+                ],
+                [
+                  "`#`",
+                  "digit, left out if missing"
+                ],
+                [
+                  "`,`",
+                  "grouping separator"
+                ],
+                [
+                  "`.`",
+                  "decimal separator"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "System.out.println(new DecimalFormat(\n    \"0000.00\").format(12.3));\nSystem.out.println(new DecimalFormat(\n    \"#,###.##\").format(1234.5));",
+              "caption": "0012.30 and 1,234.5",
+              "verify": {
+                "expect": "stdout",
+                "value": "0012.30\n1,234.5",
+                "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nSystem.out.println(new DecimalFormat(\n    \"0000.00\").format(12.3));\nSystem.out.println(new DecimalFormat(\n    \"#,###.##\").format(1234.5));\n}}"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Locale symbols",
+              "text": "`new DecimalFormat(pattern)` uses the default FORMAT locale's symbols. In `en_US`, `,` and `.` print as themselves."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l08-e03",
+          "kind": "singleChoice",
+          "prompt": "The default locale is `en_US`. What is the output?",
+          "code": "var a = new DecimalFormat(\"000.0#\");\nvar b = new DecimalFormat(\"#,###.##\");\nSystem.out.println(a.format(7.5) + \" \"\n    + b.format(12345.678));",
+          "options": [
+            "007.5 12,345.68",
+            "007.50 12,345.68",
+            "7.5 12,345.678",
+            "007.5 12345.68"
+          ],
+          "answer": 0,
+          "explanation": "`000.0#` forces three integer digits and at least one decimal: `007.5` (the `#` adds nothing because there's no second decimal). `#,###.##` groups thousands and keeps at most two decimals, rounding .678 to .68.",
+          "objective": "10.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "007.5 12,345.68",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar a = new DecimalFormat(\"000.0#\");\nvar b = new DecimalFormat(\"#,###.##\");\nSystem.out.println(a.format(7.5) + \" \"\n    + b.format(12345.678));\n}}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l08-e04",
+          "kind": "fillBlanks",
+          "prompt": "The default locale is `en_US`. Complete the pattern so the code prints `0042.10`.",
+          "code": "var f = new DecimalFormat(\"___\");\nSystem.out.println(f.format(42.1));",
+          "bank": [
+            "0000.00",
+            "####.##",
+            "#,##0.0",
+            "0000.##"
+          ],
+          "answers": [
+            "0000.00"
+          ],
+          "explanation": "Every `0` forces a digit, so four zeros before the point pad `42` to `0042` and two after pad `.1` to `.10`. With `#` after the point (`0000.##`) you'd get `0042.1`.",
+          "objective": "10.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "0042.10",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar f = new DecimalFormat(\"0000.00\");\nSystem.out.println(f.format(42.1));\n}}"
+          }
+        },
+        {
+          "type": "page",
+          "title": "MessageFormat and String.format",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`MessageFormat.format(pattern, args...)` fills numbered placeholders `{0}`, `{1}`... in any order. Numbers are formatted with the default locale: `{0}` with 12345 gives `12,345`."
+            },
+            {
+              "type": "code",
+              "code": "System.out.println(MessageFormat.format(\n    \"{1} owes {0}\", \"Ann\", \"Bob\"));",
+              "verify": {
+                "expect": "stdout",
+                "value": "Bob owes Ann",
+                "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nSystem.out.println(MessageFormat.format(\n    \"{1} owes {0}\", \"Ann\", \"Bob\"));\n}}"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Single quotes",
+              "text": "In MessageFormat a single quote starts quoted text. `\"It's {0}\"` prints `Its {0}`. Write `''` for one apostrophe: `\"It''s {0}\"`."
+            },
+            {
+              "type": "paragraph",
+              "text": "A placeholder can name a **subformat**: `{0,number,#.##}`, `{0,number,percent}`, `{0,number,integer}`, `{0,date,short}`. Text in single quotes is literal, so `'{0}'` prints the braces."
+            },
+            {
+              "type": "code",
+              "code": "var mf = new MessageFormat(\n    \"{0,number,percent} of {1,number,#.##} kg\",\n    Locale.US);\nSystem.out.println(\n    mf.format(new Object[] {0.256, 3.14159}));\nSystem.out.println(MessageFormat.format(\n    \"'{0}' is {0}\", \"x\"));",
+              "verify": {
+                "expect": "stdout",
+                "value": "26% of 3.14 kg\n{0} is x",
+                "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar mf = new MessageFormat(\n    \"{0,number,percent} of {1,number,#.##} kg\",\n    Locale.US);\nSystem.out.println(\n    mf.format(new Object[] {0.256, 3.14159}));\nSystem.out.println(MessageFormat.format(\n    \"'{0}' is {0}\", \"x\"));\n}}"
+              }
+            },
+            {
+              "type": "table",
+              "header": [
+                "String.format",
+                "Gives"
+              ],
+              "rows": [
+                [
+                  "`%s`",
+                  "any value as text"
+                ],
+                [
+                  "`%d`",
+                  "integer"
+                ],
+                [
+                  "`%.2f`",
+                  "decimal, 2 places (rounded)"
+                ],
+                [
+                  "`%,d`",
+                  "integer with grouping: `1,234,567`"
+                ],
+                [
+                  "`%5d` / `%-5s`",
+                  "width 5, right / left aligned"
+                ],
+                [
+                  "`%n`",
+                  "line separator"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "A wrong type, like `%d` with a String, compiles but throws `IllegalFormatConversionException`."
+            },
+            {
+              "type": "paragraph",
+              "text": "To **sort** text the way a language expects, use `java.text.Collator.getInstance(locale)`. It implements `Comparator<Object>`, so you can pass it to `sort`. `String`'s natural order compares char codes, so every capital comes before every lowercase letter."
+            },
+            {
+              "type": "code",
+              "code": "var w = new ArrayList<>(\n    List.of(\"zebra\", \"Apple\", \"apple\", \"Zoo\"));\nCollections.sort(w);\nSystem.out.println(w);\nw.sort(Collator.getInstance(Locale.US));\nSystem.out.println(w);",
+              "verify": {
+                "expect": "stdout",
+                "value": "[Apple, Zoo, apple, zebra]\n[apple, Apple, zebra, Zoo]",
+                "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar w = new ArrayList<>(\n    List.of(\"zebra\", \"Apple\", \"apple\", \"Zoo\"));\nCollections.sort(w);\nSystem.out.println(w);\nw.sort(Collator.getInstance(Locale.US));\nSystem.out.println(w);\n}}"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Collator strength",
+              "text": "`setStrength(Collator.PRIMARY)` ignores case and accents, so `compare(\"a\", \"A\")` returns 0. `SECONDARY` also notices accents; `TERTIARY` (the default) also notices case."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l08-e05",
+          "kind": "singleChoice",
+          "prompt": "The default locale is `en_US`. What is the output?",
+          "code": "String s = MessageFormat.format(\n    \"{1}: {0} items\", 1200, \"Cart\");\nSystem.out.println(s);",
+          "options": [
+            "Cart: 1,200 items",
+            "Cart: 1200 items",
+            "1200: Cart items",
+            "{1}: 1200 items"
+          ],
+          "answer": 0,
+          "explanation": "`{1}` is the second argument, `\"Cart\"`, and `{0}` the first, 1200. MessageFormat formats numbers with grouping, so 1200 prints as `1,200`.",
+          "objective": "10.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "Cart: 1,200 items",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nString s = MessageFormat.format(\n    \"{1}: {0} items\", 1200, \"Cart\");\nSystem.out.println(s);\n}}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l08-e06",
+          "kind": "singleChoice",
+          "prompt": "The default locale is `en_US`. What is the output?",
+          "code": "System.out.println(String.format(\n    \"%d|%.2f|%,d\", 7, 3.14159, 98765));",
+          "options": [
+            "7|3.14|98,765",
+            "7|3.14159|98765",
+            "7|3.1|98,765",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`%d` prints 7, `%.2f` rounds to two decimals (3.14) and `%,d` adds grouping commas (98,765).",
+          "objective": "10.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "7|3.14|98,765"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l08-e07",
+          "kind": "trueFalse",
+          "prompt": "This code compiles, but throws an exception at runtime.",
+          "code": "System.out.println(\n    String.format(\"%d\", \"5\"));",
+          "answer": true,
+          "explanation": "The format string is only checked when it runs. `%d` needs an integer type, and `\"5\"` is a String, so `String.format` throws `IllegalFormatConversionException`.",
+          "objective": "10.1",
+          "verify": {
+            "expect": "exception",
+            "value": "IllegalFormatConversionException"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u10-l09",
+      "title": "Unit 10 checkpoint",
+      "summary": "Twelve exam-style questions on dates, times, zones and localization.",
+      "minutes": 10,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Checkpoint",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Twelve exam-style questions covering the whole unit. Code fragments run inside `main(...) throws Exception`, and the default locale is `en_US` unless a question says otherwise."
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "Before computing anything, scan for traps: ignored return values, chained static `ofXxx` calls, Period/Duration on the wrong type, `MM` vs `mm`, and DST dates."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l09-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "LocalDate d = LocalDate.of(2024, 1, 31);\nd.plusDays(1);\nd = d.plusMonths(1).plusDays(1);\nSystem.out.println(d);",
+          "options": [
+            "2024-03-01",
+            "2024-03-02",
+            "2024-02-02",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "Line 2 discards its result. Then Jan 31 + 1 month clamps to Feb 29 (leap year), and + 1 day gives March 1.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "2024-03-01"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l09-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Period p = Period.ofYears(2).ofDays(10);\nLocalDate d = LocalDate.of(2024, 1, 1);\nSystem.out.println(d.plus(p));",
+          "options": [
+            "2024-01-11",
+            "2026-01-11",
+            "2026-01-01",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`ofDays` is static, so calling it on the result of `ofYears(2)` throws the years away. The Period is just `P10D`.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "2024-01-11"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l09-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var d = Duration.ofMinutes(150)\n    .plusSeconds(30);\nSystem.out.println(d);",
+          "options": [
+            "PT2H30M30S",
+            "P2H30M30S",
+            "PT150M30S",
+            "PT2.5H30S"
+          ],
+          "answer": 0,
+          "explanation": "150 minutes plus 30 seconds is 2 h 30 min 30 s. Duration prints `PT` followed by hours, minutes and seconds.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "PT2H30M30S"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l09-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "LocalTime t = LocalTime.of(23, 30);\nSystem.out.println(t.plusHours(2));",
+          "options": [
+            "01:30",
+            "25:30",
+            "1:30",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`LocalTime` wraps around midnight without error and without changing any date (it has none). It always prints two-digit hours.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "01:30"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l09-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "ZoneId ny = ZoneId.of(\"America/New_York\");\nvar z = ZonedDateTime.of(LocalDateTime\n    .of(2024, 3, 10, 1, 30), ny);\nSystem.out.println(z.plusHours(1));",
+          "options": [
+            "2024-03-10T03:30-04:00[America/New_York]",
+            "2024-03-10T02:30-05:00[America/New_York]",
+            "2024-03-10T02:30-04:00[America/New_York]",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "One real hour after 1:30 EST, clocks have jumped from 2:00 to 3:00. The wall clock shows 3:30 at the new offset -04:00.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "2024-03-10T03:30-04:00[America/New_York]"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l09-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "var d = LocalDate.of(2024, 7, 4);\nvar f = DateTimeFormatter.ofPattern(\n    \"yyyy-mm-dd\");\nSystem.out.println(d.format(f));",
+          "options": [
+            "2024-07-04",
+            "2024-00-04",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 3,
+          "explanation": "`mm` is minute-of-hour, not month. A `LocalDate` has no minutes, so `format` throws `UnsupportedTemporalTypeException`.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "exception",
+            "value": "UnsupportedTemporalTypeException",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar d = LocalDate.of(2024, 7, 4);\nvar f = DateTimeFormatter.ofPattern(\n    \"yyyy-mm-dd\");\nSystem.out.println(d.format(f));\n}}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l09-e07",
+          "kind": "multiChoice",
+          "prompt": "Which two lines compile and run without throwing an exception? Choose two.",
+          "options": [
+            "LocalDate.now().plus(Period.ofDays(1));",
+            "LocalTime.now().plus(Duration.ofHours(1));",
+            "LocalDate.now().plus(Duration.ofHours(1));",
+            "LocalTime.now().plus(Period.ofDays(1));",
+            "Instant.now().plus(Period.ofMonths(1));"
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "All five compile because `plus` takes any `TemporalAmount`. A LocalDate can't take hours, a LocalTime can't take days, and an Instant can't take months: each throws `UnsupportedTemporalTypeException`.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ok",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nLocalDate.now().plus(Period.ofDays(1));\nLocalTime.now().plus(Duration.ofHours(1));\nSystem.out.println(\"ok\");\n}}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l09-e08",
+          "kind": "singleChoice",
+          "prompt": "The default locale is `en_US`. What is the output?",
+          "code": "// Labels.properties\nhi=Hello\nbye=Bye\n// Labels_fr.properties\nbye=Salut\n// Labels_fr_CA.properties\nhi=Allo\n// Main\nvar rb = ResourceBundle.getBundle(\"Labels\",\n    Locale.CANADA_FRENCH);\nSystem.out.println(rb.getString(\"hi\")\n    + \" \" + rb.getString(\"bye\"));",
+          "options": [
+            "Allo Salut",
+            "Allo Bye",
+            "Hello Bye",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`Labels_fr_CA` is chosen and has `hi`. For `bye`, Java walks its parents: `Labels_fr` has `Salut`, so the base `Labels` is never reached for that key.",
+          "objective": "10.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "Allo Salut",
+            "source": "public class Main {\n  public static class Labels extends ListResourceBundle {\n    protected Object[][] getContents() { return new Object[][] {{\"hi\", \"Hello\"}, {\"bye\", \"Bye\"}}; }\n  }\n  public static class Labels_fr extends ListResourceBundle {\n    protected Object[][] getContents() { return new Object[][] {{\"bye\", \"Salut\"}}; }\n  }\n  public static class Labels_fr_CA extends ListResourceBundle {\n    protected Object[][] getContents() { return new Object[][] {{\"hi\", \"Allo\"}}; }\n  }\n  public static void main(String[] args) throws Exception {\nLocale.setDefault(Locale.US);\nvar rb = ResourceBundle.getBundle(\"Main$Labels\", Locale.CANADA_FRENCH);\nSystem.out.println(rb.getString(\"hi\") + \" \" + rb.getString(\"bye\"));\n  }\n}\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l09-e09",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var nf = NumberFormat\n    .getPercentInstance(Locale.US);\nSystem.out.println(nf.format(0.256));",
+          "options": [
+            "26%",
+            "25.6%",
+            "0.256%",
+            "25%"
+          ],
+          "answer": 0,
+          "explanation": "The percent format multiplies by 100 and shows no decimals by default: 25.6 rounds to 26.",
+          "objective": "10.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "26%",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar nf = NumberFormat\n    .getPercentInstance(Locale.US);\nSystem.out.println(nf.format(0.256));\n}}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l09-e10",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var f = NumberFormat.getCompactNumberInstance(\n    Locale.US, NumberFormat.Style.SHORT);\nSystem.out.println(f.format(2_600) + \" \"\n    + f.format(1_200_000));",
+          "options": [
+            "3K 1M",
+            "2.6K 1.2M",
+            "2K 1M",
+            "3K 1.2M"
+          ],
+          "answer": 0,
+          "explanation": "The short compact style shows no decimals by default, so 2,600 rounds to `3K` and 1,200,000 to `1M`.",
+          "objective": "10.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "3K 1M",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\nvar f = NumberFormat.getCompactNumberInstance(\n    Locale.US, NumberFormat.Style.SHORT);\nSystem.out.println(f.format(2_600) + \" \"\n    + f.format(1_200_000));\n}}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l09-e11",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var utc = ZonedDateTime.of(2024, 1, 1,\n    12, 0, 0, 0, ZoneOffset.UTC);\nvar t = utc.withZoneSameLocal(\n    ZoneId.of(\"Asia/Tokyo\"));\nSystem.out.println(\n    Duration.between(utc, t));",
+          "options": [
+            "PT-9H",
+            "PT9H",
+            "PT0S",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`withZoneSameLocal` keeps 12:00 but moves it to Tokyo (+09:00). Noon in Tokyo is 03:00 UTC, nine hours **before** noon UTC, so the Duration is negative: `PT-9H`.",
+          "objective": "1.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "PT-9H"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u10-l09-e12",
+          "kind": "multiChoice",
+          "prompt": "Which two statements are true? Choose two.",
+          "options": [
+            "LocalDate.of(2024, 0, 1) throws a DateTimeException.",
+            "Period.between returns a Duration.",
+            "ChronoUnit.DAYS.between returns a long.",
+            "LocalDateTime stores a zone offset.",
+            "The compiler rejects invalid DateTimeFormatter patterns."
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "Months run 1 to 12, so 0 throws at runtime. `Period.between` returns a Period. `LocalDateTime` has no offset. Patterns are plain Strings checked only when `ofPattern` runs.",
+          "objective": "1.3",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "DateTimeException\n31",
+            "source": "import java.time.format.*; import java.time.temporal.*; import java.text.*;\npublic class Main { public static void main(String[] args) throws Exception {\ntry { LocalDate.of(2024, 0, 1); } catch (DateTimeException e) { System.out.println(\"DateTimeException\"); }\nlong n = ChronoUnit.DAYS.between(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 2, 1));\nSystem.out.println(n);\n}}"
+          }
+        }
+      ]
+    }
+  ]
+}

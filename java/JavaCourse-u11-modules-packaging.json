@@ -1,0 +1,1517 @@
+{
+ "unitId": "u11",
+ "lessons": [
+  {
+   "id": "u11-l01",
+   "title": "Why modules exist",
+   "minutes": 7,
+   "summary": "module-info.java, requires, exports, the module path and java.base.",
+   "steps": [
+    {
+     "type": "page",
+     "title": "A module is a named set of packages",
+     "blocks": [
+      {
+       "type": "paragraph",
+       "text": "Before Java 9 everything sat on the **classpath**: one flat bag of JARs where any `public` class was visible to everyone, and a missing JAR only showed up as a `NoClassDefFoundError` at runtime."
+      },
+      {
+       "type": "paragraph",
+       "text": "A **module** groups packages under a name and declares two things up front: which other modules it **needs**, and which of its own packages it **shares**."
+      },
+      {
+       "type": "code",
+       "code": "// src/com.shop/module-info.java\nmodule com.shop {\n    requires com.payments;   // I read this module\n    exports com.shop.api;    // others may use this package\n}",
+       "caption": "The descriptor lives at the root of the module's source folder, next to the top-level package folders."
+      },
+      {
+       "type": "callout",
+       "kind": "python",
+       "title": "Python vs Java",
+       "text": "Think of `exports` as an explicit `__all__` enforced by the compiler and the JVM. Python only hides `_private` names by convention; a Java package that isn't exported is truly unreachable from other modules, even its `public` classes."
+      }
+     ]
+    },
+    {
+     "type": "page",
+     "title": "Strong encapsulation",
+     "blocks": [
+      {
+       "type": "paragraph",
+       "text": "`public` no longer means *visible to the world*. For code in module **B** to use a type from module **A**, all three must hold:"
+      },
+      {
+       "type": "bullets",
+       "items": [
+        "B's descriptor says `requires A;` (B **reads** A)",
+        "A's descriptor says `exports` for the type's package (to everyone or to B)",
+        "the type itself is `public` (and its member is accessible as usual)"
+       ]
+      },
+      {
+       "type": "table",
+       "header": [
+        "A exports pkg?",
+        "B requires A?",
+        "Can B use A's public class?"
+       ],
+       "rows": [
+        [
+         "yes",
+         "yes",
+         "**yes**"
+        ],
+        [
+         "no",
+         "yes",
+         "no — compile error"
+        ],
+        [
+         "yes",
+         "no",
+         "no — compile error"
+        ]
+       ]
+      },
+      {
+       "type": "callout",
+       "kind": "exam",
+       "title": null,
+       "text": "Expect a question with two `module-info.java` files and a class that won't compile. Check the three conditions in order: `requires`, then `exports` of that **exact package**, then `public`."
+      }
+     ]
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l01-e01",
+     "kind": "singleChoice",
+     "prompt": "Module `com.app` contains `requires com.util;`. Module `com.util` exports only `com.util.text`. Which class can `com.app` use?",
+     "options": [
+      "`public class com.util.text.Slug`",
+      "`public class com.util.text.internal.Cache`",
+      "`class com.util.text.Slug` (package-private)",
+      "`public class com.util.io.Reader`"
+     ],
+     "answer": 0,
+     "explanation": "`exports com.util.text` shares exactly that package. Subpackages like `com.util.text.internal` are separate packages and are **not** exported. A package-private class is never visible outside its package, and `com.util.io` isn't exported at all.",
+     "objective": "7.1",
+     "examStyle": true
+    },
+    {
+     "type": "page",
+     "title": "Every module reads java.base",
+     "blocks": [
+      {
+       "type": "paragraph",
+       "text": "`java.base` holds `java.lang`, `java.util`, `java.io`, `java.time` and friends. Every module requires it **implicitly**; you never write `requires java.base;` (it's allowed but pointless)."
+      },
+      {
+       "type": "paragraph",
+       "text": "Anything else from the JDK must be required explicitly:"
+      },
+      {
+       "type": "code",
+       "code": "module com.reports {\n    requires java.sql;        // java.sql.Connection\n    requires java.logging;    // java.util.logging.Logger\n    requires java.net.http;   // java.net.http.HttpClient\n}"
+      },
+      {
+       "type": "callout",
+       "kind": "trap",
+       "title": "java.util.logging is not in java.base",
+       "text": "The package name starts with `java.util`, but `java.util.logging` lives in module **java.logging**. Without `requires java.logging;` the code does not compile."
+      },
+      {
+       "type": "paragraph",
+       "text": "List every module of your JDK with `java --list-modules`."
+      }
+     ]
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l01-e02",
+     "kind": "trueFalse",
+     "prompt": "A module that uses `java.util.List` and `java.time.LocalDate` must declare `requires java.base;`.",
+     "answer": false,
+     "explanation": "`java.base` is required implicitly by every module. Writing `requires java.base;` is legal but never needed.",
+     "objective": "7.1"
+    },
+    {
+     "type": "page",
+     "title": "Module path vs classpath",
+     "blocks": [
+      {
+       "type": "paragraph",
+       "text": "Named modules are found on the **module path** (`--module-path` or `-p`). The old **classpath** still works and is a separate world."
+      },
+      {
+       "type": "table",
+       "header": [
+        "Aspect",
+        "Module path",
+        "Classpath"
+       ],
+       "rows": [
+        [
+         "Option",
+         "`--module-path` / `-p`",
+         "`--class-path` / `-cp`"
+        ],
+        [
+         "Holds",
+         "named and automatic modules",
+         "plain JARs and folders"
+        ],
+        [
+         "Becomes",
+         "one module per JAR/folder",
+         "a single **unnamed module**"
+        ],
+        [
+         "Missing dependency",
+         "error at startup",
+         "error when the class is first used"
+        ]
+       ]
+      },
+      {
+       "type": "callout",
+       "kind": "tip",
+       "title": "Reliable configuration",
+       "text": "The JVM checks the whole module graph when it starts: a missing `requires`, two modules exporting the same package to one reader, or a dependency cycle stops the launch immediately instead of failing hours later."
+      }
+     ]
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l01-e03",
+     "kind": "multiChoice",
+     "prompt": "Which two are checked when the JVM resolves modules at startup? Choose two.",
+     "options": [
+      "Every `requires` names a module that can be found",
+      "Every exported package contains at least one `public` class",
+      "No module reads two modules that export the same package",
+      "Every module has a `main` method",
+      "Every module is signed"
+     ],
+     "answers": [
+      0,
+      2
+     ],
+     "explanation": "Resolution fails fast on a missing required module and on **split packages** (one package reachable from two modules). Exported packages may hold only non-public types (though it would be useless), only one module needs a main class, and signing is unrelated.",
+     "objective": "7.1",
+     "examStyle": true
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l01-e04",
+     "kind": "fillBlanks",
+     "prompt": "Complete the descriptor so `com.shop` can use `java.sql.Connection` and other modules can use package `com.shop.api`.",
+     "code": "___ com.shop {\n    ___ java.sql;\n    ___ com.shop.api;\n}",
+     "bank": [
+      "module",
+      "requires",
+      "exports",
+      "package",
+      "import",
+      "opens"
+     ],
+     "answers": [
+      "module",
+      "requires",
+      "exports"
+     ],
+     "explanation": "A descriptor starts with `module <name>`. `requires` reads another module and `exports` shares a package. `opens` only grants reflective access, and `import`/`package` are ordinary source keywords, not directives.",
+     "objective": "7.1"
+    },
+    {
+     "type": "page",
+     "title": "Rules for module-info.java",
+     "blocks": [
+      {
+       "type": "bullets",
+       "items": [
+        "Exactly one per module, at the root of the module source folder, compiled to `module-info.class`.",
+        "No `package` statement. `import` statements are allowed before `module`.",
+        "Module names follow package-name rules: `com.shop.core` is fine, `com-shop` and `1shop` are not.",
+        "`requires` cycles are compile errors: A requires B and B requires A cannot both exist.",
+        "You can only `exports` a package that exists in the module and isn't empty."
+       ]
+      },
+      {
+       "type": "callout",
+       "kind": "trap",
+       "title": "Duplicate directives",
+       "text": "Two `requires com.x;` lines, or two `exports com.x.api;` lines in the same descriptor, are compile errors."
+      },
+      {
+       "type": "callout",
+       "kind": "trap",
+       "title": "No split packages",
+       "text": "A package may live in only one module. If a module reads two modules that both contain (or export) the same package, it fails to compile or launch."
+      }
+     ]
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l01-e05",
+     "kind": "tapLine",
+     "prompt": "Tap the line that makes this descriptor fail to compile.",
+     "code": "module com.shop.web {\n    requires com.shop.core;\n    requires java.net.http;\n    exports com.shop.web.api;\n    requires com.shop.core;\n}",
+     "answer": 5,
+     "explanation": "Line 5 repeats `requires com.shop.core;`. Each module may be required only once. Requiring `java.net.http` is fine, and exporting an existing package is fine.",
+     "objective": "7.1"
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l01-e06",
+     "kind": "singleChoice",
+     "prompt": "Which module name is valid?",
+     "options": [
+      "`com.acme.billing`",
+      "`com-acme-billing`",
+      "`com.acme.2billing`",
+      "`com.acme.billing.`"
+     ],
+     "answer": 0,
+     "explanation": "Module names are dotted Java identifiers, like package names. Hyphens are illegal, an identifier can't start with a digit, and a trailing dot leaves an empty identifier.",
+     "objective": "7.1",
+     "examStyle": true
+    }
+   ]
+  },
+  {
+   "id": "u11-l02",
+   "title": "requires & exports in depth",
+   "minutes": 8,
+   "summary": "transitive, static, qualified exports, opens and open modules.",
+   "steps": [
+    {
+     "type": "page",
+     "title": "requires transitive",
+     "blocks": [
+      {
+       "type": "paragraph",
+       "text": "Readability isn't inherited by default. If `com.app` requires `com.api`, and `com.api`'s public methods return types from `com.model`, then `com.app` can't name those types unless it also reads `com.model`."
+      },
+      {
+       "type": "paragraph",
+       "text": "`requires transitive` passes the dependency on: everyone who reads `com.api` automatically reads `com.model` too. This is called **implied readability**."
+      },
+      {
+       "type": "code",
+       "code": "module com.model { exports com.model; }\n\nmodule com.api {\n    requires transitive com.model;\n    exports com.api;          // methods return com.model.Order\n}\n\nmodule com.app {\n    requires com.api;         // also reads com.model now\n}"
+      },
+      {
+       "type": "callout",
+       "kind": "exam",
+       "title": null,
+       "text": "Draw the arrows. A plain `requires` is one hop and stops. `requires transitive` adds an arrow from **every reader** to the transitive target. It is not inherited further unless that module also uses `transitive`."
+      }
+     ]
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l02-e01",
+     "kind": "singleChoice",
+     "prompt": "Given these descriptors, which modules can use the public types in package `c` of module `C`?",
+     "code": "module C { exports c; }\nmodule B { requires transitive C; exports b; }\nmodule A { requires B; }",
+     "options": [
+      "`B` only",
+      "`A` and `B`",
+      "`A` only",
+      "none"
+     ],
+     "answer": 1,
+     "explanation": "`C` exports `c`. `B` reads `C` directly. `A` reads `B`, and because `B` says `requires transitive C`, `A` also reads `C`. So both `A` and `B` can use `c`.",
+     "objective": "7.1",
+     "examStyle": true
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l02-e02",
+     "kind": "singleChoice",
+     "prompt": "Same as before, but `B` now says `requires C;` (no `transitive`). Which modules can use package `c`?",
+     "code": "module C { exports c; }\nmodule B { requires C; exports b; }\nmodule A { requires B; }",
+     "options": [
+      "`B` only",
+      "`A` and `B`",
+      "`A` only",
+      "none"
+     ],
+     "answer": 0,
+     "explanation": "Without `transitive`, readability doesn't flow through `B`. `A` reads only `B`; to use `c` it must add `requires C;` itself.",
+     "objective": "7.1",
+     "examStyle": true
+    },
+    {
+     "type": "page",
+     "title": "requires static",
+     "blocks": [
+      {
+       "type": "paragraph",
+       "text": "`requires static` means **needed at compile time, optional at run time**. Use it for annotations or optional integrations."
+      },
+      {
+       "type": "code",
+       "code": "module com.app {\n    requires static com.annotations;  // @Nullable etc.\n}"
+      },
+      {
+       "type": "bullets",
+       "items": [
+        "At compile time the module must be present.",
+        "At run time it isn't resolved unless something else requires it (or you add it with `--add-modules`).",
+        "Code touching it must cope with `NoClassDefFoundError` if it's missing."
+       ]
+      },
+      {
+       "type": "callout",
+       "kind": "tip",
+       "title": "Combining",
+       "text": "`requires transitive static com.x;` is legal: readers get implied readability at compile time, and nothing is forced at run time."
+      }
+     ]
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l02-e03",
+     "kind": "trueFalse",
+     "prompt": "With `requires static com.metrics;`, the application fails to start if `com.metrics` is not on the module path.",
+     "answer": false,
+     "explanation": "`static` makes the dependency optional at run time. Startup succeeds; only code that actually touches `com.metrics` types would fail.",
+     "objective": "7.1"
+    },
+    {
+     "type": "page",
+     "title": "Qualified exports",
+     "blocks": [
+      {
+       "type": "paragraph",
+       "text": "`exports … to …` shares a package with named modules only. Everyone else is still locked out."
+      },
+      {
+       "type": "code",
+       "code": "module com.shop.core {\n    exports com.shop.core.api;\n    exports com.shop.core.spi to com.shop.web, com.shop.batch;\n}"
+      },
+      {
+       "type": "callout",
+       "kind": "trap",
+       "title": "Only named friends",
+       "text": "A qualified export can't target the unnamed (classpath) module. If a listed module doesn't exist, javac only **warns**; it is not an error."
+      }
+     ]
+    },
+    {
+     "type": "page",
+     "title": "opens: reflection only",
+     "blocks": [
+      {
+       "type": "paragraph",
+       "text": "`exports` gives compile-time **and** run-time access to `public` members. Frameworks like JSON mappers or DI containers also need **deep reflection**: reading `private` fields with `setAccessible(true)`. That needs `opens`."
+      },
+      {
+       "type": "table",
+       "header": [
+        "Directive",
+        "Compile against public types",
+        "Reflect on public members",
+        "Reflect on private members"
+       ],
+       "rows": [
+        [
+         "`exports p`",
+         "yes",
+         "yes",
+         "no"
+        ],
+        [
+         "`opens p`",
+         "**no**",
+         "yes",
+         "yes"
+        ],
+        [
+         "both",
+         "yes",
+         "yes",
+         "yes"
+        ]
+       ]
+      },
+      {
+       "type": "code",
+       "code": "module com.shop.model {\n    exports com.shop.model;              // compile against it\n    opens com.shop.model.dto to com.fasterxml.jackson.databind;\n}"
+      },
+      {
+       "type": "callout",
+       "kind": "exam",
+       "title": null,
+       "text": "`opens` alone does **not** let other modules compile against the package. If a question's consumer writes `new Dto()` and the package is only opened, the answer is a compile error."
+      }
+     ]
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l02-e04",
+     "kind": "multiChoice",
+     "prompt": "Package `com.x.dto` is declared with `opens com.x.dto;` and is **not** exported. Which two statements are true for another module that reads `com.x`? Choose two.",
+     "options": [
+      "It can call `Class.forName(\"com.x.dto.User\")` and read private fields reflectively",
+      "It can write `com.x.dto.User u = new com.x.dto.User();`",
+      "Reflection works only on public members",
+      "Its code that names `com.x.dto.User` directly fails to compile",
+      "`opens` is ignored unless the module is also `open`"
+     ],
+     "answers": [
+      0,
+      3
+     ],
+     "explanation": "`opens` grants run-time deep reflection, including private members. It gives **no** compile-time access, so naming the type in source fails. `opens` works on its own; `open module` is a shortcut that opens every package.",
+     "objective": "7.1",
+     "examStyle": true
+    },
+    {
+     "type": "page",
+     "title": "open module",
+     "blocks": [
+      {
+       "type": "paragraph",
+       "text": "Prefix the module with `open` to open **every** package for deep reflection. Exports are still needed for compile-time access."
+      },
+      {
+       "type": "code",
+       "code": "open module com.legacy.app {\n    requires java.sql;\n    exports com.legacy.app.api;\n    // opens com.legacy.app.x;   // compile error inside an open module\n}"
+      },
+      {
+       "type": "callout",
+       "kind": "trap",
+       "title": "No opens inside open",
+       "text": "An `open module` may not contain any `opens` directive, because everything is already open. That line would not compile."
+      }
+     ]
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l02-e05",
+     "kind": "tapLine",
+     "prompt": "Tap the line that does not compile.",
+     "code": "open module com.cart {\n    requires transitive com.money;\n    requires static com.lint;\n    exports com.cart.api;\n    opens com.cart.internal;\n}",
+     "answer": 5,
+     "explanation": "In an `open module` every package is already open, so an `opens` directive is illegal. `requires transitive`, `requires static` and `exports` are all fine.",
+     "objective": "7.1"
+    },
+    {
+     "type": "page",
+     "title": "Directive cheat sheet",
+     "blocks": [
+      {
+       "type": "table",
+       "header": [
+        "Directive",
+        "Meaning"
+       ],
+       "rows": [
+        [
+         "`requires M`",
+         "I read M"
+        ],
+        [
+         "`requires transitive M`",
+         "I read M, and so does anyone who reads me"
+        ],
+        [
+         "`requires static M`",
+         "M at compile time, optional at run time"
+        ],
+        [
+         "`exports p`",
+         "everyone may use p's public types"
+        ],
+        [
+         "`exports p to M, N`",
+         "only M and N may"
+        ],
+        [
+         "`opens p`",
+         "everyone may deep-reflect on p (run time)"
+        ],
+        [
+         "`opens p to M`",
+         "only M may"
+        ],
+        [
+         "`uses S`",
+         "I look up implementations of service S"
+        ],
+        [
+         "`provides S with I`",
+         "I supply implementation I of S"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l02-e06",
+     "kind": "fillBlanks",
+     "prompt": "Make `com.orders` readable to anyone who reads `com.api`, and let only `com.admin` use package `com.api.ops`.",
+     "code": "module com.api {\n    requires ___ com.orders;\n    exports com.api;\n    exports com.api.ops ___ com.admin;\n}",
+     "bank": [
+      "transitive",
+      "to",
+      "static",
+      "with",
+      "opens",
+      "uses"
+     ],
+     "answers": [
+      "transitive",
+      "to"
+     ],
+     "explanation": "`requires transitive` gives implied readability. A qualified export is written `exports <package> to <modules>`. `with` belongs to `provides`, and `static` would make `com.orders` optional instead.",
+     "objective": "7.1"
+    }
+   ]
+  },
+  {
+   "id": "u11-l03",
+   "title": "Services & ServiceLoader",
+   "minutes": 9,
+   "summary": "Service interface, provider, consumer, uses/provides and ServiceLoader.",
+   "steps": [
+    {
+     "type": "page",
+     "title": "Plug-ins without hard dependencies",
+     "blocks": [
+      {
+       "type": "paragraph",
+       "text": "A **service** lets a consumer use implementations it has never heard of at compile time. Four roles, usually four modules:"
+      },
+      {
+       "type": "table",
+       "header": [
+        "Role",
+        "Contains",
+        "Directive"
+       ],
+       "rows": [
+        [
+         "Service interface",
+         "`public interface Tax`",
+         "`exports com.tax.api`"
+        ],
+        [
+         "Service provider",
+         "`class DutchTax implements Tax`",
+         "`provides com.tax.api.Tax with com.tax.nl.DutchTax`"
+        ],
+        [
+         "Service locator",
+         "code calling `ServiceLoader.load(Tax.class)`",
+         "`uses com.tax.api.Tax`"
+        ],
+        [
+         "Consumer",
+         "the app calling the locator",
+         "`requires` the API/locator"
+        ]
+       ]
+      },
+      {
+       "type": "callout",
+       "kind": "tip",
+       "title": "Often merged",
+       "text": "Small apps put the locator inside the API module or the consumer. The exam likes the four-module version, so learn which directive belongs where."
+      }
+     ]
+    },
+    {
+     "type": "page",
+     "title": "The provider side",
+     "blocks": [
+      {
+       "type": "code",
+       "code": "// module com.tax.nl\nmodule com.tax.nl {\n    requires com.tax.api;\n    provides com.tax.api.Tax with com.tax.nl.DutchTax;\n}"
+      },
+      {
+       "type": "paragraph",
+       "text": "The provider package is **not exported**. Consumers never see `DutchTax`; they only get a `Tax`."
+      },
+      {
+       "type": "paragraph",
+       "text": "ServiceLoader creates the provider in one of two ways:"
+      },
+      {
+       "type": "bullets",
+       "items": [
+        "a `public static` no-argument method named `provider()` that returns the service type, **or**",
+        "a `public` no-argument constructor (the class must also be `public`)"
+       ]
+      },
+      {
+       "type": "callout",
+       "kind": "exam",
+       "title": null,
+       "text": "If the provider class has only a constructor that takes arguments and no `provider()` method, the module **fails to compile** (for module-based providers javac checks this)."
+      }
+     ]
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l03-e01",
+     "kind": "singleChoice",
+     "prompt": "Which module declares `uses com.tax.api.Tax;`?",
+     "options": [
+      "The module that calls `ServiceLoader.load(Tax.class)`",
+      "The module containing `DutchTax`",
+      "The module containing the `Tax` interface",
+      "Every module that requires `com.tax.api`"
+     ],
+     "answer": 0,
+     "explanation": "`uses` belongs to whoever calls `ServiceLoader`, the service locator. The provider uses `provides … with …`, and the API module just exports the interface.",
+     "objective": "7.1",
+     "examStyle": true
+    },
+    {
+     "type": "page",
+     "title": "The consumer side",
+     "blocks": [
+      {
+       "type": "code",
+       "code": "module com.tax.app {\n    requires com.tax.api;\n    uses com.tax.api.Tax;\n}"
+      },
+      {
+       "type": "code",
+       "code": "ServiceLoader<Tax> loader = ServiceLoader.load(Tax.class);\n\nfor (Tax tax : loader) {            // ServiceLoader is Iterable\n    System.out.println(tax.rate());\n}\n\nOptional<Tax> first = loader.findFirst();\n\nList<Tax> all = loader.stream()     // Stream<ServiceLoader.Provider<Tax>>\n        .map(ServiceLoader.Provider::get)\n        .toList();",
+       "caption": "ServiceLoader in the three ways you'll meet it."
+      },
+      {
+       "type": "callout",
+       "kind": "trap",
+       "title": "stream() gives Providers",
+       "text": "`loader.stream()` is a `Stream<ServiceLoader.Provider<Tax>>`, not a `Stream<Tax>`. Call `Provider::get` to create the instance or `Provider::type` to get its `Class` without instantiating."
+      }
+     ]
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l03-e02",
+     "kind": "singleChoice",
+     "prompt": "What is the type of `x`?",
+     "code": "var x = ServiceLoader.load(Tax.class).stream();",
+     "options": [
+      "`Stream<ServiceLoader.Provider<Tax>>`",
+      "`Stream<Tax>`",
+      "`List<Tax>`",
+      "`Iterator<Tax>`"
+     ],
+     "answer": 0,
+     "explanation": "`ServiceLoader.stream()` returns a stream of `Provider` objects so you can inspect `type()` before deciding to `get()` an instance.",
+     "objective": "7.1",
+     "examStyle": true
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l03-e03",
+     "kind": "multiChoice",
+     "prompt": "Which two ways let ServiceLoader instantiate a provider class `FastTax`? Choose two.",
+     "options": [
+      "`public FastTax() {}`",
+      "`public static Tax provider() { return new FastTax(); }`",
+      "`public FastTax(double rate) {}` only",
+      "`private FastTax() {}` only",
+      "`public static FastTax getInstance()`"
+     ],
+     "answers": [
+      0,
+      1
+     ],
+     "explanation": "ServiceLoader looks for a `public static provider()` method first, then a public no-arg constructor. Constructors with parameters, private constructors and arbitrarily named factory methods don't count.",
+     "objective": "7.1",
+     "examStyle": true
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l03-e04",
+     "kind": "orderLines",
+     "prompt": "Arrange the provider's descriptor.",
+     "lines": [
+      "module com.tax.de {",
+      "    requires com.tax.api;",
+      "    provides com.tax.api.Tax",
+      "        with com.tax.de.GermanTax;",
+      "}"
+     ],
+     "distractors": [
+      "    uses com.tax.api.Tax;"
+     ],
+     "explanation": "A provider reads the API module and declares `provides <interface> with <implementation>`. It doesn't need `exports` or `uses`.",
+     "objective": "7.1"
+    },
+    {
+     "type": "page",
+     "title": "What changes with no providers?",
+     "blocks": [
+      {
+       "type": "paragraph",
+       "text": "If no module provides the service, `ServiceLoader` is simply **empty**: the loop runs zero times, `findFirst()` returns `Optional.empty()`, and `stream().count()` is `0`. Nothing is thrown."
+      },
+      {
+       "type": "callout",
+       "kind": "trap",
+       "title": "Missing uses",
+       "text": "Calling `ServiceLoader.load(Tax.class)` from a named module that **doesn't** declare `uses com.tax.api.Tax` throws `ServiceConfigurationError` at run time. It compiles fine."
+      },
+      {
+       "type": "callout",
+       "kind": "python",
+       "title": "Python vs Java",
+       "text": "Similar idea to Python entry points (`importlib.metadata.entry_points(group=...)`): plug-ins advertise themselves in metadata, the host discovers them at run time, and neither imports the other directly."
+      }
+     ]
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l03-e05",
+     "kind": "trueFalse",
+     "prompt": "When no provider for a service is on the module path, `ServiceLoader.load(S.class).findFirst()` throws `NoSuchElementException`.",
+     "answer": false,
+     "explanation": "An empty loader is normal. `findFirst()` returns `Optional.empty()`; only calling `get()` on that empty Optional would throw.",
+     "objective": "7.1"
+    },
+    {
+     "type": "page",
+     "title": "Classpath providers",
+     "blocks": [
+      {
+       "type": "paragraph",
+       "text": "Plain JARs on the classpath advertise providers in a text file instead of `provides`:"
+      },
+      {
+       "type": "code",
+       "code": "META-INF/services/com.tax.api.Tax\n---------------------------------\ncom.tax.legacy.OldTax"
+      },
+      {
+       "type": "paragraph",
+       "text": "The file name is the service's fully qualified name; each line is a provider class. Named modules must use `provides`; their `META-INF/services` files are ignored."
+      }
+     ]
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l03-e06",
+     "kind": "multiChoice",
+     "prompt": "Which three directives can appear in the four-module service example? Choose three.",
+     "options": [
+      "`exports com.tax.api;` in the API module",
+      "`provides com.tax.api.Tax with com.tax.nl.DutchTax;` in the provider",
+      "`uses com.tax.api.Tax;` in the locator",
+      "`exports com.tax.nl;` required in the provider",
+      "`requires com.tax.nl;` required in the consumer"
+     ],
+     "answers": [
+      0,
+      1,
+      2
+     ],
+     "explanation": "The API exports its interface package, the provider declares `provides … with …`, and the locator declares `uses`. The provider's package stays hidden, and the consumer must **not** depend on any specific provider; that's the whole point.",
+     "objective": "7.1",
+     "examStyle": true
+    }
+   ]
+  },
+  {
+   "id": "u11-l04",
+   "title": "Compile, package & run",
+   "minutes": 8,
+   "summary": "javac, jar and java with -p, -m, -d and --describe-module.",
+   "steps": [
+    {
+     "type": "page",
+     "title": "Compiling modules",
+     "blocks": [
+      {
+       "type": "code",
+       "code": "src/\n  com.shop/\n    module-info.java\n    com/shop/Main.java",
+       "caption": "One folder per module, named after the module."
+      },
+      {
+       "type": "code",
+       "code": "javac -d out/com.shop \\\n      src/com.shop/module-info.java \\\n      src/com.shop/com/shop/Main.java\n\n# several modules at once\njavac -d out --module-source-path src -m com.shop,com.util\n\n# against already-compiled modules\njavac -p mods -d out/com.app $(find src/com.app -name '*.java')"
+      },
+      {
+       "type": "table",
+       "header": [
+        "Option",
+        "Short",
+        "Meaning"
+       ],
+       "rows": [
+        [
+         "`--module-path`",
+         "`-p`",
+         "where to find compiled modules"
+        ],
+        [
+         "`--module-source-path`",
+         "—",
+         "root of per-module source folders"
+        ],
+        [
+         "`--module`",
+         "`-m`",
+         "which module(s) to compile"
+        ],
+        [
+         "`-d`",
+         "—",
+         "output directory (for javac)"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "type": "page",
+     "title": "Running a module",
+     "blocks": [
+      {
+       "type": "code",
+       "code": "java --module-path out --module com.shop/com.shop.Main\njava -p out -m com.shop/com.shop.Main\n\n# if the JAR records a main class\njava -p mods -m com.shop"
+      },
+      {
+       "type": "callout",
+       "kind": "exam",
+       "title": null,
+       "text": "The format is **module/fully.qualified.MainClass**. A slash between module and class, dots inside each. `-m com.shop.Main` alone is wrong unless `com.shop.Main` is a module name with a recorded main class."
+      }
+     ]
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l04-e01",
+     "kind": "singleChoice",
+     "prompt": "Which command runs class `com.shop.cli.Start` in module `com.shop` whose compiled classes are in `out`?",
+     "options": [
+      "`java -p out -m com.shop/com.shop.cli.Start`",
+      "`java -cp out -m com.shop.cli.Start`",
+      "`java -p out com.shop.cli.Start/com.shop`",
+      "`java -m out -p com.shop/com.shop.cli.Start`"
+     ],
+     "answer": 0,
+     "explanation": "`-p` gives the module path and `-m` takes `module/mainclass`. The other options swap the parts, mix in the classpath, or give the path to `-m`.",
+     "objective": "7.2",
+     "examStyle": true
+    },
+    {
+     "type": "page",
+     "title": "Building a modular JAR",
+     "blocks": [
+      {
+       "type": "code",
+       "code": "jar --create --file mods/com.shop.jar \\\n    --main-class com.shop.Main \\\n    -C out/com.shop .\n\n# short form\njar -cfe mods/com.shop.jar com.shop.Main -C out/com.shop ."
+      },
+      {
+       "type": "paragraph",
+       "text": "A **modular JAR** is just a JAR with `module-info.class` at its root. `--main-class` records the entry point, so `java -p mods -m com.shop` is enough."
+      },
+      {
+       "type": "callout",
+       "kind": "tip",
+       "title": "-C",
+       "text": "`-C dir .` means: change into `dir` and add everything there. Without it, the folder name ends up inside the JAR paths."
+      }
+     ]
+    },
+    {
+     "type": "page",
+     "title": "Inspecting modules",
+     "blocks": [
+      {
+       "type": "table",
+       "header": [
+        "Command",
+        "Shows"
+       ],
+       "rows": [
+        [
+         "`java --list-modules`",
+         "every module in the JDK (with versions)"
+        ],
+        [
+         "`java -p mods --describe-module com.shop`",
+         "the descriptor of one module (`-d` short)"
+        ],
+        [
+         "`jar --describe-module --file x.jar`",
+         "descriptor inside a JAR (`jar -d -f x.jar`)"
+        ],
+        [
+         "`java --show-module-resolution -p mods -m com.shop`",
+         "how the module graph was resolved"
+        ],
+        [
+         "`jdeps -s app.jar`",
+         "summary of what a JAR depends on"
+        ],
+        [
+         "`jdeps --jdk-internals app.jar`",
+         "uses of internal JDK APIs"
+        ]
+       ]
+      },
+      {
+       "type": "callout",
+       "kind": "trap",
+       "title": "-d means two things",
+       "text": "For `javac`, `-d` is the **output directory**. For `java`, `-d` is short for `--describe-module`. For `jar`, `-d` is also `--describe-module`. The exam enjoys this collision."
+      }
+     ]
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l04-e02",
+     "kind": "singleChoice",
+     "prompt": "What does `java -p mods -d com.shop` do?",
+     "options": [
+      "Prints the module descriptor of `com.shop`",
+      "Runs `com.shop` with debugging on",
+      "Writes compiled classes to `com.shop`",
+      "Deletes module `com.shop` from `mods`"
+     ],
+     "answer": 0,
+     "explanation": "With the `java` launcher, `-d` is the short form of `--describe-module`. It prints requires, exports, uses, provides and so on, without running anything.",
+     "objective": "7.2",
+     "examStyle": true
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l04-e03",
+     "kind": "multiChoice",
+     "prompt": "Which two commands print module information without running application code? Choose two.",
+     "options": [
+      "`java --list-modules`",
+      "`jar --describe-module --file app.jar`",
+      "`java -p mods -m com.app`",
+      "`javac -d out src/module-info.java`",
+      "`jar --create --file app.jar -C out .`"
+     ],
+     "answers": [
+      0,
+      1
+     ],
+     "explanation": "`--list-modules` and `--describe-module` only inspect. `-m` launches the app, `javac -d` compiles and `jar --create` builds an archive.",
+     "objective": "7.2",
+     "examStyle": true
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l04-e04",
+     "kind": "fillBlanks",
+     "prompt": "Complete the command to launch `com.app.Main` from module `com.app` in folder `mods`.",
+     "code": "java ___ mods ___ com.app/com.app.Main",
+     "bank": [
+      "-p",
+      "-m",
+      "-cp",
+      "-d",
+      "-jar"
+     ],
+     "answers": [
+      "-p",
+      "-m"
+     ],
+     "explanation": "`-p` sets the module path and `-m` names `module/main class`. `-cp` is the classpath, `-d` would describe the module, and `-jar` runs a single executable JAR from the classpath.",
+     "objective": "7.2"
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l04-e05",
+     "kind": "orderLines",
+     "prompt": "Order the steps to ship a runnable modular JAR.",
+     "lines": [
+      "write module-info.java",
+      "javac -d out ...",
+      "jar --create --file mods/app.jar --main-class com.app.Main -C out .",
+      "java -p mods -m com.app"
+     ],
+     "distractors": [],
+     "explanation": "Write the descriptor, compile into `out`, package `out` into a modular JAR with a main class, then launch it by module name.",
+     "objective": "7.2"
+    }
+   ]
+  },
+  {
+   "id": "u11-l05",
+   "title": "Migration & runtime images",
+   "minutes": 9,
+   "summary": "Unnamed and automatic modules, bottom-up vs top-down, jdeps and jlink.",
+   "steps": [
+    {
+     "type": "page",
+     "title": "Three kinds of module",
+     "blocks": [
+      {
+       "type": "table",
+       "header": [
+        "Aspect",
+        "Named",
+        "Automatic",
+        "Unnamed"
+       ],
+       "rows": [
+        [
+         "Where",
+         "module path, has module-info",
+         "module path, **no** module-info",
+         "classpath"
+        ],
+        [
+         "Name",
+         "from module-info",
+         "manifest or file name",
+         "none"
+        ],
+        [
+         "Exports",
+         "what it declares",
+         "**every** package",
+         "every package"
+        ],
+        [
+         "Reads",
+         "what it requires",
+         "every module, incl. unnamed",
+         "every module"
+        ],
+        [
+         "Can be required by named?",
+         "yes",
+         "yes",
+         "**no**"
+        ]
+       ]
+      },
+      {
+       "type": "callout",
+       "kind": "exam",
+       "title": null,
+       "text": "The key asymmetry: a named module can never `requires` code on the classpath, because the unnamed module has no name. Automatic modules are the bridge: they're on the module path (so named modules can require them) and they can still read the classpath."
+      }
+     ]
+    },
+    {
+     "type": "page",
+     "title": "Naming automatic modules",
+     "blocks": [
+      {
+       "type": "paragraph",
+       "text": "A plain JAR on the module path becomes an automatic module. Its name comes from:"
+      },
+      {
+       "type": "bullets",
+       "items": [
+        "the `Automatic-Module-Name` entry in `META-INF/MANIFEST.MF`, if present; otherwise",
+        "the file name: drop `.jar`, drop a trailing version (`-1.2.3`), turn every non-alphanumeric char into `.`, collapse repeated dots, trim dots at the ends."
+       ]
+      },
+      {
+       "type": "table",
+       "header": [
+        "JAR file",
+        "Automatic module name"
+       ],
+       "rows": [
+        [
+         "`commons-lang3-3.14.0.jar`",
+         "`commons.lang3`"
+        ],
+        [
+         "`my_utils-2.0.jar`",
+         "`my.utils`"
+        ],
+        [
+         "`guava-33.0-jre.jar`",
+         "`guava` (version `33.0-jre`)"
+        ],
+        [
+         "`json--api.jar`",
+         "`json.api`"
+        ]
+       ]
+      },
+      {
+       "type": "callout",
+       "kind": "trap",
+       "title": "Manifest wins",
+       "text": "If the manifest says `Automatic-Module-Name: org.apache.commons.lang3`, that's the name, whatever the file is called."
+      }
+     ]
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l05-e01",
+     "kind": "singleChoice",
+     "prompt": "No manifest entry. What is the automatic module name of `fancy-logger-4.2.1.jar`?",
+     "options": [
+      "`fancy.logger`",
+      "`fancy-logger`",
+      "`fancy.logger.4.2.1`",
+      "`fancylogger`"
+     ],
+     "answer": 0,
+     "explanation": "Drop `.jar`, drop the version `-4.2.1`, then replace the hyphen with a dot: `fancy.logger`.",
+     "objective": "7.2",
+     "examStyle": true
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l05-e02",
+     "kind": "multiChoice",
+     "prompt": "Which two statements about automatic modules are true? Choose two.",
+     "options": [
+      "They export all their packages",
+      "They can read the unnamed module",
+      "They must contain module-info.class",
+      "Named modules cannot require them",
+      "They only read java.base"
+     ],
+     "answers": [
+      0,
+      1
+     ],
+     "explanation": "Automatic modules export (and open) every package and read every other module, including the classpath's unnamed module. They have no descriptor by definition, and named modules can require them by their derived name.",
+     "objective": "7.2",
+     "examStyle": true
+    },
+    {
+     "type": "page",
+     "title": "Bottom-up migration",
+     "blocks": [
+      {
+       "type": "paragraph",
+       "text": "Start with the libraries that depend on nothing else in your app, modularize them, and work **up** the dependency tree."
+      },
+      {
+       "type": "bullets",
+       "items": [
+        "Modularized JARs move to the module path with a real `module-info.java`.",
+        "Not-yet-migrated JARs stay on the **classpath** (unnamed module).",
+        "A named module can't require unmigrated code, so lower layers must go first."
+       ]
+      },
+      {
+       "type": "code",
+       "code": "app  ->  service  ->  util          step 1: util gets module-info\napp  ->  service  ->  [util]        step 2: service gets module-info\napp  ->  [service] -> [util]        step 3: app gets module-info",
+       "caption": "[x] = named module. Arrows show 'depends on'."
+      }
+     ]
+    },
+    {
+     "type": "page",
+     "title": "Top-down migration",
+     "blocks": [
+      {
+       "type": "paragraph",
+       "text": "Put **every** JAR on the module path at once. Unmigrated JARs become automatic modules, so you can modularize the **top** (the app) first and work down."
+      },
+      {
+       "type": "bullets",
+       "items": [
+        "Fast start: the app is named on day one.",
+        "Automatic module names come from file names, which may change when the library ships its own `module-info` later.",
+        "Third-party JARs you don't control stay automatic until their authors modularize."
+       ]
+      },
+      {
+       "type": "callout",
+       "kind": "exam",
+       "title": null,
+       "text": "Bottom-up: unmigrated code on the **classpath**. Top-down: unmigrated code on the **module path** as automatic modules. Swap the two and the answer is wrong."
+      }
+     ]
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l05-e03",
+     "kind": "singleChoice",
+     "prompt": "During a top-down migration, where do the not-yet-migrated JARs go?",
+     "options": [
+      "On the module path, as automatic modules",
+      "On the classpath, as part of the unnamed module",
+      "Inside a jlink runtime image",
+      "In `META-INF/services`"
+     ],
+     "answer": 0,
+     "explanation": "Top-down puts everything on the module path so the top module can `requires` the unmigrated JARs by their automatic names. Bottom-up is the strategy that leaves them on the classpath.",
+     "objective": "7.2",
+     "examStyle": true
+    },
+    {
+     "type": "page",
+     "title": "jdeps: what do I depend on?",
+     "blocks": [
+      {
+       "type": "code",
+       "code": "jdeps -s app.jar\n#  app.jar -> java.base\n#  app.jar -> java.sql\n\njdeps --jdk-internals app.jar\n#  uses sun.misc.Unsafe  -> suggested replacement ...\n\njdeps --generate-module-info out lib.jar",
+       "caption": "-s summary · --jdk-internals flags internal JDK APIs · --generate-module-info drafts a descriptor."
+      },
+      {
+       "type": "callout",
+       "kind": "tip",
+       "title": "Before migrating",
+       "text": "Run `jdeps --jdk-internals` first. Internal packages like `sun.misc` are strongly encapsulated since Java 17, so code using them may need replacements."
+      }
+     ]
+    },
+    {
+     "type": "page",
+     "title": "jlink: custom runtime images",
+     "blocks": [
+      {
+       "type": "paragraph",
+       "text": "`jlink` links your modules plus only the JDK modules they need into a small, self-contained runtime with its own `bin/java`."
+      },
+      {
+       "type": "code",
+       "code": "jlink --module-path mods \\\n      --add-modules com.shop \\\n      --launcher shop=com.shop/com.shop.Main \\\n      --strip-debug --compress zip-6 \\\n      --output build/shop-image\n\nbuild/shop-image/bin/shop"
+      },
+      {
+       "type": "bullets",
+       "items": [
+        "`--add-modules` lists root modules; their dependencies are pulled in.",
+        "`--output` is the target folder; it must not exist yet.",
+        "Current JDKs find their own modules automatically; older guides add `$JAVA_HOME/jmods` to `--module-path`."
+       ]
+      },
+      {
+       "type": "callout",
+       "kind": "trap",
+       "title": "No automatic modules",
+       "text": "jlink only links **named** modules. An automatic module (plain JAR on the module path) makes jlink fail. Every module in the image needs a real `module-info.class`."
+      }
+     ]
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l05-e04",
+     "kind": "trueFalse",
+     "prompt": "`jlink` can include an automatic module created from a plain JAR on the module path.",
+     "answer": false,
+     "explanation": "jlink requires explicit modules. Automatic modules have no descriptor, so jlink rejects them. Modularize the JAR (or drop it) first.",
+     "objective": "7.2"
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l05-e05",
+     "kind": "fillBlanks",
+     "prompt": "Build a runtime image containing module `com.shop` from folder `mods` into `image`.",
+     "code": "jlink ___ mods ___ com.shop ___ image",
+     "bank": [
+      "--module-path",
+      "--add-modules",
+      "--output",
+      "-d",
+      "--class-path",
+      "-m"
+     ],
+     "answers": [
+      "--module-path",
+      "--add-modules",
+      "--output"
+     ],
+     "explanation": "jlink needs a module path, the root modules to add, and an output folder. It has no classpath option, and `-d`/`-m` are not jlink options for this.",
+     "objective": "7.2"
+    }
+   ]
+  },
+  {
+   "id": "u11-l06",
+   "title": "Unit 11 checkpoint",
+   "minutes": 10,
+   "summary": "Exam-style mix: descriptors, services, commands and migration.",
+   "steps": [
+    {
+     "type": "page",
+     "title": "Checkpoint",
+     "blocks": [
+      {
+       "type": "paragraph",
+       "text": "Ten exam-style questions across the whole unit. Read the descriptors carefully: most mistakes come from a missing `transitive`, an `opens` mistaken for `exports`, or a command with its parts swapped."
+      },
+      {
+       "type": "callout",
+       "kind": "tip",
+       "title": "Strategy",
+       "text": "For module graph questions, sketch the arrows on paper (or in your head) before reading the options."
+      }
+     ]
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l06-e01",
+     "kind": "singleChoice",
+     "prompt": "Module `com.ui` has `requires com.core;`. `com.core` has `requires transitive com.data; exports com.core;`. `com.data` has `exports com.data; exports com.data.impl to com.core;`. Which packages can `com.ui` use?",
+     "options": [
+      "`com.core` and `com.data`",
+      "`com.core` only",
+      "`com.core`, `com.data` and `com.data.impl`",
+      "`com.data` only"
+     ],
+     "answer": 0,
+     "explanation": "`com.ui` reads `com.core` directly and `com.data` through `requires transitive`. `com.data.impl` is exported **only** to `com.core`, so `com.ui` can't use it even though it reads `com.data`.",
+     "objective": "7.1",
+     "examStyle": true
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l06-e02",
+     "kind": "multiChoice",
+     "prompt": "Assume every named package and module exists. Which two descriptors compile? Choose two.",
+     "options": [
+      "`module a { requires b; requires b; }`",
+      "`open module a { exports a.x; }`",
+      "`open module a { opens a.x; }`",
+      "`module a { requires static transitive b; }`",
+      "`module a-b { }`"
+     ],
+     "answers": [
+      1,
+      3
+     ],
+     "explanation": "Open modules may export packages but may not contain `opens`. `requires static transitive` is legal. Duplicate `requires` and hyphenated names don't compile.",
+     "objective": "7.1",
+     "examStyle": true
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l06-e03",
+     "kind": "singleChoice",
+     "prompt": "A JSON library in module `json.lib` must set private fields of `com.app.model.User` reflectively. `com.app` must not let any other module compile against `com.app.model`. Which directive fits best?",
+     "options": [
+      "`opens com.app.model to json.lib;`",
+      "`exports com.app.model to json.lib;`",
+      "`exports com.app.model;`",
+      "`requires transitive json.lib;`"
+     ],
+     "answer": 0,
+     "explanation": "Deep reflection on private members needs `opens`, and the qualified form limits it to `json.lib`. `exports` never allows private reflection, and `requires` is about the other direction.",
+     "objective": "7.1",
+     "examStyle": true
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l06-e04",
+     "kind": "singleChoice",
+     "prompt": "The provider module has `provides com.pay.Gateway with com.pay.stripe.StripeGateway;`. `StripeGateway` has only `public StripeGateway(String key)`. What happens?",
+     "options": [
+      "Compilation of the provider module fails",
+      "It compiles; ServiceLoader passes `null` for `key`",
+      "It compiles; the provider is silently skipped",
+      "It compiles; `ServiceLoader.load` throws immediately"
+     ],
+     "answer": 0,
+     "explanation": "For module providers, javac checks that the class has a public no-arg constructor or a `public static provider()` method. Neither exists, so the provider module doesn't compile.",
+     "objective": "7.1",
+     "examStyle": true
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l06-e05",
+     "kind": "trueFalse",
+     "prompt": "A named module can declare `requires` on the unnamed module to use classes from the classpath.",
+     "answer": false,
+     "explanation": "The unnamed module has no name, so it can't be required. Move the JAR to the module path to make it an automatic module instead.",
+     "objective": "7.1"
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l06-e06",
+     "kind": "singleChoice",
+     "prompt": "Which command prints the descriptor of module `com.shop` stored in `mods`?",
+     "options": [
+      "`java -p mods -d com.shop`",
+      "`javac -p mods -d com.shop`",
+      "`java -cp mods --list-modules com.shop`",
+      "`jlink -p mods -d com.shop`"
+     ],
+     "answer": 0,
+     "explanation": "`java -d` is `--describe-module`. For javac, `-d` is the output folder. `--list-modules` takes no module argument, and jlink doesn't describe modules.",
+     "objective": "7.2",
+     "examStyle": true
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l06-e07",
+     "kind": "singleChoice",
+     "prompt": "Your app depends on `old-cache-1.4.jar`, which has no module-info and no manifest entry. You want your named module `com.app` to require it. What do you write, and where does the JAR go?",
+     "options": [
+      "`requires old.cache;` and the JAR on the module path",
+      "`requires old-cache;` and the JAR on the classpath",
+      "`requires old.cache.1.4;` and the JAR on the module path",
+      "Nothing; put the JAR on the classpath and named modules see it automatically"
+     ],
+     "answer": 0,
+     "explanation": "On the module path the JAR becomes automatic module `old.cache` (version dropped, hyphen to dot). A named module can't see the classpath.",
+     "objective": "7.2",
+     "examStyle": true
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l06-e08",
+     "kind": "multiChoice",
+     "prompt": "Which two are true about `ServiceLoader<S>`? Choose two.",
+     "options": [
+      "It implements `Iterable<S>`",
+      "`stream()` returns `Stream<ServiceLoader.Provider<S>>`",
+      "`findFirst()` returns `S` or `null`",
+      "It throws when no providers are found",
+      "It only finds providers on the classpath"
+     ],
+     "answers": [
+      0,
+      1
+     ],
+     "explanation": "`ServiceLoader` is iterable and its `stream()` yields providers. `findFirst()` returns an `Optional<S>`, an empty loader is normal, and it finds both module-path (`provides`) and classpath (`META-INF/services`) providers.",
+     "objective": "7.1",
+     "examStyle": true
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l06-e09",
+     "kind": "singleChoice",
+     "prompt": "In a bottom-up migration of `app -> service -> util`, which module gets its `module-info.java` first?",
+     "options": [
+      "`util`",
+      "`app`",
+      "`service`",
+      "All three at once"
+     ],
+     "answer": 0,
+     "explanation": "Bottom-up starts with the module that has no dependencies inside the app (`util`). Named modules can't require classpath code, so the lowest layer must be named first.",
+     "objective": "7.2",
+     "examStyle": true
+    },
+    {
+     "type": "exercise",
+     "id": "u11-l06-e10",
+     "kind": "multiChoice",
+     "prompt": "Which two are true about `jlink`? Choose two.",
+     "options": [
+      "It produces a runtime image with its own `bin/java`",
+      "It only includes JDK modules that are reachable from the modules you add",
+      "It can link plain JARs from the classpath",
+      "It replaces the need for `javac`",
+      "The `--output` folder must already exist"
+     ],
+     "answers": [
+      0,
+      1
+     ],
+     "explanation": "jlink builds a trimmed runtime containing just the needed modules. It doesn't work with classpath or automatic JARs, doesn't compile code, and refuses to write into an existing output directory.",
+     "objective": "7.2",
+     "examStyle": true
+    }
+   ]
+  }
+ ]
+}

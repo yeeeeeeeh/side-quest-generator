@@ -1,0 +1,2649 @@
+{
+  "unitId": "u03",
+  "lessons": [
+    {
+      "id": "u03-l01",
+      "title": "Classes, objects & references",
+      "summary": "Blueprints, new, reference variables, null and ==.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "A class is a blueprint",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A **class** describes what its objects hold (**fields**) and what they can do (**methods**). It is a blueprint, not a thing."
+            },
+            {
+              "type": "code",
+              "code": "class Dog {\n    String name;\n    int age;\n\n    void bark() {\n        System.out.println(name + \" woofs\");\n    }\n}",
+              "caption": "Fields are declared up front, with types"
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "No `__init__` needed to create fields and no `self` parameter. Fields are declared in the class body with a type. Inside a method, `name` simply means this object's field."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Making objects with new",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`new Dog()` creates an **object** (an instance) and gives back a **reference** to it. The variable `d` stores that reference, not the object itself."
+            },
+            {
+              "type": "code",
+              "code": "class Dog {\n    String name;\n    void bark() {\n        System.out.println(name + \" woofs\");\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Dog d = new Dog();\n        d.name = \"Rex\";\n        d.bark();\n    }\n}",
+              "caption": "Prints: Rex woofs",
+              "verify": {
+                "expect": "stdout",
+                "value": "Rex woofs\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Fields get **default values**: `0` for numbers, `false` for boolean, `null` for references.",
+                "**Local variables** get no default. Reading one before assigning it does not compile."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l01-e01",
+          "kind": "fillBlanks",
+          "prompt": "Create a Dog and set its name.",
+          "code": "Dog d = ___ Dog();\nd.___ = \"Rex\";\nd.bark();",
+          "bank": [
+            "new",
+            "name",
+            "Dog",
+            "self",
+            "create",
+            "this"
+          ],
+          "answers": [
+            "new",
+            "name"
+          ],
+          "explanation": "`new` creates the object. Fields are accessed with the dot operator: `d.name`. Java has no `self`, and `create` is not a keyword.",
+          "objective": "3.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "Rex woofs\n",
+            "source": "class Dog {\n    String name;\n    void bark() {\n        System.out.println(name + \" woofs\");\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Dog d = new Dog();\n        d.name = \"Rex\";\n        d.bark();\n    }\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l01-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Box {\n    int size;\n    String label;\n    boolean open;\n}\npublic class Main {\n    public static void main(String[] args) {\n        Box b = new Box();\n        System.out.println(b.size + \" \"\n            + b.label + \" \" + b.open);\n    }\n}",
+          "options": [
+            "0 null false",
+            "0  false",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "Fields are always initialized: `int` to `0`, references to `null`, `boolean` to `false`. Concatenating `null` into a String prints the text `null`. Only **local** variables lack defaults.",
+          "objective": "3.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "0 null false\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "References and aliasing",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Assigning one reference variable to another copies the **reference**, not the object. Both variables now point to the same object."
+            },
+            {
+              "type": "code",
+              "code": "Dog a = new Dog();\nDog b = a;        // same object\nb.name = \"Max\";\nSystem.out.println(a.name); // Max"
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Same as Python: `b = a` makes two names for one object. Nothing is copied."
+            },
+            {
+              "type": "paragraph",
+              "text": "Assigning a **new** object to `b` later only moves `b`. `a` still points to the old object."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l01-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Cup { int ml; }\npublic class Main {\n    public static void main(String[] args) {\n        Cup a = new Cup();\n        Cup b = a;\n        a.ml = 100;\n        b = new Cup();\n        b.ml = 200;\n        System.out.print(a.ml + \" \" + b.ml);\n    }\n}",
+          "options": [
+            "100 200",
+            "200 200",
+            "100 100",
+            "0 200"
+          ],
+          "answer": 0,
+          "explanation": "`b = a` makes both point to the first Cup, so `a.ml = 100` sets it. Then `b = new Cup()` moves only `b` to a second Cup, which gets 200. `a` is unaffected.",
+          "objective": "3.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "100 200\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "null and NullPointerException",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A reference can be `null`: it points to **no object**. Using a field or method through a `null` reference compiles fine but throws a **NullPointerException** (NPE) at runtime."
+            },
+            {
+              "type": "code",
+              "code": "Dog d = null;\nd.bark();   // compiles, then NPE"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Compiles, then crashes",
+              "text": "The compiler does not track null. `Dog d = null; d.bark();` compiles. The failure happens only when the line runs."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l01-e04",
+          "kind": "tapLine",
+          "prompt": "Tap the line that throws an exception at runtime.",
+          "code": "class Pet { String name; }\npublic class Main {\n    public static void main(String[] args) {\n        Pet p = new Pet();\n        Pet q = null;\n        System.out.println(p.name);\n        System.out.println(q.name);\n    }\n}",
+          "answer": 7,
+          "explanation": "Line 6 prints `null` (the field's default value). Line 7 reads a field through the `null` reference `q`, which throws NullPointerException.",
+          "objective": "3.1",
+          "verify": {
+            "expect": "exception",
+            "value": "NullPointerException",
+            "stdout": "null\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "== vs equals",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "For objects, `==` asks **is it the same object?** It compares references. `equals()` asks **do they mean the same value?** — but only if the class defines it."
+            },
+            {
+              "type": "code",
+              "code": "String x = new String(\"hi\");\nString y = new String(\"hi\");\nSystem.out.println(x == y);\nSystem.out.println(x.equals(y));",
+              "caption": "Prints false, then true",
+              "verify": {
+                "expect": "stdout",
+                "value": "false\ntrue\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`String` overrides `equals()` to compare characters.",
+                "Your own class without an `equals()` override inherits the version from `Object`, which behaves like `==`.",
+                "Printing an object without a `toString()` override gives something like `Dog@1b6d3586` (class name + hash). You'll write `toString()` to get readable output."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python `==` calls `__eq__` (value), and `is` checks identity. In Java, `==` on objects is like Python `is`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l01-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Tag { String v; }\npublic class Main {\n    public static void main(String[] args) {\n        Tag t1 = new Tag();\n        Tag t2 = new Tag();\n        t1.v = \"a\";\n        t2.v = \"a\";\n        Tag t3 = t1;\n        System.out.print(t1 == t2);\n        System.out.print(\" \" + t1.equals(t2));\n        System.out.print(\" \" + (t1 == t3));\n    }\n}",
+          "options": [
+            "false false true",
+            "false true true",
+            "true true true",
+            "false false false"
+          ],
+          "answer": 0,
+          "explanation": "`t1` and `t2` are different objects, so `==` is false. `Tag` doesn't override `equals()`, so it falls back to identity: also false, even though both hold \"a\". `t3` points to the same object as `t1`, so `t1 == t3` is true.",
+          "objective": "3.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "false false true"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l01-e06",
+          "kind": "multiChoice",
+          "prompt": "Which two statements are true? Choose two.",
+          "options": [
+            "A reference variable stores the object itself.",
+            "Several reference variables can point to the same object.",
+            "Calling a method through a null reference throws a NullPointerException.",
+            "An instance field of type String defaults to \"\".",
+            "Local variables default to 0 or null like fields do."
+          ],
+          "answers": [
+            1,
+            2
+          ],
+          "explanation": "A variable holds a **reference** to the object, so many variables can share one object. Fields of reference type default to `null`, not `\"\"`. Local variables have no default at all; using one unassigned does not compile.",
+          "objective": "3.1",
+          "examStyle": true
+        }
+      ]
+    },
+    {
+      "id": "u03-l02",
+      "title": "Object life cycle & GC",
+      "summary": "When objects become eligible for garbage collection.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Who frees memory?",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Objects live on the **heap**. You never delete them yourself. The **garbage collector** (GC) reclaims objects that the program can no longer reach."
+            },
+            {
+              "type": "paragraph",
+              "text": "An object is **eligible for GC** when no reference chain from live code (local variables of running methods, static fields) leads to it."
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python has `del` and reference counting. Java has neither. The rule to remember: **unreachable = eligible**."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Three ways to lose an object",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "Set the last reference to `null`.",
+                "Reassign the last reference to another object.",
+                "The last reference was a local variable and its method returned."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "Obj a = new Obj();  // object #1\nObj b = new Obj();  // object #2\na = b;     // #1 unreachable: eligible\nb = null;  // #2 still reachable via a"
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Draw it",
+              "text": "On paper, draw each object as a box and each variable as an arrow. Cross out arrows as lines run. Boxes with no arrows from a live variable are eligible."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l02-e01",
+          "kind": "singleChoice",
+          "prompt": "How many objects are eligible for garbage collection when line 6 is reached?",
+          "code": "Obj a = new Obj();\nObj b = new Obj();\nObj c = a;\na = null;\nb = c;\n// line 6",
+          "options": [
+            "0",
+            "1",
+            "2",
+            "3"
+          ],
+          "answer": 1,
+          "explanation": "Object #1 is referenced by `a` and `c`. Setting `a = null` still leaves `c`. Then `b = c` drops the only reference to object #2, so exactly **one** object is eligible.",
+          "objective": "3.1",
+          "examStyle": true
+        },
+        {
+          "type": "page",
+          "title": "Islands of isolation",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Objects that reference **each other** but are not reachable from live code are still eligible. Java does not count references; it checks reachability."
+            },
+            {
+              "type": "code",
+              "code": "class Node { Node next; }\n\nNode x = new Node();\nNode y = new Node();\nx.next = y;\ny.next = x;\nx = null;\ny = null;   // both Nodes eligible"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Referenced ≠ reachable",
+              "text": "An object being referenced is not enough. The reference has to come from something reachable. A cycle that nothing reaches is an island, and the whole island is eligible."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l02-e02",
+          "kind": "singleChoice",
+          "prompt": "How many Node objects are eligible for garbage collection when line 9 is reached?",
+          "code": "Node a = new Node();\nNode b = new Node();\nNode c = new Node();\na.next = b;\nb.next = c;\nc.next = a;\na = null;\nb = null;\n// line 9",
+          "options": [
+            "0",
+            "1",
+            "2",
+            "3"
+          ],
+          "answer": 0,
+          "explanation": "`c` still points to node #3. Following `next`: #3 → #1 → #2. Every node is reachable through `c`, so **none** is eligible. It would be an island only if `c` were also set to null.",
+          "objective": "3.1",
+          "examStyle": true
+        },
+        {
+          "type": "page",
+          "title": "Objects created in methods",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A local variable disappears when its method returns. The object it pointed to becomes eligible **unless** a reference escaped: it was returned, or stored in a field."
+            },
+            {
+              "type": "code",
+              "code": "static Obj saved;\n\nstatic Obj make() {\n    Obj t = new Obj(); // eligible\n    Obj k = new Obj(); // kept by saved\n    saved = k;\n    return new Obj();  // kept if stored\n}"
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l02-e03",
+          "kind": "singleChoice",
+          "prompt": "After the call `make();` on line 10 finishes, how many objects created inside make() are eligible for GC?",
+          "code": "class Factory {\n    static Obj keep;\n    static Obj make() {\n        Obj a = new Obj();\n        Obj b = new Obj();\n        keep = b;\n        return new Obj();\n    }\n    public static void main(String[] s) {\n        make();\n    }\n}",
+          "options": [
+            "0",
+            "1",
+            "2",
+            "3"
+          ],
+          "answer": 2,
+          "explanation": "Three objects are created. The one from `a` is only referenced by a local, so it's eligible after the method returns. The one from `b` is kept by the static field `keep`. The returned object is ignored by the caller (`make();` discards it), so it's eligible too: **2**.",
+          "objective": "3.1",
+          "examStyle": true
+        },
+        {
+          "type": "page",
+          "title": "System.gc() and finalize()",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "`System.gc()` is only a **request**. The JVM may ignore it. You can't force collection.",
+                "You can't predict **when** an eligible object is collected, or whether it is collected at all before the program ends.",
+                "`finalize()` is deprecated and not on the exam. Never rely on it."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "Exam questions ask how many objects are **eligible** at a given line. Never answer \"when is it collected\" with a specific moment: the answer is always \"it can't be known\"."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l02-e04",
+          "kind": "trueFalse",
+          "prompt": "Calling `System.gc()` guarantees that all eligible objects are destroyed before the next line runs.",
+          "answer": false,
+          "explanation": "`System.gc()` only suggests that the JVM run the garbage collector. Nothing is guaranteed: not when, not which objects, not whether it runs at all.",
+          "objective": "3.1"
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l02-e05",
+          "kind": "multiChoice",
+          "prompt": "Which two statements about garbage collection are true? Choose two.",
+          "options": [
+            "An object becomes eligible when no live code can reach it.",
+            "Setting a reference to null immediately frees the object's memory.",
+            "Two objects that only reference each other can be eligible.",
+            "System.gc() forces the garbage collector to run.",
+            "An object stored in a static field is eligible when the method that created it returns."
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "Eligibility is about reachability, so an isolated cycle is eligible. `null` only removes a reference; actual collection happens later, if ever. `System.gc()` is a hint. A static field keeps its object reachable for as long as the class is loaded.",
+          "objective": "3.1",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l02-e06",
+          "kind": "tapLine",
+          "prompt": "Tap the line after which the object created on line 1 first becomes eligible for GC.",
+          "code": "Obj p = new Obj();\nObj q = p;\np = new Obj();\nObj r = q;\nq = null;\nr = p;",
+          "answer": 6,
+          "explanation": "Track object #1: line 1 `p`, line 2 also `q`. Line 3 moves `p` away, but `q` remains. Line 4 adds `r`. Line 5 drops `q`, but `r` remains. Line 6 moves `r` to object #2, removing the last reference to #1.",
+          "objective": "3.1"
+        }
+      ]
+    },
+    {
+      "id": "u03-l03",
+      "title": "Instance vs static members",
+      "summary": "Shared static fields, static methods and static imports.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "One per object, or one per class",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "An **instance field** exists once per object. A **static field** exists once per **class**, shared by every object."
+            },
+            {
+              "type": "code",
+              "code": "class Counter {\n    static int total;\n    int mine;\n    void click() {\n        total++;\n        mine++;\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Counter a = new Counter();\n        Counter b = new Counter();\n        a.click();\n        a.click();\n        b.click();\n        System.out.println(a.mine + \" \"\n            + b.mine + \" \" + Counter.total);\n    }\n}",
+              "caption": "Prints: 2 1 3",
+              "verify": {
+                "expect": "stdout",
+                "value": "2 1 3\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Close to a Python class attribute. But in Python, `self.total += 1` creates a new instance attribute. In Java, `a.total++` always updates the one shared static field."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l03-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Ticket {\n    static int next = 1;\n    int id;\n    void issue() { id = next++; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Ticket t1 = new Ticket();\n        Ticket t2 = new Ticket();\n        t1.issue();\n        t2.issue();\n        t1.issue();\n        System.out.println(t1.id + \" \"\n            + t2.id + \" \" + Ticket.next);\n    }\n}",
+          "options": [
+            "3 2 4",
+            "1 2 3",
+            "3 2 3",
+            "1 1 2"
+          ],
+          "answer": 0,
+          "explanation": "`next` is static and shared. `t1.issue()` sets id 1 (next becomes 2), `t2.issue()` sets id 2 (next 3), then `t1.issue()` again sets t1's id to 3 (next 4). `next++` returns the old value.",
+          "objective": "3.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "3 2 4\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Static methods",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A **static method** belongs to the class, not to an object. So there is no `this` inside it."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "A static method **can** use other static fields and methods directly.",
+                "It **cannot** use instance fields or instance methods directly — which object's would it use?",
+                "It can use them through an object: `new Shop().sell()`.",
+                "An instance method can use **both** static and instance members."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Why main is special",
+              "text": "`main` is static. That's why calling an instance method from `main` without an object fails to compile."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l03-e02",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "class Shop {\n    int stock = 5;\n    static String name = \"Corner\";\n    static void info() {\n        System.out.println(name);\n        System.out.println(stock);\n    }\n    void sell() {\n        stock--;\n        info();\n    }\n}",
+          "answer": 6,
+          "explanation": "`info()` is static, so it has no object and cannot read the instance field `stock`. Line 10 is fine: an instance method may call a static method.",
+          "objective": "3.2",
+          "verify": {
+            "expect": "compileError",
+            "line": 6
+          }
+        },
+        {
+          "type": "page",
+          "title": "Static through a reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "You can call a static member through a reference variable. The compiler only looks at the variable's **declared type**; the object is never used."
+            },
+            {
+              "type": "code",
+              "code": "class Util {\n    static String hi() { return \"hi\"; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Util u = null;\n        System.out.println(u.hi());\n    }\n}",
+              "caption": "Prints hi — no NullPointerException",
+              "verify": {
+                "expect": "stdout",
+                "value": "hi\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "null, but no NPE",
+              "text": "A static call through a `null` reference does **not** throw an NPE. The exam loves this. Good style is `Util.hi()`, but the reference version compiles."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l03-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Lamp {\n    static int count;\n    String color;\n    static void add() { count++; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Lamp lamp = null;\n        lamp.add();\n        lamp.count++;\n        System.out.println(Lamp.count);\n    }\n}",
+          "options": [
+            "2",
+            "0",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`add()` and `count` are static, so `lamp.add()` and `lamp.count++` really mean `Lamp.add()` and `Lamp.count++`. The `null` value of `lamp` is never used, so there is no exception. `count` goes 0 → 1 → 2.",
+          "objective": "3.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "2\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Static imports",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A **static import** lets you use static members without the class name."
+            },
+            {
+              "type": "code",
+              "code": "import static java.lang.Math.max;\nimport static java.lang.Math.*;  // all\n\nint big = max(3, 7);   // no \"Math.\""
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Word order",
+              "text": "The syntax is `import static`. Writing `static import` does not compile. You import **members** (`Math.max`), not just the class."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l03-e04",
+          "kind": "fillBlanks",
+          "prompt": "Complete the static import so the code prints 7.",
+          "code": "import ___ java.lang.Math.___;\n\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(max(3, 7));\n    }\n}",
+          "bank": [
+            "static",
+            "max",
+            "final",
+            "min",
+            "class",
+            "Math"
+          ],
+          "answers": [
+            "static",
+            "max"
+          ],
+          "explanation": "`import static java.lang.Math.max;` imports the static method `max`, so it can be called without `Math.`. The order is `import static`, never `static import`.",
+          "objective": "3.2",
+          "verify": {
+            "expect": "stdout",
+            "value": "7\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l03-e05",
+          "kind": "multiChoice",
+          "prompt": "Which two lines compile when inserted at // INSERT? Choose two.",
+          "code": "public class App {\n    int x = 1;\n    static int y = 2;\n    void go() { }\n    public static void main(String[] a) {\n        // INSERT\n    }\n}",
+          "options": [
+            "x++;",
+            "y++;",
+            "go();",
+            "new App().go();",
+            "this.x = 3;"
+          ],
+          "answers": [
+            1,
+            3
+          ],
+          "explanation": "`main` is static, so it can't use the instance field `x`, the instance method `go()`, or `this`. It can use the static field `y` directly and call `go()` through a new object.",
+          "objective": "3.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "3\n",
+            "source": "public class App {\n    int x = 1;\n    static int y = 2;\n    void go() { }\n    public static void main(String[] a) {\n        y++;\n        new App().go();\n        System.out.println(y);\n    }\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l03-e06",
+          "kind": "trueFalse",
+          "prompt": "A static method may use `this` as long as it is called through an object reference.",
+          "answer": false,
+          "explanation": "A static method never has a `this`, however it is called. `obj.staticMethod()` is compiled as `ClassName.staticMethod()`. Using `this` in a static method is always a compile error.",
+          "objective": "3.2",
+          "verify": {
+            "expect": "compileError",
+            "source": "class A {\n    int v;\n    static int get() { return this.v; }\n}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u03-l04",
+      "title": "Constructors",
+      "summary": "Default and overloaded constructors, this(...) and final fields.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "What a constructor is",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A **constructor** runs when `new` creates an object. It has the **same name as the class** and **no return type**, not even `void`."
+            },
+            {
+              "type": "code",
+              "code": "class Dog {\n    String name;\n    Dog(String name) {\n        this.name = name;\n    }\n}\n// usage: new Dog(\"Rex\")"
+            },
+            {
+              "type": "paragraph",
+              "text": "`this.name` is the field; plain `name` is the parameter."
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Like `__init__`, but named after the class, without `self`. A class may have **several** constructors with different parameters."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "The default constructor",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "If you write **no** constructor, the compiler adds a no-argument one for you: the **default constructor**."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "It disappears",
+              "text": "As soon as you declare **any** constructor, the default one is gone. `new Dog()` then fails to compile unless you write `Dog() { }` yourself."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l04-e01",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "class Cat {\n    String name;\n    Cat(String name) {\n        this.name = name;\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Cat a = new Cat(\"Tom\");\n        Cat b = new Cat();\n    }\n}",
+          "answer": 10,
+          "explanation": "`Cat` declares a constructor, so the compiler does not add a default no-arg one. `new Cat()` has no matching constructor.",
+          "objective": "3.2",
+          "verify": {
+            "expect": "compileError",
+            "line": 10
+          }
+        },
+        {
+          "type": "page",
+          "title": "Overloading and this(...)",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A class can have several constructors with different parameter lists. One can call another with `this(...)` to avoid repeating code."
+            },
+            {
+              "type": "code",
+              "code": "class Pizza {\n    String size;\n    int slices;\n    Pizza() {\n        this(\"M\");\n    }\n    Pizza(String size) {\n        this(size, 8);\n    }\n    Pizza(String size, int slices) {\n        this.size = size;\n        this.slices = slices;\n    }\n}"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`this(...)` must be the **first statement** in the constructor.",
+                "Only constructors can call `this(...)`; methods cannot.",
+                "Constructors calling each other in a cycle do not compile."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l04-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Box {\n    Box() {\n        this(1);\n        System.out.print(\"A\");\n    }\n    Box(int n) {\n        System.out.print(\"B\" + n);\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        new Box();\n    }\n}",
+          "options": [
+            "B1A",
+            "AB1",
+            "B1",
+            "A"
+          ],
+          "answer": 0,
+          "explanation": "`new Box()` runs the no-arg constructor, whose first statement `this(1)` runs `Box(int)` completely (printing B1) before the rest of `Box()` prints A.",
+          "objective": "3.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "B1A"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l04-e03",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "class Lamp {\n    int watts;\n    Lamp() {\n        System.out.println(\"init\");\n        this(60);\n    }\n    Lamp(int w) {\n        watts = w;\n    }\n}",
+          "answer": 5,
+          "explanation": "`this(...)` must be the very first statement of a constructor. Here a print comes first, so the call on line 5 is a compile error.",
+          "objective": "3.2",
+          "verify": {
+            "expect": "compileError",
+            "line": 5
+          }
+        },
+        {
+          "type": "page",
+          "title": "Constructor or method?",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Add a return type and it is **no longer a constructor** — it's an ordinary method that happens to share the class name. It compiles, but `new` never calls it."
+            },
+            {
+              "type": "code",
+              "code": "class Robot {\n    void Robot() {   // a method!\n        System.out.println(\"hi\");\n    }\n}"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Legal but sneaky",
+              "text": "`void ClassName()` is legal and a classic exam trick. Since no real constructor is declared, the class gets a default constructor that does nothing."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l04-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Robot {\n    String id = \"none\";\n    void Robot() {\n        id = \"R2\";\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Robot r = new Robot();\n        System.out.println(r.id);\n    }\n}",
+          "options": [
+            "none",
+            "R2",
+            "null",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`void Robot()` has a return type, so it's a method, not a constructor. `new Robot()` uses the default constructor, and the method is never called. `id` keeps its initial value.",
+          "objective": "3.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "none\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "final instance fields",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A `final` field must be assigned **exactly once**: at its declaration, in an initializer block, or in **every** constructor."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Not assigned on some constructor path: compile error.",
+                "Assigned twice (e.g. at declaration and in a constructor): compile error.",
+                "A constructor that starts with `this(...)` counts as assigning what the called constructor assigns."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "class Account {\n    final int id;\n    Account() {\n        this(0);       // OK: delegates\n    }\n    Account(int id) {\n        this.id = id;  // OK: once\n    }\n}"
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l04-e05",
+          "kind": "multiChoice",
+          "prompt": "The code does not compile. Which three changes, each on its own, fix it? Choose three.",
+          "code": "class Account {\n    final int id;\n    Account() {\n    }\n    Account(int id) {\n        this.id = id;\n    }\n}",
+          "options": [
+            "Add id = 0; inside Account()",
+            "Add this(0); inside Account()",
+            "Remove final from line 2",
+            "Change line 2 to final int id = 0;",
+            "Add id = 1; after line 6"
+          ],
+          "answers": [
+            0,
+            1,
+            2
+          ],
+          "explanation": "`Account()` leaves the final field `id` unassigned. Assigning it there, or delegating with `this(0)`, fixes that. Removing `final` also works because non-final fields get a default. Initializing at the declaration makes line 6 a second assignment, and assigning twice in one constructor is also an error.",
+          "objective": "3.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l04-e06",
+          "kind": "orderLines",
+          "prompt": "Build a class whose constructor stores x.",
+          "lines": [
+            "class Point {",
+            "    int x;",
+            "    Point(int x) {",
+            "        this.x = x;",
+            "    }",
+            "}"
+          ],
+          "distractors": [
+            "    void Point(int x) {",
+            "        x = this.x;"
+          ],
+          "explanation": "A constructor has the class name and no return type. Inside it, `this.x` is the field and `x` is the parameter. `void Point(int x)` would be a method, not a constructor.",
+          "objective": "3.2"
+        }
+      ]
+    },
+    {
+      "id": "u03-l05",
+      "title": "Initializers & init order",
+      "summary": "Static and instance blocks, and the order everything runs in.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Instance initializer blocks",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A bare `{ ... }` block in a class body is an **instance initializer**. It runs every time an object is created, **before the constructor body**."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Field initializers (`String s = \"a\";`) and instance blocks run **top to bottom, in source order**.",
+                "Then the constructor body runs.",
+                "Where the constructor appears in the file doesn't matter."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "class Demo {\n    { System.out.print(\"block \"); }\n    Demo() { System.out.print(\"ctor\"); }\n}\n// new Demo() prints: block ctor"
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l05-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Cake {\n    String s = \"a\";\n    {\n        s += \"b\";\n    }\n    Cake() {\n        s += \"c\";\n    }\n    {\n        s += \"d\";\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(new Cake().s);\n    }\n}",
+          "options": [
+            "abdc",
+            "abcd",
+            "acbd",
+            "adbc"
+          ],
+          "answer": 0,
+          "explanation": "Field initializer and instance blocks run in source order: `s = \"a\"`, then `+= \"b\"`, then `+= \"d\"` (the second block, even though it is below the constructor). The constructor body runs last and adds `c`.",
+          "objective": "3.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "abdc\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Static initializer blocks",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`static { ... }` runs **once**, when the class is first loaded (first used). Static field initializers and static blocks run top to bottom."
+            },
+            {
+              "type": "code",
+              "code": "class Config {\n    static int max;\n    static {\n        max = 10;\n        System.out.println(\"loaded\");\n    }\n}"
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Main goes first",
+              "text": "The class with `main` is loaded before `main` runs, so its static blocks print **before** anything in `main`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l05-e02",
+          "kind": "trueFalse",
+          "prompt": "A static initializer block runs every time a new object of the class is created.",
+          "answer": false,
+          "explanation": "A static block runs once, when the class is initialized. It is instance initializer blocks (without `static`) that run for every new object.",
+          "objective": "3.2"
+        },
+        {
+          "type": "page",
+          "title": "The full order",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "For a class without a parent class (inheritance comes in Unit 4):"
+            },
+            {
+              "type": "table",
+              "header": [
+                "When",
+                "What runs"
+              ],
+              "rows": [
+                [
+                  "Class first used (once)",
+                  "static fields + static blocks, top to bottom"
+                ],
+                [
+                  "Each new object",
+                  "instance fields + instance blocks, top to bottom"
+                ],
+                [
+                  "Then",
+                  "constructor body"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "public class Order {\n    static { System.out.print(\"S \"); }\n    { System.out.print(\"I \"); }\n    Order() { System.out.print(\"C \"); }\n    public static void main(String[] a) {\n        System.out.print(\"M \");\n        new Order();\n        new Order();\n    }\n}",
+              "caption": "Prints: S M I C I C",
+              "verify": {
+                "expect": "stdout",
+                "value": "S M I C I C "
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "Classic \"what is printed?\" questions mix static blocks, instance blocks and constructors. Work in order: static once, then per object fields/blocks, then the constructor."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l05-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "public class Init {\n    static int x = 1;\n    int y = 10;\n    static {\n        x += 5;\n        System.out.print(x + \" \");\n    }\n    {\n        y += x;\n        System.out.print(y + \" \");\n    }\n    Init() {\n        System.out.print(\"ctor \");\n    }\n    public static void main(String[] a) {\n        System.out.print(\"main \");\n        new Init();\n        new Init();\n    }\n}",
+          "options": [
+            "6 main 16 ctor 16 ctor",
+            "main 6 16 ctor 16 ctor",
+            "6 main 16 ctor 22 ctor",
+            "main 6 16 ctor 22 ctor"
+          ],
+          "answer": 0,
+          "explanation": "Loading `Init` (before `main`) runs the static block: x becomes 6, prints `6`. Then `main` prints `main`. Each `new Init()` starts with a fresh `y = 10`, adds `x` (16), then runs the constructor. `x` is never changed again, so both objects print 16.",
+          "objective": "3.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "6 main 16 ctor 16 ctor "
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l05-e04",
+          "kind": "orderLines",
+          "prompt": "Arrange the output lines in the order they are printed.",
+          "code": "public class Shop {\n    Shop() {\n        System.out.println(\"constructor\");\n    }\n    {\n        System.out.println(\"instance\");\n    }\n    static {\n        System.out.println(\"static\");\n    }\n    public static void main(String[] a) {\n        System.out.println(\"main\");\n        new Shop();\n    }\n}",
+          "lines": [
+            "static",
+            "main",
+            "instance",
+            "constructor"
+          ],
+          "explanation": "`Shop` is loaded before `main` runs, so the static block prints first. Then `main` prints. `new Shop()` runs the instance block before the constructor body.",
+          "objective": "3.2",
+          "verify": {
+            "expect": "stdout",
+            "value": "static\nmain\ninstance\nconstructor\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Forward references",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A field initializer may not **read** a field declared further down by its simple name. That's an **illegal forward reference** and does not compile."
+            },
+            {
+              "type": "code",
+              "code": "class Bad {\n    int a = b + 1;  // does not compile\n    int b = 2;\n}"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Only in initializers",
+              "text": "Order matters only for **reading by simple name** in initializers. Methods and constructors can use any field, wherever it's declared."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l05-e05",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "class Config {\n    static int max = 10;\n    static int min = max - 5;\n    int size = limit * 2;\n    int limit = 4;\n    int total() {\n        return later + size;\n    }\n    int later = 1;\n}",
+          "answer": 4,
+          "explanation": "Line 4 reads `limit` before its declaration on line 5: an illegal forward reference. Line 3 is fine because `max` is declared above it. Line 7 is inside a method, where declaration order doesn't matter.",
+          "objective": "3.2",
+          "verify": {
+            "expect": "compileError",
+            "line": 4
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l05-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Helper {\n    static {\n        System.out.print(\"H \");\n    }\n    static int v = 3;\n}\npublic class Main {\n    static {\n        System.out.print(\"M \");\n    }\n    public static void main(String[] a) {\n        System.out.print(\"start \");\n        System.out.print(Helper.v);\n    }\n}",
+          "options": [
+            "M start H 3",
+            "H M start 3",
+            "M H start 3",
+            "start M H 3"
+          ],
+          "answer": 0,
+          "explanation": "`Main` is initialized before `main` runs: `M`. Then `start`. `Helper` is only initialized when first used — reading `Helper.v` triggers its static block (`H`) and then the value `3` is printed.",
+          "objective": "3.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "M start H 3"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u03-l06",
+      "title": "Overloading & varargs",
+      "summary": "Same name, different parameters, and how Java picks one.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Same name, different parameters",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "**Overloading** means several methods share a name but differ in their **parameter types** (number, type or order). The compiler picks one based on the arguments."
+            },
+            {
+              "type": "code",
+              "code": "static int add(int a, int b) { ... }\nstatic int add(int a, int b, int c) { ... }\nstatic double add(double a, double b)\n    { ... }"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Signature = method name + parameter types.",
+                "Return type, parameter **names**, `static`, and `throws` don't count.",
+                "Two methods with the same signature don't compile, even with different return types."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python has no overloading: a second `def add` simply replaces the first. Java keeps every version and chooses one **at compile time**."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l06-e01",
+          "kind": "multiChoice",
+          "prompt": "A class has the method below. Which two methods can be added to the same class? Choose two.",
+          "code": "void print(int x, String s) {}",
+          "options": [
+            "void print(String s, int x) {}",
+            "int print(int a, String b) { return 0; }",
+            "void print(int x) {}",
+            "static void print(int y, String t) {}",
+            "void print(int x, String s) throws Exception {}"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "Swapping parameter order or changing the count gives a new signature. Changing only the return type, the parameter names, `static`, or the `throws` clause leaves the signature `print(int, String)` unchanged, so it's a duplicate.",
+          "objective": "3.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ok\n",
+            "source": "public class Main {\n    void print(int x, String s) {}\n    void print(String s, int x) {}\n    void print(int x) {}\n    public static void main(String[] a) {\n        System.out.println(\"ok\");\n    }\n}"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Which overload wins?",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "When several overloads could accept the arguments, Java tries these steps **in order** and stops at the first that finds a match:"
+            },
+            {
+              "type": "table",
+              "header": [
+                "Step",
+                "Example for int 5"
+              ],
+              "rows": [
+                [
+                  "1. Exact match",
+                  "f(int)"
+                ],
+                [
+                  "2. Widening primitive",
+                  "f(long), f(double)"
+                ],
+                [
+                  "3. Autoboxing",
+                  "f(Integer), f(Object)"
+                ],
+                [
+                  "4. Varargs",
+                  "f(int...)"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "static void f(long x)    { ... } // wins\nstatic void f(Integer x) { ... }\nstatic void f(int... x)  { ... }\n\nf(5);  // widening beats boxing"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "One kind of conversion",
+              "text": "Java will not widen **and then** box. A `long` argument can never match `Integer`. But it can box and then widen to a reference type: `int` → `Integer` → `Object`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l06-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "public class Main {\n    static void go(Object o) {\n        System.out.print(\"Object \");\n    }\n    static void go(long n) {\n        System.out.print(\"long \");\n    }\n    static void go(Integer n) {\n        System.out.print(\"Integer \");\n    }\n    public static void main(String[] a) {\n        int i = 1;\n        go(i);\n        go(Integer.valueOf(2));\n        go(\"x\");\n    }\n}",
+          "options": [
+            "long Integer Object",
+            "Object Integer Object",
+            "Integer Integer Object",
+            "long long Object"
+          ],
+          "answer": 0,
+          "explanation": "`go(i)`: no `go(int)`, so widening to `long` wins before boxing. `go(Integer.valueOf(2))`: exact match for `Integer`. `go(\"x\")`: a String only fits `Object`.",
+          "objective": "3.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "long Integer Object "
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l06-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "public class Main {\n    static void show(int x) {\n        System.out.print(\"int \");\n    }\n    static void show(Object o) {\n        System.out.print(\"Object\");\n    }\n    public static void main(String[] a) {\n        show('a');\n        show(3L);\n    }\n}",
+          "options": [
+            "int Object",
+            "int int",
+            "Object Object",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`'a'` is a `char`, which widens to `int`: first match. `3L` is a `long`; it can't narrow to `int`, so Java boxes it to `Long`, which is an `Object`.",
+          "objective": "3.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "int Object"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Varargs",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`int... nums` accepts **zero or more** ints. Inside the method, `nums` is an `int[]` array (arrays are covered in Unit 6)."
+            },
+            {
+              "type": "code",
+              "code": "static int sum(int... nums) {\n    int total = 0;\n    for (int i = 0; i < nums.length; i++) {\n        total += nums[i];\n    }\n    return total;\n}\n// sum()              -> 0\n// sum(1, 2, 3)       -> 6\n// sum(new int[]{4, 5}) -> 9"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Only **one** varargs parameter per method.",
+                "It must be the **last** parameter.",
+                "You may pass an array instead of a list of values.",
+                "Varargs is the **last resort** in overload resolution."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "T[] is not T...",
+              "text": "Only a `T...` parameter accepts separate arguments. If a method declares `int[] nums`, then `f(1, 2)` doesn't compile; you must pass an array. Both forms accept `new int[]{1, 2}`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l06-e04",
+          "kind": "multiChoice",
+          "prompt": "Which two method declarations compile? Choose two.",
+          "options": [
+            "void a(int... x, String s) {}",
+            "void b(String s, int... x) {}",
+            "void c(int... x, int... y) {}",
+            "void d(int[]... x) {}",
+            "void e(int...) {}"
+          ],
+          "answers": [
+            1,
+            3
+          ],
+          "explanation": "A varargs parameter must be last and there can be only one. `int[]... x` is legal: a varargs of arrays. `int...` needs a parameter name.",
+          "objective": "3.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ok\n",
+            "source": "public class Main {\n    void b(String s, int... x) {}\n    void d(int[]... x) {}\n    public static void main(String[] a) {\n        System.out.println(\"ok\");\n    }\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l06-e05",
+          "kind": "fillBlanks",
+          "prompt": "Complete the method so count(\"a\", \"b\", \"c\") returns 3.",
+          "code": "static int count(String___ words) {\n    return words.___;\n}",
+          "bank": [
+            "...",
+            "length",
+            "length()",
+            "size()",
+            "*"
+          ],
+          "answers": [
+            "...",
+            "length"
+          ],
+          "explanation": "`String...` declares varargs. Inside, `words` is a `String[]`, and arrays use the **field** `length` — not `length()` (that's for String) and not `size()` (that's for collections).",
+          "objective": "3.3",
+          "verify": {
+            "expect": "stdout",
+            "value": "3\n",
+            "source": "public class Main {\n    static int count(String... words) {\n        return words.length;\n    }\n    public static void main(String[] a) {\n        System.out.println(count(\"a\", \"b\", \"c\"));\n    }\n}"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Ambiguous calls and null",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "If two overloads match equally well, the call is **ambiguous** and does not compile."
+            },
+            {
+              "type": "code",
+              "code": "static void m(int a, long b) { }\nstatic void m(long a, int b) { }\n\nm(1, 1);  // ambiguous: compile error"
+            },
+            {
+              "type": "paragraph",
+              "text": "A `null` argument fits any reference type. Java picks the **most specific** one: `String` beats `Object`, because every String is an Object. If two unrelated types both fit, like `String` and `StringBuilder`, the call is ambiguous."
+            },
+            {
+              "type": "paragraph",
+              "text": "Two more traps. Passing `null` to an `Object...` parameter passes a **null array**; cast it to `Object` to get a one-element array. And a wrapper argument such as `Short` matches an `Object` parameter by plain subtyping in phase 1, so it wins before unboxing and widening to `long` are even considered."
+            },
+            {
+              "type": "code",
+              "code": "public class Main {\n    static void show(Object... args) {\n        System.out.println(args == null ? \"null array\" : args.length + \" element\");\n    }\n    static void take(Object o) { System.out.println(\"Object\"); }\n    static void take(long n)   { System.out.println(\"long\"); }\n\n    public static void main(String[] a) {\n        show(null);           // warning, but compiles\n        show((Object) null);\n        Short s = 5;\n        take(s);\n    }\n}",
+              "caption": "Prints null array, 1 element, Object",
+              "verify": {
+                "expect": "stdout",
+                "value": "null array\n1 element\nObject\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l06-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "public class Main {\n    static void p(Object o) {\n        System.out.println(\"Object\");\n    }\n    static void p(String s) {\n        System.out.println(\"String\");\n    }\n    static void p(StringBuilder sb) {\n        System.out.println(\"StringBuilder\");\n    }\n    public static void main(String[] a) {\n        p(null);\n    }\n}",
+          "options": [
+            "Object",
+            "String",
+            "StringBuilder",
+            "Compilation fails"
+          ],
+          "answer": 3,
+          "explanation": "`null` matches all three. `String` and `StringBuilder` are both more specific than `Object`, but neither is more specific than the other, so the call on line 12 is ambiguous and does not compile.",
+          "objective": "3.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 12
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l06-e07",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "public class Main {\n    static void v(int... x) {\n        System.out.print(\"varargs\");\n    }\n    static void v(long a, long b) {\n        System.out.print(\"long,long\");\n    }\n    public static void main(String[] a) {\n        v(1, 2);\n    }\n}",
+          "options": [
+            "long,long",
+            "varargs",
+            "Compilation fails",
+            "long,long varargs"
+          ],
+          "answer": 0,
+          "explanation": "Varargs is only tried when no other overload works. `v(1, 2)` matches `v(long, long)` by widening, which is an earlier step than varargs.",
+          "objective": "3.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "long,long"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u03-l07",
+      "title": "Pass-by-value",
+      "summary": "What a method can and can't change for its caller.",
+      "minutes": 6,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Java always copies",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Java passes **every** argument **by value**: the method gets a copy. For a primitive, it's a copy of the number."
+            },
+            {
+              "type": "code",
+              "code": "public class Main {\n    static void bump(int n) {\n        n++;\n    }\n    public static void main(String[] a) {\n        int x = 5;\n        bump(x);\n        System.out.println(x);\n    }\n}",
+              "caption": "Prints 5 — only the copy changed",
+              "verify": {
+                "expect": "stdout",
+                "value": "5\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Copies of references",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "For an object, the copied value is the **reference**. Caller and method now point to the **same object**."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Changing the object through the parameter (`sb.append(...)`, `s.value = 9`) **is** visible to the caller.",
+                "Reassigning the parameter (`sb = new StringBuilder()`) only changes the method's copy. The caller **doesn't** see it."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "static void fix(StringBuilder sb) {\n    sb.append(\"!\");            // visible\n    sb = new StringBuilder(); // lost\n    sb.append(\"?\");            // lost\n}"
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Same model as Python (\"pass object reference by value\"). The difference: Java primitives like `int` are plain values, not objects."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l07-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Score { int value; }\npublic class Main {\n    static void update(int n, Score s) {\n        n = 99;\n        s.value = 99;\n    }\n    public static void main(String[] a) {\n        int n = 1;\n        Score s = new Score();\n        s.value = 1;\n        update(n, s);\n        System.out.print(n + \" \" + s.value);\n    }\n}",
+          "options": [
+            "1 99",
+            "99 99",
+            "1 1",
+            "99 1"
+          ],
+          "answer": 0,
+          "explanation": "`n` is a copy of the int, so the caller's `n` stays 1. `s` is a copy of the reference; both point to the same Score object, so setting `s.value` is visible.",
+          "objective": "3.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "1 99\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l07-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Box { String item = \"toy\"; }\npublic class Main {\n    static void swap(Box b) {\n        b = new Box();\n        b.item = \"book\";\n    }\n    static void fill(Box b) {\n        b.item = \"pen\";\n    }\n    public static void main(String[] a) {\n        Box box = new Box();\n        swap(box);\n        System.out.print(box.item + \" \");\n        fill(box);\n        System.out.println(box.item);\n    }\n}",
+          "options": [
+            "toy pen",
+            "book pen",
+            "toy toy",
+            "book book"
+          ],
+          "answer": 0,
+          "explanation": "`swap` reassigns its parameter to a new Box, then changes that new Box; the caller's box is untouched (`toy`). `fill` changes the object the caller's reference points to, so `pen` is visible.",
+          "objective": "3.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "toy pen\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Strings can't be changed",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`String` is **immutable**. `s + \"!\"`, `s.concat(...)`, `s.toUpperCase()` all return a **new** String. Inside a method, `s = s + \"!\"` just reassigns the local copy."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Ignored results",
+              "text": "`s.toUpperCase();` on its own line does nothing useful: the result is thrown away. On the exam, check whether the return value is assigned."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l07-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "public class Main {\n    static void edit(String s,\n                     StringBuilder sb) {\n        s = s + \"!\";\n        sb.append(\"!\");\n        s.toUpperCase();\n    }\n    public static void main(String[] a) {\n        String s = \"hi\";\n        var sb = new StringBuilder(\"hi\");\n        edit(s, sb);\n        System.out.println(s + \" \" + sb);\n    }\n}",
+          "options": [
+            "hi hi!",
+            "hi! hi!",
+            "hi hi",
+            "HI! hi!"
+          ],
+          "answer": 0,
+          "explanation": "`s = s + \"!\"` creates a new String and points the local `s` at it; the caller's `s` is still `hi`. `toUpperCase()`'s result is discarded. `sb.append` changes the shared StringBuilder object, so the caller sees `hi!`.",
+          "objective": "3.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "hi hi!\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Getting a new value back",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "To give the caller a new value, **return** it — and the caller must **assign** it."
+            },
+            {
+              "type": "code",
+              "code": "static int twice(int n) {\n    return n * 2;\n}\n// x = twice(x);  updates x\n// twice(x);      result is lost"
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l07-e04",
+          "kind": "trueFalse",
+          "prompt": "A method can make the caller's variable point to a different object by assigning a new object to its parameter.",
+          "answer": false,
+          "explanation": "The parameter is a copy of the caller's reference. Reassigning it changes only the copy. To hand back a new object, return it and let the caller assign it.",
+          "objective": "3.1"
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l07-e05",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code so it prints 8.",
+          "code": "static int twice(int n) {\n    ___ n * 2;\n}\npublic static void main(String[] a) {\n    int x = 4;\n    x = twice(___);\n    System.out.println(x);\n}",
+          "bank": [
+            "return",
+            "x",
+            "yield",
+            "n",
+            "8",
+            "void"
+          ],
+          "answers": [
+            "return",
+            "x"
+          ],
+          "explanation": "A method sends a value back with `return`. The caller passes `x` (4) and assigns the result back to `x`. `n` is not visible in `main`, and `twice(8)` would print 16.",
+          "objective": "3.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "8\n",
+            "source": "public class Main {\n    static int twice(int n) {\n        return n * 2;\n    }\n    public static void main(String[] a) {\n        int x = 4;\n        x = twice(x);\n        System.out.println(x);\n    }\n}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u03-l08",
+      "title": "Scope, shadowing & var",
+      "summary": "Where variables live, this.x = x, and var's rules.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Where a variable lives",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Kind",
+                "Lives from … to …"
+              ],
+              "rows": [
+                [
+                  "Local",
+                  "its declaration → end of its block { }"
+                ],
+                [
+                  "Loop variable",
+                  "only inside the loop"
+                ],
+                [
+                  "Parameter",
+                  "the whole method"
+                ],
+                [
+                  "Instance field",
+                  "as long as the object"
+                ],
+                [
+                  "Static field",
+                  "as long as the class"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "int total = 0;\nfor (int i = 0; i < 3; i++) {\n    int sq = i * i;\n    total += sq;\n}\nSystem.out.println(total);\n// i and sq are out of scope here",
+              "caption": "Prints 5",
+              "verify": {
+                "expect": "stdout",
+                "value": "5\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l08-e01",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "public class Main {\n    public static void main(String[] a) {\n        int sum = 0;\n        for (int i = 0; i < 3; i++) {\n            int step = 2;\n            sum += step;\n        }\n        if (sum > 5) {\n            int bonus = 1;\n            sum += bonus;\n        }\n        System.out.println(sum + bonus);\n    }\n}",
+          "answer": 12,
+          "explanation": "`bonus` is declared inside the `if` block, so its scope ends at the closing brace on line 11. Line 12 can't see it.",
+          "objective": "3.4",
+          "verify": {
+            "expect": "compileError",
+            "line": 12
+          }
+        },
+        {
+          "type": "page",
+          "title": "Shadowing",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A local variable or parameter with the same name as a field **shadows** (hides) the field. Use `this.name` to reach the field."
+            },
+            {
+              "type": "code",
+              "code": "class Car {\n    int speed;\n    void set(int speed) {\n        this.speed = speed; // field\n    }\n}"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Self-assignment",
+              "text": "`speed = speed;` compiles but assigns the parameter to itself. The field is unchanged."
+            },
+            {
+              "type": "paragraph",
+              "text": "Inside one method, you **can't** declare a local with the same name as another local or parameter still in scope."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l08-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Car {\n    int speed = 10;\n    void set(int speed) {\n        speed = speed;\n    }\n    void boost(int speed) {\n        this.speed += speed;\n    }\n}\npublic class Main {\n    public static void main(String[] a) {\n        Car c = new Car();\n        c.set(50);\n        c.boost(5);\n        System.out.println(c.speed);\n    }\n}",
+          "options": [
+            "15",
+            "55",
+            "10",
+            "65"
+          ],
+          "answer": 0,
+          "explanation": "In `set`, `speed = speed` assigns the parameter to itself; the field stays 10. `boost` uses `this.speed`, so the field becomes 10 + 5 = 15.",
+          "objective": "3.4",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "15\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l08-e03",
+          "kind": "trueFalse",
+          "prompt": "This code compiles.",
+          "code": "int x = 1;\nfor (int i = 0; i < 2; i++) {\n    int x = i;\n}",
+          "answer": false,
+          "explanation": "A local variable can shadow a **field**, but not another **local** that is still in scope. The outer `x` is in scope inside the loop, so redeclaring `x` on line 3 is an error.",
+          "objective": "3.4",
+          "verify": {
+            "expect": "compileError",
+            "line": 3
+          }
+        },
+        {
+          "type": "page",
+          "title": "var: let the compiler infer",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`var` declares a **local** variable whose type is inferred from the initializer. The type is fixed at compile time; `var` is not dynamic typing."
+            },
+            {
+              "type": "code",
+              "code": "var n = 10;          // int\nvar name = \"Ana\";    // String\nvar list = new ArrayList<String>();\nn = 20;              // OK\n// n = \"twenty\";    // error: n is int"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Only for **local variables** (including `for` loops). Not fields, parameters or return types.",
+                "Needs an initializer in the same statement: `var x;` fails.",
+                "Can't be initialized to `null` or to an array initializer `{1, 2}`.",
+                "One variable per statement: `var a = 1, b = 2;` fails.",
+                "Also allowed for lambda parameters (Unit 7)."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python variables can change type at any time. `var n = 10;` makes `n` an `int` forever; assigning a String later is a compile error."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "No brackets on var",
+              "text": "`var` can't carry array brackets: `var[] a` and `var a[]` don't compile. Put the brackets on the right: `var a = new int[3];`."
+            },
+            {
+              "type": "code",
+              "code": "var ok = new int[3];\nvar bad[] = new int[3];",
+              "caption": "Line 2 does not compile",
+              "verify": {
+                "expect": "compileError",
+                "line": 2
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l08-e04",
+          "kind": "multiChoice",
+          "prompt": "Which three lines compile inside a method? Choose three.",
+          "options": [
+            "var a = 10;",
+            "var b;",
+            "var c = null;",
+            "var d = new ArrayList<String>();",
+            "var e = {1, 2};",
+            "var var = \"var\";"
+          ],
+          "answers": [
+            0,
+            3,
+            5
+          ],
+          "explanation": "`var` needs an initializer with a real type: not missing, not `null`, not a bare array initializer. `var` is a **reserved type name**, not a keyword, so a variable may be called `var` — but a class may not.",
+          "objective": "3.4",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "10 0 var\n",
+            "source": "var a = 10;\nvar d = new ArrayList<String>();\nvar var = \"var\";\nSystem.out.println(a + \" \" + d.size()\n    + \" \" + var);"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l08-e05",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "public class Main {\n    static int limit = 3;\n    public static void main(String[] a) {\n        var total = 0;\n        for (var i = 0; i < limit; i++) {\n            total += i;\n        }\n        total = \"done\";\n        System.out.println(total);\n    }\n}",
+          "answer": 8,
+          "explanation": "`var total = 0;` makes `total` an `int` for good. Assigning a String on line 8 is a type mismatch. `var` in a `for` loop (line 5) is allowed.",
+          "objective": "3.4",
+          "verify": {
+            "expect": "compileError",
+            "line": 8
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l08-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var x = 5;\nvar y = 2.0;\nvar z = x / 2 + y;\nSystem.out.println(z);",
+          "options": [
+            "4.0",
+            "4.5",
+            "4",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`x` is inferred as `int` and `y` as `double`. `x / 2` is integer division: 2. Then `2 + 2.0` is the double 4.0, so `z` is a `double`.",
+          "objective": "3.4",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "4.0\n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u03-l09",
+      "title": "Access, encapsulation & immutability",
+      "summary": "private/public, getters, and building immutable classes.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Four access levels",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Classes live in **packages** (`package com.shop;` as the first line). Access modifiers control who can see a member."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Modifier",
+                "Visible to"
+              ],
+              "rows": [
+                [
+                  "private",
+                  "the same class only"
+                ],
+                [
+                  "(none) package",
+                  "classes in the same package"
+                ],
+                [
+                  "protected",
+                  "same package + subclasses"
+                ],
+                [
+                  "public",
+                  "everyone"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "No keyword",
+              "text": "From most to least restrictive: private → package → protected → public. \"Package access\" has no keyword; writing `package` before a member does not compile."
+            },
+            {
+              "type": "paragraph",
+              "text": "`protected` from **another package** is narrower than it looks. A subclass may use an inherited protected member only through `this`, `super`, or a reference of its **own** type (or a subtype). Through a reference typed as the parent, it doesn't compile."
+            },
+            {
+              "type": "code",
+              "code": "package shop.sub;\nimport shop.Item;   // Item declares: protected int stock;\n\npublic class Gadget extends Item {\n    void restock(Item item, Gadget other) {\n        stock = 5;        // OK: this.stock\n        other.stock = 5;  // OK: a Gadget reference\n        item.stock = 5;   // compile error: Item reference\n    }\n}",
+              "caption": "Gadget and Item are in different packages"
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l09-e01",
+          "kind": "singleChoice",
+          "prompt": "Which access level makes a member visible only to classes in the same package?",
+          "options": [
+            "private",
+            "No modifier (package access)",
+            "protected",
+            "public"
+          ],
+          "answer": 1,
+          "explanation": "Leaving out the modifier gives package access. `protected` is wider: it adds subclasses in other packages. `private` limits access to the class itself.",
+          "objective": "3.4",
+          "examStyle": true
+        },
+        {
+          "type": "page",
+          "title": "Encapsulation",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "**Encapsulation**: keep fields `private` and expose behaviour through methods. The class can then validate every change."
+            },
+            {
+              "type": "code",
+              "code": "public class Account {\n    private int balance;\n    public int getBalance() {\n        return balance;\n    }\n    public void deposit(int amount) {\n        if (amount > 0) {\n            balance += amount;\n        }\n    }\n}"
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python's `_balance` is only a naming convention. Java's `private` is enforced by the compiler: other classes simply can't compile code that touches it."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l09-e02",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "class Wallet {\n    private int cash = 10;\n    int getCash() {\n        return cash;\n    }\n}\npublic class Main {\n    public static void main(String[] a) {\n        Wallet w = new Wallet();\n        System.out.println(w.getCash());\n        System.out.println(w.cash);\n    }\n}",
+          "answer": 11,
+          "explanation": "`cash` is private to `Wallet`, so `Main` can't read it directly (line 11). The package-access getter on line 10 is fine.",
+          "objective": "3.4",
+          "verify": {
+            "expect": "compileError",
+            "line": 11
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l09-e03",
+          "kind": "trueFalse",
+          "prompt": "This code compiles.",
+          "code": "class Wallet {\n    private int cash = 10;\n    boolean richer(Wallet other) {\n        return cash > other.cash;\n    }\n}",
+          "answer": true,
+          "explanation": "`private` is per **class**, not per object. Code inside `Wallet` may read the private field of **any** Wallet, including the `other` parameter.",
+          "objective": "3.4",
+          "verify": {
+            "expect": "stdout",
+            "value": "false\n",
+            "source": "class Wallet {\n    private int cash = 10;\n    boolean richer(Wallet other) {\n        return cash > other.cash;\n    }\n}\npublic class Main {\n    public static void main(String[] a) {\n        var w = new Wallet();\n        System.out.println(w.richer(w));\n    }\n}"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Immutable class recipe",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "Make the class `final` (no subclass can add mutation).",
+                "Make every field `private final`.",
+                "No setters. Set everything in the constructor.",
+                "For mutable inputs (List, StringBuilder, arrays), store a **copy** in the constructor…",
+                "…and return a **copy** (or unmodifiable view) from getters."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "final class Team {\n    private final String name;\n    private final List<String> members;\n    Team(String name, List<String> m) {\n        this.name = name;\n        this.members = new ArrayList<>(m);\n    }\n    String getName() { return name; }\n    List<String> getMembers() {\n        return new ArrayList<>(members);\n    }\n}",
+              "caption": "String is already immutable, so no copy needed"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "final ≠ immutable",
+              "text": "`final` on a field freezes the **reference**, not the object. A `private final List` can still be changed by anyone holding the same list."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l09-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "final class Roster {\n    private final List<String> names;\n    Roster(List<String> names) {\n        this.names = names;\n    }\n    List<String> names() {\n        return names;\n    }\n}\npublic class Main {\n    public static void main(String[] a) {\n        var src = new ArrayList<String>();\n        src.add(\"Ann\");\n        Roster r = new Roster(src);\n        src.add(\"Bob\");\n        r.names().add(\"Cy\");\n        System.out.print(r.names().size());\n    }\n}",
+          "options": [
+            "3",
+            "1",
+            "2",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "The constructor stores the caller's list itself, and the getter hands out that same list. So `src.add(\"Bob\")` and `r.names().add(\"Cy\")` both change the Roster's list: 3 elements. `final` only stops reassigning the field.",
+          "objective": "3.4",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "3\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l09-e05",
+          "kind": "multiChoice",
+          "prompt": "Using the Roster class from the last question: which two changes are both needed so no caller can ever change a Roster's list? Choose two.",
+          "options": [
+            "Copy the list in the constructor: new ArrayList<>(names)",
+            "Return a copy from names(): new ArrayList<>(names)",
+            "Make names() a static method",
+            "Mark names() as final",
+            "Make the names field public"
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "The list can leak in two directions: the caller keeps a reference to the list passed in, and the getter hands out the internal list. A defensive copy is needed at **both** points. `final` on a method only stops overriding.",
+          "objective": "3.4",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l09-e06",
+          "kind": "fillBlanks",
+          "prompt": "Make Money immutable.",
+          "code": "public ___ class Money {\n    private ___ int cents;\n    public Money(int cents) {\n        this.cents = cents;\n    }\n    public int cents() { return cents; }\n}",
+          "bank": [
+            "final",
+            "final",
+            "static",
+            "abstract",
+            "var"
+          ],
+          "answers": [
+            "final",
+            "final"
+          ],
+          "explanation": "A `final` class can't be subclassed, and a `private final` field can be set only once, in the constructor. Top-level classes can't be `static`, and `abstract` would forbid creating objects.",
+          "objective": "3.4",
+          "verify": {
+            "expect": "stdout",
+            "value": "5\n",
+            "source": "final class Money {\n    private final int cents;\n    public Money(int cents) {\n        this.cents = cents;\n    }\n    public int cents() { return cents; }\n}\npublic class Main {\n    public static void main(String[] a) {\n        System.out.println(new Money(5).cents());\n    }\n}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u03-l10",
+      "title": "Records",
+      "summary": "Compact data classes: components, accessors and constructors.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "A data class in one line",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A **record** declares its data in a header. The compiler generates the rest."
+            },
+            {
+              "type": "code",
+              "code": "record Point(int x, int y) { }\npublic class Main {\n    public static void main(String[] a) {\n        var p = new Point(1, 2);\n        var q = new Point(1, 2);\n        System.out.println(p);\n        System.out.println(p.x() + p.y());\n        System.out.println(p.equals(q));\n    }\n}",
+              "caption": "Prints Point[x=1, y=2], 3, true",
+              "verify": {
+                "expect": "stdout",
+                "value": "Point[x=1, y=2]\n3\ntrue\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "A `private final` field per component.",
+                "A **canonical constructor** taking all components in order.",
+                "Accessor methods named **exactly like the components**: `x()`, not `getX()`.",
+                "`equals()`, `hashCode()` and `toString()` based on the components."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Like `@dataclass(frozen=True)`. But you read data by calling methods: `p.x()`, not `p.x`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l10-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "record Book(String title, int pages) { }\npublic class Main {\n    public static void main(String[] a) {\n        var b = new Book(\"Java\", 300);\n        System.out.print(b + \" \" + b.title());\n    }\n}",
+          "options": [
+            "Book[title=Java, pages=300] Java",
+            "Book(title=Java, pages=300) Java",
+            "Book[Java, 300] Java",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "A record's `toString()` prints the record name, then each component as `name=value` inside square brackets, separated by `, `. `title()` is the generated accessor.",
+          "objective": "3.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "Book[title=Java, pages=300] Java\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l10-e02",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "record User(String name, int age) { }\npublic class Main {\n    public static void main(String[] a) {\n        var u = new User(\"Ana\", 30);\n        System.out.println(u.name());\n        System.out.println(u.getAge());\n    }\n}",
+          "answer": 6,
+          "explanation": "Record accessors use the component name: `age()`. No `getAge()` method is generated.",
+          "objective": "3.2",
+          "verify": {
+            "expect": "compileError",
+            "line": 6
+          }
+        },
+        {
+          "type": "page",
+          "title": "Compact constructors",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "To validate or normalize, write a **compact constructor**: the record name with **no parameter list**. The fields are assigned automatically **after** its body runs."
+            },
+            {
+              "type": "code",
+              "code": "record Name(String value) {\n    Name {\n        value = value.trim();\n    }\n}\n// new Name(\"  Ann \").value() is \"Ann\""
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "You may reassign the **parameters** (`value = ...`). The changed value is what gets stored.",
+                "You may **not** assign the fields (`this.value = ...`): compile error."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "No parentheses",
+              "text": "A compact constructor looks like an instance initializer with a name in front. No parentheses — `Name() { }` would be a different, non-canonical constructor."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "No throws clause",
+              "text": "A canonical or compact constructor can't declare `throws`. It may still throw unchecked exceptions such as `IllegalArgumentException`."
+            },
+            {
+              "type": "code",
+              "code": "record Age(int years) {\n    Age(int years) throws Exception {\n        this.years = years;\n    }\n}",
+              "caption": "Line 2 does not compile",
+              "verify": {
+                "expect": "compileError",
+                "line": 2
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l10-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "record Temp(int c) {\n    Temp {\n        if (c < 0) {\n            c = 0;\n        }\n    }\n}\npublic class Main {\n    public static void main(String[] a) {\n        System.out.println(new Temp(-5)\n            + \" \" + new Temp(7).c());\n    }\n}",
+          "options": [
+            "Temp[c=0] 7",
+            "Temp[c=-5] 7",
+            "Temp[c=0] 0",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "The compact constructor replaces a negative parameter with 0 before the field is assigned, so the first record stores 0. The second stores 7 unchanged.",
+          "objective": "3.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "Temp[c=0] 7\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l10-e04",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "record Tag(String text) {\n    Tag {\n        text = text.strip();\n        this.text = text.toLowerCase();\n    }\n}",
+          "answer": 4,
+          "explanation": "In a compact constructor you may reassign the parameter (line 3), but you may not assign the field. The compiler assigns `this.text` itself after the body.",
+          "objective": "3.2",
+          "verify": {
+            "expect": "compileError",
+            "line": 4
+          }
+        },
+        {
+          "type": "page",
+          "title": "Other constructors",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "You can also write the **long canonical form** with all parameters; then you must assign every field yourself. Any **other** constructor must start by calling `this(...)`."
+            },
+            {
+              "type": "code",
+              "code": "record Point(int x, int y) {\n    Point() {\n        this(0, 0);  // required\n    }\n}"
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l10-e05",
+          "kind": "trueFalse",
+          "prompt": "This code compiles.",
+          "code": "record Pair(String a, String b) {\n    Pair(String a) {\n        this.a = a;\n        this.b = \"\";\n    }\n}",
+          "answer": false,
+          "explanation": "`Pair(String a)` is not the canonical constructor, so its first statement must be `this(...)` — for example `this(a, \"\")`. Assigning fields directly is not allowed there.",
+          "objective": "3.2",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "page",
+          "title": "What records can and can't do",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Allowed",
+                "Not allowed"
+              ],
+              "rows": [
+                [
+                  "implements interfaces",
+                  "extends a class"
+                ],
+                [
+                  "static fields & methods",
+                  "extra instance fields"
+                ],
+                [
+                  "instance methods",
+                  "instance initializer blocks"
+                ],
+                [
+                  "nested types",
+                  "being extended (records are final)"
+                ]
+              ]
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Every record implicitly extends `java.lang.Record`.",
+                "A record nested in a class is implicitly `static`.",
+                "Fields are `final`, but a component like a `List` can still be changed from outside — copy it for real immutability."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "The generated `equals` compares each component with `Objects.equals`, so an **array** component compares by reference. The generated `toString`, `equals` and `hashCode` read the **fields** directly, so overriding an accessor doesn't change them."
+            },
+            {
+              "type": "code",
+              "code": "record Tag(String name) {\n    public String name() { return name.toUpperCase(); }\n}\nrecord Bag(int[] items) { }\npublic class Main {\n    public static void main(String[] a) {\n        var t = new Tag(\"x\");\n        System.out.println(t.name() + \" \" + t);\n        System.out.println(new Bag(new int[]{1}).equals(new Bag(new int[]{1})));\n    }\n}",
+              "caption": "Prints X Tag[name=x], then false",
+              "verify": {
+                "expect": "stdout",
+                "value": "X Tag[name=x]\nfalse\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l10-e06",
+          "kind": "multiChoice",
+          "prompt": "Which two records compile? Choose two.",
+          "options": [
+            "record A(int x) {\n    static int count;\n}",
+            "record B(int x) {\n    int y;\n}",
+            "record C(int x) extends Object { }",
+            "record D(int x) implements Runnable {\n    public void run() { }\n}",
+            "record E(int x) {\n    E { this.x = x; }\n}"
+          ],
+          "answers": [
+            0,
+            3
+          ],
+          "explanation": "Static fields are fine, and records can implement interfaces. Records can't declare extra instance fields, can't use `extends`, and a compact constructor can't assign fields.",
+          "objective": "3.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ok\n",
+            "source": "record A(int x) {\n    static int count;\n}\nrecord D(int x) implements Runnable {\n    public void run() { }\n}\npublic class Main {\n    public static void main(String[] a) {\n        System.out.println(\"ok\");\n    }\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l10-e07",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "record Coin(int value) { }\npublic class Main {\n    public static void main(String[] a) {\n        var x = new Coin(5);\n        var y = new Coin(5);\n        System.out.println((x == y) + \" \"\n            + x.equals(y) + \" \"\n            + (x.hashCode()\n               == y.hashCode()));\n    }\n}",
+          "options": [
+            "false true true",
+            "true true true",
+            "false false false",
+            "false true false"
+          ],
+          "answer": 0,
+          "explanation": "Two `new` calls create two objects, so `==` is false. The generated `equals()` compares components, and `hashCode()` is consistent with it, so both are true.",
+          "objective": "3.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "false true true\n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u03-l11",
+      "title": "Unit 3 checkpoint",
+      "summary": "Exam-style review of classes, objects and records.",
+      "minutes": 10,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Checkpoint",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "12 exam-style questions covering the whole unit. Read the code carefully: exam questions hide one small detail that changes everything."
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "Exam habit",
+              "text": "If an option says \"Compilation fails\", check that first: a static method touching instance members, a missing default constructor, an illegal `var`, an ambiguous overload."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l11-e01",
+          "kind": "singleChoice",
+          "prompt": "How many objects are eligible for garbage collection when line 8 is reached?",
+          "code": "Item a = new Item();\nItem b = new Item();\nItem c = new Item();\na.other = b;\nb = null;\nc = a;\na = null;\n// line 8",
+          "options": [
+            "0",
+            "1",
+            "2",
+            "3"
+          ],
+          "answer": 1,
+          "explanation": "Item #2 is reachable through `#1.other` after `b = null`. `c = a` drops the only reference to #3. `a = null` leaves #1 reachable via `c`. Only #3 is eligible.",
+          "objective": "3.1",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l11-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "public class Main {\n    static String log = \"\";\n    int n = 1;\n    { log += \"i\" + n; }\n    Main() {\n        this(5);\n        log += \"c\";\n    }\n    Main(int n) { log += \"p\" + n; }\n    static { log += \"s\"; }\n    public static void main(String[] a) {\n        new Main();\n        System.out.println(log);\n    }\n}",
+          "options": [
+            "si1p5c",
+            "sp5i1c",
+            "i1sp5c",
+            "si1p5i1c"
+          ],
+          "answer": 0,
+          "explanation": "The static block runs first: `s`. `new Main()` calls `this(5)`. Instance initializers run once, in the constructor that doesn't start with `this(...)`: `i1`, then that body adds `p5`, then control returns and `c` is added.",
+          "objective": "3.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "si1p5c\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l11-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "public class Main {\n    static void f(Integer... a) {\n        System.out.print(\"A\");\n    }\n    static void f(long a) {\n        System.out.print(\"B \");\n    }\n    static void f(Object a) {\n        System.out.print(\"C \");\n    }\n    public static void main(String[] s) {\n        f(1);\n        f(1, 2);\n    }\n}",
+          "options": [
+            "B A",
+            "A A",
+            "C A",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`f(1)`: no `f(int)`, so widening to `long` (B) beats boxing (C) and varargs (A). `f(1, 2)`: only the varargs method accepts two arguments (A).",
+          "objective": "3.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "B A"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l11-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "record P(int x) { }\npublic class Main {\n    static P bump(P p) {\n        p = new P(p.x() + 1);\n        return p;\n    }\n    public static void main(String[] s) {\n        P a = new P(1);\n        P b = bump(a);\n        System.out.print(a.x() + \" \" + b.x());\n    }\n}",
+          "options": [
+            "1 2",
+            "2 2",
+            "1 1",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "Records are immutable. `bump` reassigns its local parameter to a new P and returns it. `a` still points to the original `P(1)`; `b` gets the new `P(2)`.",
+          "objective": "3.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "1 2\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l11-e05",
+          "kind": "multiChoice",
+          "prompt": "Which two statements are true? Choose two.",
+          "options": [
+            "A static method called through a null reference of its class does not throw an exception.",
+            "A static method can read instance fields directly.",
+            "A static initializer block runs once per class.",
+            "Each object gets its own copy of a static field.",
+            "\"static import java.lang.Math.*;\" is valid syntax."
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "Static calls are resolved by the declared type, so a null reference is never used. Static blocks run once when the class is initialized. Static fields are shared, static methods have no instance, and the syntax is `import static`.",
+          "objective": "3.2",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l11-e06",
+          "kind": "singleChoice",
+          "prompt": "Which statement compiles when placed inside a method?",
+          "options": [
+            "var a = null;",
+            "var b = {1, 2};",
+            "var c = new ArrayList<>();",
+            "var d, e = 1;"
+          ],
+          "answer": 2,
+          "explanation": "`var c = new ArrayList<>();` compiles; with nothing to infer from, the type is `ArrayList<Object>`. `var` can't be `null`, can't use a bare array initializer, and can't declare several variables.",
+          "objective": "3.4",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "0\n",
+            "optionCheck": false,
+            "source": "var c = new ArrayList<>();\nSystem.out.println(c.size());"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l11-e07",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Fan {\n    int speed;\n    Fan(int s) { speed = s; }\n}\npublic class Main {\n    public static void main(String[] a) {\n        Fan f1 = new Fan(3);\n        System.out.println(f1.speed);\n        Fan f2 = new Fan();\n        System.out.println(f2.speed);\n    }\n}",
+          "options": [
+            "0",
+            "null",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 2,
+          "explanation": "`Fan` declares `Fan(int s)`, so no default constructor is generated. `new Fan()` on line 9 has nothing to call.",
+          "objective": "3.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 9
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l11-e08",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "record Name(String v) {\n    Name {\n        v = v.toUpperCase();\n    }\n}\npublic class Main {\n    public static void main(String[] a) {\n        var x = new Name(\"ann\");\n        var y = new Name(\"ANN\");\n        System.out.println(x.equals(y)\n            + \" \" + new Name(\"bo\"));\n    }\n}",
+          "options": [
+            "true Name[v=BO]",
+            "false Name[v=bo]",
+            "true Name[v=bo]",
+            "false Name[v=BO]"
+          ],
+          "answer": 0,
+          "explanation": "The compact constructor upper-cases the parameter before the field is assigned, so both names store `ANN` and are equal. The second record stores `BO`.",
+          "objective": "3.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "true Name[v=BO]\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l11-e09",
+          "kind": "multiChoice",
+          "prompt": "Which two are part of the recipe for an immutable class? Choose two.",
+          "options": [
+            "Fields are private and final",
+            "The class has a public no-arg constructor",
+            "Mutable fields are copied when received and when returned",
+            "All methods are static",
+            "Every field has a setter that checks its input"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "An immutable class has private final fields set once in the constructor, no setters, defensive copies for mutable data, and is usually `final`. A no-arg constructor or static methods have nothing to do with it.",
+          "objective": "3.4",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l11-e10",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "public class Main {\n    static int x = 10;\n    int y = 20;\n    void run(int x) {\n        int y = x + this.y;\n        Main.x = y;\n        System.out.println(x + \" \" + y\n            + \" \" + Main.x);\n    }\n    public static void main(String[] a) {\n        new Main().run(1);\n    }\n}",
+          "options": [
+            "1 21 21",
+            "10 21 21",
+            "1 22 10",
+            "1 21 10"
+          ],
+          "answer": 0,
+          "explanation": "Parameter `x` (1) shadows the static `x`. The local `y` is 1 + `this.y` (20) = 21. `Main.x = y` sets the static field to 21. Printing uses the parameter `x`, the local `y`, and `Main.x`.",
+          "objective": "3.4",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "1 21 21\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l11-e11",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "public class Main {\n    static void m(Object o) {\n        System.out.println(\"Object\");\n    }\n    static void m(String s) {\n        System.out.println(\"String\");\n    }\n    public static void main(String[] a) {\n        m(null);\n    }\n}",
+          "options": [
+            "String",
+            "Object",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`null` fits both `Object` and `String`. `String` is more specific (it is a subtype of `Object`), so it is chosen. There's no ambiguity here because the two types are related.",
+          "objective": "3.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "String\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u03-l11-e12",
+          "kind": "multiChoice",
+          "prompt": "Which two lines cause compile errors? Choose two.",
+          "code": "public class Main {\n    final int a;\n    static int b;\n    Main() {\n        a = 1;\n        b = 2;\n    }\n    static void reset() {\n        a = 0;\n        b = 0;\n        this.b = 0;\n    }\n}",
+          "options": [
+            "Line 5",
+            "Line 6",
+            "Line 9",
+            "Line 10",
+            "Line 11"
+          ],
+          "answers": [
+            2,
+            4
+          ],
+          "explanation": "Lines 5 and 6 are in a constructor, where both fields are accessible and the final field is assigned once. `reset()` is static: line 9 uses the instance field `a` (and it's final), line 11 uses `this`. Line 10 assigns a static field, which is fine.",
+          "objective": "3.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 9
+          }
+        }
+      ]
+    }
+  ]
+}

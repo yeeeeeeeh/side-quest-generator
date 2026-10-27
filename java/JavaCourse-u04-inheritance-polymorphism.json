@@ -1,0 +1,3217 @@
+{
+  "unitId": "u04",
+  "lessons": [
+    {
+      "id": "u04-l01",
+      "title": "extends, super & constructor chaining",
+      "summary": "Subclasses, implicit super() and constructor order.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "One parent per class",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`extends` makes a class a **subclass**. It inherits the parent's fields and methods and can add its own."
+            },
+            {
+              "type": "code",
+              "code": "class Animal {\n    String name = \"animal\";\n    void eat() {\n        System.out.println(name + \" eats\");\n    }\n}\nclass Dog extends Animal {\n    void bark() {\n        System.out.println(\"Woof\");\n    }\n}"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "A class extends exactly **one** class. Without `extends`, it extends `java.lang.Object`.",
+                "Inherited: `public` and `protected` members, plus package-private ones when in the same package.",
+                "Not inherited: `private` members and constructors.",
+                "A `final` class can't be extended (`String` is final)."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python allows `class Dog(Animal, Pet)`. A Java class has exactly one parent class. Extra types come from interfaces (lesson 9)."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l01-e01",
+          "kind": "fillBlanks",
+          "prompt": "Make Cat a subclass of Animal.",
+          "code": "class Cat ___ Animal {\n    void meow() {\n        System.out.println(name + \" meows\");\n    }\n}",
+          "bank": [
+            "extends",
+            "implements",
+            "inherits",
+            "super",
+            ":"
+          ],
+          "answers": [
+            "extends"
+          ],
+          "explanation": "Classes use `extends` for a parent class. `implements` is for interfaces, and Python's `class Cat(Animal)` / C#'s `:` don't exist in Java.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "stdout",
+            "value": "animal meows\n",
+            "source": "class Animal {\n    String name = \"animal\";\n}\nclass Cat extends Animal {\n    void meow() {\n        System.out.println(name + \" meows\");\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        new Cat().meow();\n    }\n}"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Constructors chain upward",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Constructors are **not** inherited. Every constructor begins by calling another constructor: `this(...)` in the same class or `super(...)` in the parent. If you write neither, the compiler inserts `super();`."
+            },
+            {
+              "type": "code",
+              "code": "class A {\n    A() { System.out.print(\"A\"); }\n}\nclass B extends A {\n    B() { System.out.print(\"B\"); }\n}\nclass C extends B {\n    C() {\n        super();\n        System.out.print(\"C\");\n    }\n}\npublic class Main {\n    public static void main(String[] a) {\n        new C();   // ABC\n    }\n}",
+              "caption": "The parent part is always built first.",
+              "verify": {
+                "expect": "stdout",
+                "value": "ABC"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Read it like a stack",
+              "text": "The calls go **up** to `Object` first. The constructor bodies then finish from the top of the hierarchy **down**."
+            },
+            {
+              "type": "paragraph",
+              "text": "Add static and instance initializers and the full order is: each class's `static` init runs **once**, parent first, the first time the class is used. Then, for **every** `new`: parent instance fields and blocks, parent constructor body, child instance fields and blocks, child constructor body."
+            },
+            {
+              "type": "code",
+              "code": "class Base {\n    static { System.out.print(\"Bs \"); }\n    { System.out.print(\"Bi \"); }\n    Base() { System.out.print(\"Bc \"); }\n}\nclass Derived extends Base {\n    static { System.out.print(\"Ds \"); }\n    { System.out.print(\"Di \"); }\n    Derived() { System.out.print(\"Dc \"); }\n}\npublic class Main {\n    public static void main(String[] a) {\n        new Derived();\n        System.out.println();\n        new Derived();\n    }\n}",
+              "caption": "Static parts print once; the instance parts repeat for each new.",
+              "verify": {
+                "expect": "stdout",
+                "value": "Bs Ds Bi Bc Di Dc\nBi Bc Di Dc"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l01-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class P {\n    P() { System.out.print(\"1\"); }\n    P(int x) {\n        this();\n        System.out.print(\"2\");\n    }\n}\nclass Q extends P {\n    Q() {\n        this(5);\n        System.out.print(\"3\");\n    }\n    Q(int x) {\n        super(x);\n        System.out.print(\"4\");\n    }\n}\npublic class Main {\n    public static void main(String[] a) {\n        new Q();\n    }\n}",
+          "options": [
+            "1243",
+            "3421",
+            "1234",
+            "243"
+          ],
+          "answer": 0,
+          "explanation": "`new Q()` runs `Q()`, which calls `this(5)`. `Q(int)` calls `super(5)`, so `P(int)` runs, which calls `this()`. `P()` prints **1** first. Then each body finishes in reverse call order: P(int) prints 2, Q(int) prints 4, Q() prints 3.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "1243"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "When the parent has no no-arg constructor",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Once a class declares **any** constructor, the compiler no longer generates the default no-arg one. A subclass that relies on the implicit `super()` then fails to compile."
+            },
+            {
+              "type": "code",
+              "code": "class Vehicle {\n    Vehicle(String id) { }\n}\nclass Car extends Vehicle { }  // error",
+              "verify": {
+                "expect": "compileError",
+                "line": 4
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "`Car` has no constructor, so it gets a default one: `Car() { super(); }`. But `Vehicle()` doesn't exist. Fix it by calling the constructor that does exist:"
+            },
+            {
+              "type": "code",
+              "code": "class Car extends Vehicle {\n    Car() { super(\"car\"); }\n}"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "No constructor written is still a call",
+              "text": "An empty subclass still calls `super()` through its default constructor. Check the parent: does it have a no-arg constructor?"
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l01-e03",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "class Base {\n    Base(int n) { }\n}\nclass Mid extends Base {\n    Mid() { super(1); }\n}\nclass Leaf extends Mid {\n    Leaf(int n) { }\n}\nclass Top extends Base {\n    Top(int n) { }\n}",
+          "answer": 11,
+          "explanation": "Both `Leaf(int)` and `Top(int)` get an implicit `super()`. For Leaf that's `Mid()`, which exists. For Top that's `Base()`, which doesn't: Base only has `Base(int)`. The parameter `n` of Top's constructor is not passed up automatically.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "page",
+          "title": "super(...) rules",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "`super(...)` or `this(...)` must be the **first statement** in the constructor.",
+                "A constructor contains one of them, never both.",
+                "Arguments to `super(...)` can't use the object's own instance fields or instance methods (static ones are fine).",
+                "`super.method()` calls the parent's version of a method. It can appear anywhere in an instance method."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "class Car extends Vehicle {\n    Car() {\n        System.out.println(\"hi\");\n        super(\"car\");  // error\n    }\n}"
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "Newer Java versions are relaxing the \"must be first\" rule. The 1Z0-830 exam is **Java 21**: `super(...)` and `this(...)` must come first."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Constants are already there",
+              "text": "A `final` field initialized with a **constant expression** (a literal, or `\"a\" + 1`) is a compile-time constant, and the compiler inlines its value. So an overridden method called from the parent constructor sees `5` or `\"hi\"`, not `0` or `null`. A `final` field set by a method call is an ordinary field and still holds its default at that point."
+            },
+            {
+              "type": "code",
+              "code": "class Parent {\n    Parent() { show(); }  // runs before Kid's fields\n    void show() { }\n}\nclass Kid extends Parent {\n    final int a = 5;                    // constant\n    final int b = Integer.parseInt(\"5\"); // not\n    final String s = \"hi\";              // constant\n    @Override void show() {\n        System.out.println(a + \" \" + b + \" \" + s);\n    }\n}\npublic class Main {\n    public static void main(String[] x) {\n        new Kid();  // 5 0 hi\n    }\n}",
+              "verify": {
+                "expect": "stdout",
+                "value": "5 0 hi"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l01-e04",
+          "kind": "multiChoice",
+          "prompt": "Given `class Base { Base(String s) { } }`, which two constructors compile in `class Sub extends Base`? Choose two.",
+          "options": [
+            "Sub() { super(\"x\"); }",
+            "Sub() { }",
+            "Sub(String s) { super(s); }",
+            "Sub() { int n = 1; super(\"x\"); }",
+            "Sub() { super(); }"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "Base has only `Base(String)`, so every Sub constructor must call `super(someString)` as its first statement. `Sub() { }` gets an implicit `super()`, which doesn't exist; same for an explicit `super()`. A statement before `super(...)` is illegal in Java 21.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ok",
+            "source": "class Base { Base(String s) { } }\nclass Sub extends Base {\n    Sub() { super(\"x\"); }\n    Sub(String s) { super(s); }\n}\npublic class Main {\n    public static void main(String[] a) {\n        new Sub(); new Sub(\"y\");\n        System.out.println(\"ok\");\n    }\n}"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l01-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Shape {\n    String name() { return \"shape\"; }\n}\nclass Circle extends Shape {\n    String name() {\n        return \"circle<\" + super.name() + \">\";\n    }\n}\npublic class Main {\n    public static void main(String[] a) {\n        Shape s = new Circle();\n        System.out.println(s.name());\n    }\n}",
+          "options": [
+            "circle<shape>",
+            "shape",
+            "circle<circle>",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "The object is a Circle, so `s.name()` runs Circle's version. Inside it, `super.name()` explicitly calls Shape's version, which returns \"shape\". There is no recursion: `super.` skips the override.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "circle<shape>"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l01-e06",
+          "kind": "orderLines",
+          "prompt": "Order the lines to make a Dog constructor that compiles.",
+          "lines": [
+            "class Dog extends Animal {",
+            "    Dog(String n) {",
+            "        super(n);",
+            "        System.out.println(\"dog\");",
+            "    }",
+            "}"
+          ],
+          "explanation": "`super(n)` must be the first statement, so it comes before the print. Animal only has `Animal(String)`, so an argument-less `super()` would not compile.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "stdout",
+            "value": "dog",
+            "source": "class Animal { Animal(String n) { } }\nclass Dog extends Animal {\n    Dog(String n) {\n        super(n);\n        System.out.println(\"dog\");\n    }\n}\npublic class Main {\n    public static void main(String[] a) { new Dog(\"x\"); }\n}"
+          },
+          "distractors": [
+            "        super();"
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l01-e07",
+          "kind": "trueFalse",
+          "prompt": "A constructor may call `this(...)` on its first line and `super(...)` on its second line.",
+          "answer": false,
+          "explanation": "Both must be the first statement, so a constructor can have at most one of them. A `this(...)` call delegates to another constructor, which will call `super(...)` itself.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "compileError",
+            "source": "class Base { Base() { } }\nclass Sub extends Base {\n    Sub(int x) { }\n    Sub() { this(1); super(); }\n}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u04-l02",
+      "title": "Overriding rules",
+      "summary": "Signature, access, return type, exceptions, hiding.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Overriding: same signature, new behavior",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A subclass **overrides** an instance method by declaring one with the same name and parameter types. Which version runs is decided by the **object**, not the variable type."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Rule",
+                "Allowed in the override"
+              ],
+              "rows": [
+                [
+                  "Name + parameter types",
+                  "Exactly the same (otherwise it's an overload)"
+                ],
+                [
+                  "Return type",
+                  "Same or a subtype (covariant). Primitives must match exactly"
+                ],
+                [
+                  "Access",
+                  "Same or wider: private < package < protected < public"
+                ],
+                [
+                  "Checked exceptions",
+                  "None, the same, or narrower. Never new or broader"
+                ],
+                [
+                  "Unchecked exceptions",
+                  "Anything"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Use @Override",
+              "text": "`@Override` makes the compiler check that the method really overrides something. A typo like `tostring()` then fails to compile instead of silently adding a new method."
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Beyond the core objectives: other annotations",
+              "text": "`@Deprecated(since = \"9\", forRemoval = true)` only makes callers get a compiler **warning**; the code still compiles and runs. `@SuppressWarnings(\"unchecked\")` silences warnings. `@FunctionalInterface` demands exactly one abstract method, and defaults and statics are still allowed. `@SafeVarargs` is legal only on constructors and on `static`, `final` or `private` varargs methods."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "All three loosenings at once",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "class Reader {\n    protected Object read()\n            throws IOException {\n        return \"data\";\n    }\n}\nclass TextReader extends Reader {\n    @Override\n    public String read()\n            throws FileNotFoundException {\n        return \"text\";\n    }\n}"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`protected` → `public`: wider access.",
+                "`Object` → `String`: covariant return.",
+                "`IOException` → `FileNotFoundException`: narrower checked exception."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Think \"a caller of the parent\"",
+              "text": "Code written against `Reader` must keep working with a `TextReader`. So the override may promise **more** (wider access, more specific return) but never throw **more**."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l02-e01",
+          "kind": "multiChoice",
+          "prompt": "Which two methods compile when placed in class B? Choose two.",
+          "code": "class A {\n    protected Number get()\n            throws IOException {\n        return 1;\n    }\n}\nclass B extends A {\n    // insert method here\n}",
+          "options": [
+            "public Integer get() { return 2; }",
+            "Number get() { return 2; }",
+            "protected Object get() { return 2; }",
+            "protected Number get() throws Exception { return 2; }",
+            "public Number get() throws FileNotFoundException { return 2; }",
+            "protected long get() { return 2; }"
+          ],
+          "answers": [
+            0,
+            4
+          ],
+          "explanation": "Option A widens access and returns a subtype of Number (no exception is fine). Option E widens access and throws a narrower checked exception. Package access is weaker than protected; `Object` is not a subtype of `Number`; `Exception` is broader than `IOException`; and `long` is a primitive, not a Number.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "2 2",
+            "source": "class A {\n    protected Number get() throws IOException { return 1; }\n}\nclass B extends A {\n    public Integer get() { return 2; }\n}\nclass B2 extends A {\n    public Number get() throws FileNotFoundException { return 2; }\n}\npublic class Main {\n    public static void main(String[] a) throws Exception {\n        System.out.println(new B().get() + \" \" + new B2().get());\n    }\n}"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l02-e02",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "class Animal {\n    public void move() { }\n    protected int legs() { return 4; }\n    void sleep() { }\n}\nclass Snake extends Animal {\n    protected void sleep() { }\n    public int legs() { return 0; }\n    void move() { }\n}",
+          "answer": 9,
+          "explanation": "`move()` is public in Animal. Overriding it with package access makes it **less** visible, which is illegal. Lines 7 and 8 widen access (package → protected, protected → public), which is allowed.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Static methods and fields hide",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A static method with the same signature in a subclass **hides** the parent's. No dynamic dispatch: the **reference type** decides which one is called."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "instance overrides instance: dynamic dispatch on the object.",
+                "static hides static: chosen by the reference type at compile time.",
+                "Mixing (static in one, instance in the other) is a compile error.",
+                "Fields are never overridden. A same-named field **hides** the parent's and is also chosen by the reference type."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "class P { static void go() { } }\nclass C extends P {\n    void go() { }  // error: static/instance\n}",
+              "verify": {
+                "expect": "compileError",
+                "line": 3
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l02-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Parent {\n    String name = \"parent\";\n    static String kind() { return \"P\"; }\n    String who() { return name; }\n}\nclass Child extends Parent {\n    String name = \"child\";\n    static String kind() { return \"C\"; }\n    String who() { return name; }\n}\npublic class Main {\n    public static void main(String[] a) {\n        Parent p = new Child();\n        System.out.println(p.name + \" \"\n            + p.kind() + \" \" + p.who());\n    }\n}",
+          "options": [
+            "parent P child",
+            "child C child",
+            "parent C child",
+            "child P child"
+          ],
+          "answer": 0,
+          "explanation": "The reference type is Parent. Fields (`p.name`) and static methods (`p.kind()`) are hidden, not overridden, so Parent's versions are used. `who()` is an instance method, so the Child override runs, and inside Child `name` means Child's field.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "parent P child"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Methods you can't override",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "`private` methods aren't inherited. A same-signature method in the subclass is a new, unrelated method, and `@Override` on it fails.",
+                "`final` methods can't be overridden (or hidden).",
+                "Constructors aren't inherited, so they're never overridden."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Private + polymorphism",
+              "text": "When a parent method calls its own **private** method, the parent's version always runs, no matter what the subclass declares."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l02-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Base {\n    private String id() { return \"base\"; }\n    void show() {\n        System.out.println(id());\n    }\n}\nclass Derived extends Base {\n    String id() { return \"derived\"; }\n}\npublic class Main {\n    public static void main(String[] a) {\n        new Derived().show();\n    }\n}",
+          "options": [
+            "base",
+            "derived",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`id()` in Base is private, so Derived's `id()` doesn't override it. Inside `show()` the call `id()` is bound to Base's private method. If Base's `id()` were package-private, the output would be \"derived\".",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "base"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l02-e05",
+          "kind": "trueFalse",
+          "prompt": "A subclass method with the same signature as a `private` parent method compiles when it is marked `@Override`.",
+          "answer": false,
+          "explanation": "Private methods are not inherited, so there is nothing to override. `@Override` makes the compiler check that, and it reports an error. Without the annotation the method compiles as a brand new method.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "compileError",
+            "source": "class Base {\n    private String id() { return \"b\"; }\n}\nclass Derived extends Base {\n    @Override\n    String id() { return \"d\"; }\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l02-e06",
+          "kind": "singleChoice",
+          "prompt": "Which statement is true?",
+          "code": "class Engine {\n    final void start() { }\n    long power() { return 100; }\n}\nclass Turbo extends Engine {\n    int power() { return 200; }\n}",
+          "options": [
+            "The code compiles.",
+            "Compilation fails because `int` is not the same return type as `long`.",
+            "Compilation fails because `start()` is final.",
+            "It compiles because `int` widens to `long`."
+          ],
+          "answer": 1,
+          "explanation": "Covariant returns only apply to reference types. For primitives the override must return exactly the same type, so `int power()` can't override `long power()`. `start()` is final, but Turbo doesn't try to override it, so that's fine.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 6
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l02-e07",
+          "kind": "fillBlanks",
+          "prompt": "Complete the override so it is checked by the compiler and widens access.",
+          "code": "class Doc {\n    Object copy() { return this; }\n}\nclass Pdf extends Doc {\n    @___\n    ___ Pdf copy() { return this; }\n}",
+          "bank": [
+            "Override",
+            "Overrides",
+            "public",
+            "private",
+            "static"
+          ],
+          "answers": [
+            "Override",
+            "public"
+          ],
+          "explanation": "The annotation is `@Override` (no s). `public` is wider than Doc's package access. `private` would be weaker, and `static` can't hide an instance method. Returning `Pdf` instead of `Object` is a legal covariant return.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "stdout",
+            "value": "Pdf",
+            "source": "class Doc {\n    Object copy() { return this; }\n}\nclass Pdf extends Doc {\n    @Override\n    public Pdf copy() { return this; }\n}\npublic class Main {\n    public static void main(String[] a) {\n        Doc d = new Pdf();\n        System.out.println(d.copy().getClass().getSimpleName());\n    }\n}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u04-l03",
+      "title": "Abstract classes",
+      "summary": "Partial classes, abstract methods and illegal combinations.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Abstract classes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "An `abstract` class is a partial design. You can't create it with `new`, and it can declare `abstract` methods: methods with no body that subclasses must implement."
+            },
+            {
+              "type": "code",
+              "code": "abstract class Shape {\n    private final String name;\n    Shape(String name) {\n        this.name = name;\n    }\n    abstract double area();  // no body\n    String describe() {\n        return name + \" \" + area();\n    }\n}\nclass Square extends Shape {\n    double side;\n    Square(double s) {\n        super(\"square\");\n        side = s;\n    }\n    double area() { return side * side; }\n}"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "An abstract class can have constructors, fields, concrete methods, and even **zero** abstract methods.",
+                "A class with any abstract method must itself be `abstract`.",
+                "The first **concrete** subclass must implement every inherited abstract method. An abstract subclass may leave them."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "With Python's `ABC` and `@abstractmethod`, instantiating fails at **runtime** with a TypeError. Java rejects `new Shape(...)` at **compile** time."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l03-e01",
+          "kind": "fillBlanks",
+          "prompt": "Complete the declarations.",
+          "code": "___ class Animal {\n    ___ String sound();\n}\nclass Cow extends Animal {\n    String sound() { return \"moo\"; }\n}",
+          "bank": [
+            "abstract",
+            "abstract",
+            "final",
+            "static",
+            "default",
+            "interface"
+          ],
+          "answers": [
+            "abstract",
+            "abstract"
+          ],
+          "explanation": "A method without a body must be `abstract`, and a class with an abstract method must be `abstract` too. `final` would forbid the subclass, `default` is for interface methods, and a `static` method can't be implemented by a subclass.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "stdout",
+            "value": "moo",
+            "source": "abstract class Animal {\n    abstract String sound();\n}\nclass Cow extends Animal {\n    String sound() { return \"moo\"; }\n}\npublic class Main {\n    public static void main(String[] a) {\n        Animal x = new Cow();\n        System.out.println(x.sound());\n    }\n}"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Illegal combinations",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Declaration",
+                "Why it fails"
+              ],
+              "rows": [
+                [
+                  "`abstract final class A`",
+                  "final forbids subclasses; abstract needs them"
+                ],
+                [
+                  "`abstract final void m();`",
+                  "a final method can never be implemented"
+                ],
+                [
+                  "`private abstract void m();`",
+                  "private isn't inherited, so no one can implement it"
+                ],
+                [
+                  "`static abstract void m();`",
+                  "static methods aren't overridden"
+                ],
+                [
+                  "`abstract void m() { }`",
+                  "abstract methods have no body"
+                ],
+                [
+                  "`new Shape(\"x\")`",
+                  "abstract classes can't be instantiated"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "An empty body is a body",
+              "text": "`abstract void m() { }` fails because `{ }` is a body. The correct form ends with a semicolon: `abstract void m();`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l03-e02",
+          "kind": "multiChoice",
+          "prompt": "Which two declarations compile? Choose two.",
+          "options": [
+            "abstract class A { abstract void m(); }",
+            "abstract class A { abstract void m() { } }",
+            "class A { abstract void m(); }",
+            "abstract class A { void m() { } }",
+            "abstract final class A { }",
+            "abstract class A { private abstract void m(); }"
+          ],
+          "answers": [
+            0,
+            3
+          ],
+          "explanation": "An abstract class may have abstract methods, or none at all. An abstract method can't have a body, can't live in a non-abstract class, and can't be private. `abstract final` contradicts itself.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ok",
+            "source": "abstract class A1 { abstract void m(); }\nabstract class A2 { void m() { } }\npublic class Main {\n    public static void main(String[] a) {\n        System.out.println(\"ok\");\n    }\n}"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Abstract methods are polymorphic",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A concrete method in the abstract class can call an abstract one. At runtime the subclass's implementation runs. This is the **template method** pattern."
+            },
+            {
+              "type": "code",
+              "code": "abstract class Game {\n    abstract String name();\n    void play() {\n        System.out.println(\"Play \" + name());\n    }\n}\nclass Chess extends Game {\n    String name() { return \"chess\"; }\n}\npublic class Main {\n    public static void main(String[] a) {\n        Game g = new Chess();\n        g.play();  // Play chess\n    }\n}",
+              "verify": {
+                "expect": "stdout",
+                "value": "Play chess"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l03-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "abstract class Report {\n    Report() { System.out.print(\"R\"); }\n    abstract String body();\n    void print() {\n        System.out.print(\"[\" + body() + \"]\");\n    }\n}\nclass Sales extends Report {\n    Sales() { System.out.print(\"S\"); }\n    String body() { return \"sales\"; }\n}\npublic class Main {\n    public static void main(String[] a) {\n        Report r = new Sales();\n        r.print();\n    }\n}",
+          "options": [
+            "RS[sales]",
+            "S[sales]",
+            "[sales]",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "Creating a Sales runs Report's constructor first (an abstract class still has one), printing R, then Sales's prints S. `print()` calls the abstract `body()`, which dispatches to Sales.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "RS[sales]"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l03-e04",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "abstract class Tool {\n    abstract void use();\n}\nabstract class Hammer extends Tool { }\nclass Mallet extends Hammer {\n    void use() { }\n}\npublic class Main {\n    public static void main(String[] a) {\n        Tool t = new Mallet();\n        Hammer h = new Hammer();\n    }\n}",
+          "answer": 11,
+          "explanation": "Hammer is abstract, so `new Hammer()` is illegal even though it has no abstract methods of its own. Hammer may skip `use()` because it's abstract; Mallet is the first concrete class and implements it. Line 10 is fine: an abstract type works as a reference type.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l03-e05",
+          "kind": "trueFalse",
+          "prompt": "An abstract class can declare a constructor.",
+          "answer": true,
+          "explanation": "You can't call `new` on an abstract class, but its constructor still runs whenever a subclass is created, via `super(...)`. It typically initializes the shared fields.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "stdout",
+            "value": "init",
+            "source": "abstract class A { A() { System.out.println(\"init\"); } }\nclass B extends A { }\npublic class Main {\n    public static void main(String[] a) { new B(); }\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l03-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "abstract class Pet {\n    abstract String name();\n    abstract int age();\n}\nclass Fish extends Pet {\n    String name() { return \"Nemo\"; }\n}\npublic class Main {\n    public static void main(String[] a) {\n        System.out.println(new Fish().name());\n    }\n}",
+          "options": [
+            "Nemo",
+            "Compilation fails",
+            "An exception is thrown at runtime",
+            "null"
+          ],
+          "answer": 1,
+          "explanation": "Fish is concrete but implements only `name()`. It inherits the abstract `age()` without implementing it, so `class Fish` fails to compile. Either implement `age()` or declare Fish `abstract`.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 5
+          },
+          "codeOptions": true
+        }
+      ]
+    },
+    {
+      "id": "u04-l04",
+      "title": "Polymorphism & casting",
+      "summary": "Reference type vs object type, casts and ClassCastException.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Two types per variable",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "In `Animal a = new Dog();` the **reference type** is `Animal` (what the compiler sees) and the **object type** is `Dog` (what exists at runtime)."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Question",
+                "Decided by"
+              ],
+              "rows": [
+                [
+                  "Which methods can I call?",
+                  "Reference type (compile time)"
+                ],
+                [
+                  "Which overriding method runs?",
+                  "Object type (runtime)"
+                ],
+                [
+                  "Which field is read?",
+                  "Reference type"
+                ],
+                [
+                  "Which static method runs?",
+                  "Reference type"
+                ],
+                [
+                  "Which overload is chosen?",
+                  "Argument reference types (compile time)"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python looks up every attribute at runtime (duck typing). Java's compiler refuses `a.fetch()` when `Animal` has no `fetch()`, even if the object really is a Dog."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l04-e01",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "class Animal {\n    void speak() { }\n}\nclass Dog extends Animal {\n    void speak() { }\n    void fetch() { }\n}\npublic class Main {\n    public static void main(String[] a) {\n        Animal x = new Dog();\n        x.speak();\n        x.fetch();\n    }\n}",
+          "answer": 12,
+          "explanation": "The compiler only knows that `x` is an Animal, and Animal has no `fetch()`. The object being a Dog doesn't matter at compile time. `((Dog) x).fetch()` would compile.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l04-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class A {\n    int x = 1;\n    int getX() { return x; }\n}\nclass B extends A {\n    int x = 2;\n    int getX() { return x; }\n}\npublic class Main {\n    public static void main(String[] s) {\n        A a = new B();\n        B b = (B) a;\n        System.out.println(a.x + \" \"\n            + a.getX() + \" \" + b.x);\n    }\n}",
+          "options": [
+            "1 2 2",
+            "2 2 2",
+            "1 1 2",
+            "1 2 1"
+          ],
+          "answer": 0,
+          "explanation": "`a.x` reads the field by reference type A: 1. `a.getX()` is an overridden method, so B's runs and returns B's field: 2. `b.x` uses reference type B: 2. Same object, different field depending on the variable.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "1 2 2"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Casting up and down",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "**Upcast** (subtype → supertype) is implicit and always safe: `Animal a = dog;`",
+                "**Downcast** (supertype → subtype) needs an explicit cast: `Dog d = (Dog) a;`",
+                "A downcast is checked at runtime. If the object isn't really that type: `ClassCastException`.",
+                "A cast never changes the object. It only changes how the compiler lets you use the reference."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "Object o = \"hi\";\nString s = (String) o;    // fine\nInteger n = (Integer) o;  // CCE",
+              "caption": "Compiles, but line 3 throws ClassCastException.",
+              "verify": {
+                "expect": "exception",
+                "value": "ClassCastException"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Impossible casts don't compile",
+              "text": "Between two **classes**, the compiler rejects a cast that could never succeed: `(String) new Dog()` fails, because no object is both. Casting a non-final class to an **interface** compiles, since some subclass might implement it. A `final` class can only be cast to interfaces it implements."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l04-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "class Animal { }\nclass Dog extends Animal { }\nclass Cat extends Animal { }\npublic class Main {\n    public static void main(String[] a) {\n        Animal x = new Cat();\n        Dog d = (Dog) x;\n        System.out.println(\"done\");\n    }\n}",
+          "options": [
+            "done",
+            "Compilation fails",
+            "A ClassCastException is thrown",
+            "null"
+          ],
+          "answer": 2,
+          "explanation": "The cast compiles: an Animal might be a Dog. At runtime the object is a Cat, so the JVM throws ClassCastException on line 7 and \"done\" is never printed.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "ClassCastException",
+            "stdout": ""
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l04-e04",
+          "kind": "multiChoice",
+          "prompt": "Given these types, which two statements compile? (They may still fail at runtime.) Choose two.",
+          "code": "class Animal { }\nclass Dog extends Animal { }\ninterface Pet { }\nfinal class Rock { }",
+          "options": [
+            "Dog d = (Dog) new Animal();",
+            "Dog d = (Dog) new Rock();",
+            "Pet p = (Pet) new Dog();",
+            "Pet p = (Pet) new Rock();",
+            "Animal a = (Animal) \"dog\";",
+            "String s = (String) new Dog();"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "A downcast from Animal to Dog compiles (and throws ClassCastException at runtime here). Dog is not final, so a subclass of Dog could implement Pet: the cast compiles. Rock is final and doesn't implement Pet, so that cast is impossible. Unrelated classes (Rock/Dog, String/Animal, Dog/String) can't be cast to each other.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "ClassCastException",
+            "stdout": "cast to Pet compiled\n",
+            "source": "class Animal { }\nclass Dog extends Animal { }\ninterface Pet { }\nfinal class Rock { }\npublic class Main {\n    public static void main(String[] a) {\n        try { Pet p = (Pet) new Dog(); }\n        catch (ClassCastException e) { System.out.println(\"cast to Pet compiled\"); }\n        Dog d = (Dog) new Animal();\n    }\n}"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Overloads use the reference type",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Overriding is decided at runtime by the object. **Overloading** is decided at compile time by the declared types of the arguments."
+            },
+            {
+              "type": "code",
+              "code": "void feed(Animal a) { }  // chosen for\nvoid feed(Dog d) { }     // declared types\nAnimal x = new Dog();\nfeed(x);   // feed(Animal)!"
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l04-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Printer {\n    void print(Object o) {\n        System.out.print(\"obj \");\n    }\n    void print(String s) {\n        System.out.print(\"str\");\n    }\n}\npublic class Main {\n    public static void main(String[] a) {\n        Object o = \"text\";\n        Printer p = new Printer();\n        p.print(o);\n        p.print((String) o);\n    }\n}",
+          "options": [
+            "obj str",
+            "str str",
+            "obj obj",
+            "str obj"
+          ],
+          "answer": 0,
+          "explanation": "Overload selection uses the compile-time type of the argument. `o` is declared Object, so `print(Object)` is chosen even though it holds a String. After the cast the argument type is String, so `print(String)` is chosen.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "obj str"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l04-e06",
+          "kind": "trueFalse",
+          "prompt": "A cast changes the type of the object on the heap.",
+          "answer": false,
+          "explanation": "Objects never change type. A cast only changes the type of the **reference** the compiler sees, and a downcast adds a runtime check that may throw ClassCastException.",
+          "objective": "3.5"
+        }
+      ]
+    },
+    {
+      "id": "u04-l05",
+      "title": "instanceof & pattern matching",
+      "summary": "Type tests, binding variables and flow scoping.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "The instanceof operator",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`x instanceof T` is true when the object `x` refers to IS-A `T`. If `x` is `null`, the result is simply `false` (no exception)."
+            },
+            {
+              "type": "code",
+              "code": "Object o = \"hello\";\nSystem.out.println(o instanceof String);\nSystem.out.println(o instanceof Integer);\no = null;\nSystem.out.println(o instanceof Object);",
+              "caption": "Prints true, false, false.",
+              "verify": {
+                "expect": "stdout",
+                "value": "true\nfalse\nfalse"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Impossible tests don't compile",
+              "text": "If the compiler can prove the test can never be true, it's an error. `Integer n = 5; n instanceof String` fails: an Integer can never be a String. The same rule as casting."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l05-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "Integer n = 42;\nNumber num = n;\nSystem.out.print(num instanceof Integer);\nSystem.out.print(\" \");\nSystem.out.print(n instanceof String);",
+          "options": [
+            "true false",
+            "true true",
+            "false false",
+            "Compilation fails"
+          ],
+          "answer": 3,
+          "explanation": "`num instanceof Integer` is fine: a Number might be an Integer. But `n` is declared Integer, and Integer is a final class unrelated to String, so `n instanceof String` on line 5 can't compile.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 5
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Pattern matching for instanceof",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "if (obj instanceof String s) {\n    System.out.println(s.length());\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "If the test succeeds, the **binding variable** `s` is already cast to String and ready to use. No separate `(String) obj` cast."
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "In Python you write `isinstance(obj, str)` and then use `obj` directly. Java's static typing needs a String-typed variable, and the pattern gives you one."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Generics in patterns",
+              "text": "Type arguments are erased at runtime, so from an `Object` you can't test `instanceof List<String>`: that's a compile error. Use a wildcard, `List<?>`. A parameterized test is only allowed when the compiler can prove it safe, e.g. a `List<String>` tested against `ArrayList<String>`."
+            },
+            {
+              "type": "code",
+              "code": "Object o = new ArrayList<String>();\nif (o instanceof List<?> list) {     // OK\n    System.out.println(list.size());\n}\nif (o instanceof List<String> ls) { } // error",
+              "verify": {
+                "expect": "compileError",
+                "line": 5
+              }
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Flow scoping",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`s` is in scope only where the compiler knows the match **succeeded**."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`o instanceof String s && s.isEmpty()`: OK. The right side runs only if the match succeeded.",
+                "`o instanceof String s || s.isEmpty()`: compile error. The right side runs when the match **failed**.",
+                "`if (!(o instanceof String s)) return;` makes `s` usable **after** the if.",
+                "The binding name can't clash with an existing local variable."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "static int len(Object o) {\n    if (!(o instanceof String s)) {\n        return -1;\n    }\n    return s.length();  // s in scope\n}"
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l05-e02",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "Object o = \"abc\";\nif (o instanceof String s && !s.isEmpty())\n    System.out.println(\"text\");\nif (o instanceof String t || t.isEmpty())\n    System.out.println(\"odd\");\nif (!(o instanceof String u))\n    System.out.println(\"not text\");\nelse\n    System.out.println(u.length());",
+          "answer": 4,
+          "explanation": "With `||`, the right side runs only when the left side is **false**, so `t` was never assigned. Line 2 is fine with `&&`. In lines 6–9, `u` is in scope in the `else` branch, where the match is known to have succeeded.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l05-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "public class Main {\n    static String check(Object o) {\n        if (!(o instanceof Integer i)) {\n            return \"no\";\n        }\n        return \"int \" + (i * 2);\n    }\n    public static void main(String[] a) {\n        System.out.println(check(21)\n            + \" \" + check(\"21\")\n            + \" \" + check(null));\n    }\n}",
+          "options": [
+            "int 42 no no",
+            "int 42 int 42 no",
+            "int 42 no null",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`check(21)` matches Integer, so `i` is 21 and the result is \"int 42\". `\"21\"` is a String, so the negated test returns \"no\". `null instanceof Integer` is false (no NPE), so that's \"no\" too.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "int 42 no no"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l05-e04",
+          "kind": "fillBlanks",
+          "prompt": "Complete the pattern so the code prints 8.",
+          "code": "Object obj = 7;\nif (obj ___ Integer ___ && n > 5) {\n    System.out.println(n + 1);\n}",
+          "bank": [
+            "instanceof",
+            "n",
+            "isA",
+            "typeof",
+            "(Integer)",
+            "Integer"
+          ],
+          "answers": [
+            "instanceof",
+            "n"
+          ],
+          "explanation": "The syntax is `expr instanceof Type name`. The binding `n` can be used on the right of `&&` because that side only runs after a successful match. `isA` and `typeof` aren't Java.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "stdout",
+            "value": "8"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l05-e05",
+          "kind": "multiChoice",
+          "prompt": "Given `Object o = \"x\";`, which two snippets compile? Choose two.",
+          "options": [
+            "if (o instanceof String s) { s.length(); }",
+            "if (o instanceof String s || s.isEmpty()) { }",
+            "String s = \"y\"; if (o instanceof String s) { }",
+            "if (!(o instanceof String s)) { s.length(); }",
+            "boolean b = o instanceof String s && s.isEmpty();",
+            "Integer i = 1; if (i instanceof String) { }"
+          ],
+          "answers": [
+            0,
+            4
+          ],
+          "explanation": "The binding is usable inside the `if` that tested it and on the right of `&&`. With `||` or inside the negated branch the match failed, so `s` isn't in scope. A binding can't reuse the name of an existing local `s`. Integer can never be a String, so that test doesn't compile.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "false",
+            "source": "public class Main {\n    public static void main(String[] a) {\n        Object o = \"x\";\n        if (o instanceof String s) { s.length(); }\n        boolean b = o instanceof String s && s.isEmpty();\n        System.out.println(b);\n    }\n}"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l05-e06",
+          "kind": "trueFalse",
+          "prompt": "`x instanceof Object` throws a NullPointerException when `x` is null.",
+          "answer": false,
+          "explanation": "`instanceof` is null-safe: `null instanceof AnyType` is always `false`. That's why a pattern binding is never null.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "stdout",
+            "value": "false",
+            "source": "public class Main {\n    public static void main(String[] a) {\n        Object x = null;\n        System.out.println(x instanceof Object);\n    }\n}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u04-l06",
+      "title": "Sealed classes & interfaces",
+      "summary": "sealed, permits, final, non-sealed.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Sealed classes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A `sealed` class lists exactly which classes may extend it, using `permits`."
+            },
+            {
+              "type": "code",
+              "code": "sealed class Shape\n        permits Circle, Square, Poly { }\nfinal class Circle extends Shape { }\nsealed class Square extends Shape\n        permits Cube { }\nfinal class Cube extends Square { }\nnon-sealed class Poly extends Shape { }\nclass Hexagon extends Poly { }  // fine",
+              "verify": {
+                "expect": "stdout",
+                "value": "ok",
+                "source": "sealed class Shape\n        permits Circle, Square, Poly { }\nfinal class Circle extends Shape { }\nsealed class Square extends Shape\n        permits Cube { }\nfinal class Cube extends Square { }\nnon-sealed class Poly extends Shape { }\nclass Hexagon extends Poly { }\npublic class Main {\n    public static void main(String[] a) {\n        Shape s = new Hexagon();\n        System.out.println(\"ok\");\n    }\n}"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Every permitted subclass must be `final`, `sealed`, or `non-sealed`.",
+                "`non-sealed` reopens the hierarchy: anyone may extend Poly.",
+                "Permitted subclasses must **directly** extend the sealed class.",
+                "They must be in the same package (or, with modules, the same named module).",
+                "`permits` may be left out when all subclasses are in the **same source file**.",
+                "A sealed class doesn't have to be abstract."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "More sealed rules",
+              "text": "A `sealed` class needs at least one permitted subclass: `sealed class Tool { }` with no subclasses in the file doesn't compile. `non-sealed` and `final` classes can't have a `permits` clause. You can't write `sealed` or `final` on an enum yourself (the compiler decides). Local and anonymous classes can never be permitted subtypes."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l06-e01",
+          "kind": "fillBlanks",
+          "prompt": "Complete the hierarchy so that it compiles.",
+          "code": "___ interface Vehicle\n        permits Car, Bike { }\nfinal class Car implements Vehicle { }\n___ class Bike implements Vehicle { }\nclass Ebike extends Bike { }",
+          "bank": [
+            "sealed",
+            "non-sealed",
+            "final",
+            "abstract",
+            "static",
+            "open"
+          ],
+          "answers": [
+            "sealed",
+            "non-sealed"
+          ],
+          "explanation": "`permits` requires a `sealed` type. Bike must be final, sealed, or non-sealed. Because Ebike (which has no modifier) extends it, only `non-sealed` works: `final` would block Ebike, and `sealed` would force Ebike itself to be final, sealed, or non-sealed. `abstract` alone doesn't satisfy the rule.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "stdout",
+            "value": "ok",
+            "source": "sealed interface Vehicle\n        permits Car, Bike { }\nfinal class Car implements Vehicle { }\nnon-sealed class Bike implements Vehicle { }\nclass Ebike extends Bike { }\npublic class Main {\n    public static void main(String[] a) {\n        Vehicle v = new Ebike();\n        System.out.println(\"ok\");\n    }\n}"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Why seal a hierarchy?",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "An ordinary class can be extended by anyone. A `final` class by no one. `sealed` sits in between: a **closed, known** set of subtypes."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Modifier on a subclass",
+                "Who may extend it next"
+              ],
+              "rows": [
+                [
+                  "`final`",
+                  "nobody"
+                ],
+                [
+                  "`sealed ... permits X`",
+                  "only the listed classes"
+                ],
+                [
+                  "`non-sealed`",
+                  "anybody"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python has no way to forbid subclassing at compile time. Java checks the whole sealed hierarchy when it compiles."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Missing modifier",
+              "text": "A permitted subclass with **no** modifier (`class Pear extends Fruit`) does not compile. The compiler wants you to decide explicitly how the hierarchy continues."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l06-e02",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "sealed class Fruit\n        permits Apple, Pear { }\nfinal class Apple extends Fruit { }\nnon-sealed class Pear extends Fruit { }\nclass Nashi extends Pear { }\nfinal class Plum extends Fruit { }",
+          "answer": 6,
+          "explanation": "Plum isn't listed in `permits`, so it can't extend Fruit, even though it's final. Nashi is fine: it extends Pear, which is `non-sealed`, so anyone may extend it.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Records, enums and sealed interfaces",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "sealed interface Expr\n        permits Num, Add { }\nrecord Num(int v) implements Expr { }\nrecord Add(Expr a, Expr b)\n        implements Expr { }"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Interfaces can be sealed. Permitted classes `implement` it; permitted interfaces `extend` it.",
+                "Records are implicitly `final`, so they satisfy the rule with no extra keyword.",
+                "Enums are implicitly final (or sealed), so they can implement a sealed interface too.",
+                "The payoff: the compiler knows **every** subtype, so a switch can be exhaustive without `default` (next lesson)."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "Expect questions where one subclass forgets its modifier, or extends without being permitted. Check each class: is it permitted, and is it final / sealed / non-sealed?"
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l06-e03",
+          "kind": "multiChoice",
+          "prompt": "Which two statements about sealed types are true? Choose two.",
+          "options": [
+            "Every permitted subclass must be final, sealed, or non-sealed.",
+            "A non-sealed subclass can be extended by classes that aren't listed anywhere.",
+            "A sealed class must be abstract.",
+            "A record can't implement a sealed interface.",
+            "The permits clause is required even when all subclasses are in the same file."
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "Each permitted subclass picks one of the three modifiers (records and enums are final implicitly). `non-sealed` reopens that branch. A sealed class can be concrete, records commonly implement sealed interfaces, and `permits` can be inferred when everything is in one file.",
+          "objective": "3.5",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l06-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "sealed abstract class Coin {\n    abstract int cents();\n}\nfinal class Dime extends Coin {\n    int cents() { return 10; }\n}\nfinal class Nickel extends Coin {\n    int cents() { return 5; }\n}\npublic class Main {\n    public static void main(String[] a) {\n        Coin c = new Dime();\n        System.out.println(c.cents()\n            + new Nickel().cents());\n    }\n}",
+          "options": [
+            "15",
+            "105",
+            "10",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "There is no `permits` clause, so the compiler infers the permitted subclasses from the same file: Dime and Nickel, both final. `c.cents()` dispatches to Dime (10), plus 5 from Nickel: the `+` adds two ints, giving 15.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "15"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l06-e05",
+          "kind": "trueFalse",
+          "prompt": "A record that implements a sealed interface must be explicitly marked `final`.",
+          "answer": false,
+          "explanation": "Records are implicitly final, which already satisfies the sealed rule. Writing `final record` is allowed but redundant.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "stdout",
+            "value": "1",
+            "source": "sealed interface Num permits One { }\nrecord One() implements Num { }\npublic class Main {\n    public static void main(String[] a) {\n        Num n = new One();\n        System.out.println(1);\n    }\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l06-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "sealed class Tree permits Oak, Pine { }\nfinal class Oak extends Tree { }\nfinal class Pine { }",
+          "options": [
+            "It compiles.",
+            "Compilation fails because Pine is permitted but doesn't extend Tree.",
+            "Compilation fails because Tree must be abstract.",
+            "Compilation fails because Oak must be sealed."
+          ],
+          "answer": 1,
+          "explanation": "Every class in `permits` must actually extend the sealed class. Pine is final but doesn't extend Tree, so the permits clause is invalid. Oak is correct, and a sealed class may be concrete.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u04-l07",
+      "title": "Pattern matching in switch",
+      "summary": "Type patterns, guards, null, dominance, records.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Type patterns in switch",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "static String describe(Object o) {\n    return switch (o) {\n        case Integer i -> \"int \" + i;\n        case String s -> \"text \" + s;\n        default -> \"other\";\n    };\n}"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Each `case` can test a type and bind a variable.",
+                "Cases are tried **top to bottom**.",
+                "A pattern switch must be **exhaustive**. On `Object` that means a `default` (or `case Object o`)."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python 3.10's `match` with `case int(i):` looks similar, but Java checks exhaustiveness and case order at **compile** time."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Guards and null",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "return switch (o) {\n    case null -> \"null!\";\n    case String s when s.isEmpty()\n        -> \"empty\";\n    case String s -> \"text\";\n    default -> \"other\";\n};"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`when` adds a boolean guard to a pattern.",
+                "Without `case null`, a null selector throws `NullPointerException`, even when there's a `default`.",
+                "`case null, default ->` handles both in one label."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l07-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "public class Main {\n    static String f(Object o) {\n        return switch (o) {\n            case Integer i when i > 9 -> \"B\";\n            case Integer i -> \"s\";\n            case String s -> \"S\";\n            default -> \"?\";\n        };\n    }\n    public static void main(String[] a) {\n        System.out.println(f(5) + f(50)\n            + f(\"x\") + f(2.0));\n    }\n}",
+          "options": [
+            "sBS?",
+            "BBS?",
+            "ssS?",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "5 is an Integer but fails the guard `i > 9`, so the next case gives \"s\". 50 passes the guard: \"B\". \"x\" is a String: \"S\". 2.0 is a Double, matching only `default`: \"?\".",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "sBS?"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l07-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "Object o = null;\nString r = switch (o) {\n    case String s -> \"S\";\n    default -> \"D\";\n};\nSystem.out.println(r);",
+          "options": [
+            "D",
+            "S",
+            "null",
+            "A NullPointerException is thrown"
+          ],
+          "answer": 3,
+          "explanation": "`default` does **not** match null. A switch on a null value throws NullPointerException unless it has a `case null` label.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "NullPointerException"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Dominance",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A case is **dominated** when an earlier case already matches everything it could. That's a compile error, because the later case could never run."
+            },
+            {
+              "type": "code",
+              "code": "switch (o) {\n    case CharSequence cs -> 1;\n    case String s -> 2;  // dominated\n    default -> 3;\n}"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Put more specific types first.",
+                "An unguarded `case String s` dominates a later `case String s when ...`.",
+                "A guarded case does **not** dominate a later unguarded case of the same type.",
+                "`default` goes after the pattern cases."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Java 21 also lets you mix **qualified enum constants** with type patterns when switching over a sealed interface (or `Object`). The constant must come **before** the type pattern that covers it."
+            },
+            {
+              "type": "code",
+              "code": "sealed interface Signal permits Light, Beep { }\nenum Light implements Signal { RED, GREEN }\nrecord Beep(int hz) implements Signal { }\npublic class Main {\n    static String say(Signal s) {\n        return switch (s) {\n            case Light.RED -> \"stop\";\n            case Light l -> \"go \" + l;\n            case Beep b -> b.hz() + \"Hz\";\n        };\n    }\n    public static void main(String[] a) {\n        System.out.println(say(Light.RED) + \", \"\n            + say(Light.GREEN) + \", \" + say(new Beep(440)));\n    }\n}",
+              "verify": {
+                "expect": "stdout",
+                "value": "stop, go GREEN, 440Hz"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Constant after the type",
+              "text": "Swap the first two cases and it fails to compile: `case Light l` already matches every `Light`, so `case Light.RED` is dominated."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l07-e03",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "public class Main {\n    static String f(Object o) {\n        return switch (o) {\n            case Integer i when i > 0 -> \"+\";\n            case Integer i -> \"int\";\n            case Number n -> \"num\";\n            case Long l -> \"long\";\n            default -> \"other\";\n        };\n    }\n}",
+          "answer": 7,
+          "explanation": "Every Long is a Number, so `case Number n` on line 6 already catches all Longs and `case Long l` can never run: it's dominated. Line 5 is fine because the guarded case on line 4 doesn't dominate it.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Exhaustive switches over sealed types",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "sealed interface Shape\n        permits Circle, Square { }\nrecord Circle(double r)\n        implements Shape { }\nrecord Square(double side)\n        implements Shape { }\n\nstatic double area(Shape s) {\n    return switch (s) {\n        case Circle c -> 3 * c.r() * c.r();\n        case Square q -> q.side() * q.side();\n    };   // no default needed\n}"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "If the cases cover every permitted subtype, no `default` is needed.",
+                "Add a new permitted subtype later, and every such switch stops compiling until you handle it. That's a feature.",
+                "The same works for enums: covering every constant is exhaustive."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l07-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "sealed interface Pet\n        permits Dog, Cat, Bird { }\nrecord Dog() implements Pet { }\nrecord Cat() implements Pet { }\nrecord Bird() implements Pet { }\npublic class Main {\n    static String sound(Pet p) {\n        return switch (p) {\n            case Dog d -> \"woof\";\n            case Cat c -> \"meow\";\n        };\n    }\n    public static void main(String[] a) {\n        System.out.println(sound(new Dog()));\n    }\n}",
+          "options": [
+            "woof",
+            "Compilation fails",
+            "An exception is thrown at runtime",
+            "woofmeow"
+          ],
+          "answer": 1,
+          "explanation": "Pet permits three types, but the switch only covers Dog and Cat. A pattern switch must be exhaustive, so without `case Bird b` or `default` it doesn't compile, even though `main` only passes a Dog.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 8
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Record patterns",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "record Point(int x, int y) { }\nrecord Line(Point a, Point b) { }\n\nif (o instanceof Point(int x, int y)) {\n    System.out.println(x + y);\n}\nswitch (o) {\n    case Line(Point(var x1, var y1),\n              Point b) -> ...\n    default -> ...\n}"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "A record pattern takes a record apart into its components, in declaration order.",
+                "Each component gets a type pattern: an explicit type or `var`.",
+                "Patterns nest: `Line(Point(var x1, var y1), Point b)`.",
+                "The number of components must match the record exactly.",
+                "`null` never matches a record pattern."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "Java 21 has no unnamed pattern `_`. Every component needs a type (or `var`) and a name, even if unused."
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Generic records infer their types",
+              "text": "On a generic record you can leave the type arguments off the pattern. Against a `Pair<Integer, String>`, `Pair(var n, var s)` infers `Pair<Integer, String>`, so `n` is an `Integer` and `s` a `String`."
+            },
+            {
+              "type": "code",
+              "code": "record Pair<A, B>(A first, B second) { }\npublic class Main {\n    public static void main(String[] args) {\n        Pair<Integer, String> p = new Pair<>(7, \"seven\");\n        if (p instanceof Pair(var n, var s)) {\n            // n is Integer, s is String\n            System.out.println((n + 1) + \" \" + s.length());\n        }\n    }\n}",
+              "verify": {
+                "expect": "stdout",
+                "value": "8 5"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l07-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "record Point(int x, int y) { }\nrecord Line(Point a, Point b) { }\npublic class Main {\n    static int len(Object o) {\n        return switch (o) {\n            case Line(Point(var x1, var y1),\n                      Point(var x2, var y2))\n                -> Math.abs(x2 - x1)\n                   + Math.abs(y2 - y1);\n            default -> -1;\n        };\n    }\n    public static void main(String[] a) {\n        var p = new Point(1, 2);\n        var q = new Point(4, 6);\n        System.out.println(len(new Line(p, q))\n            + \" \" + len(p));\n    }\n}",
+          "options": [
+            "7 -1",
+            "5 -1",
+            "7 7",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "The Line is deconstructed into both Points and then into their coordinates: |4-1| + |6-2| = 3 + 4 = 7. A Point is not a Line, so `len(p)` falls to `default` and returns -1.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "7 -1"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l07-e06",
+          "kind": "fillBlanks",
+          "prompt": "Complete the switch so it prints `emptyhiother`.",
+          "code": "record Box(Object item) { }\npublic class Main {\n    static String f(Box b) {\n        return switch (b) {\n            case Box(String s) ___ s.isEmpty()\n                -> \"empty\";\n            case Box(String s) -> s;\n            ___ -> \"other\";\n        };\n    }\n    public static void main(String[] a) {\n        System.out.println(f(new Box(\"\"))\n            + f(new Box(\"hi\"))\n            + f(new Box(1)));\n    }\n}",
+          "bank": [
+            "when",
+            "&&",
+            "if",
+            "default",
+            "case null",
+            "else"
+          ],
+          "answers": [
+            "when",
+            "default"
+          ],
+          "explanation": "Guards use `when` (`&&` was only an old preview syntax). The two String cases don't cover a Box holding an Integer, so `default` is needed for exhaustiveness. `case null` would only handle a null Box, leaving the switch non-exhaustive.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "stdout",
+            "value": "emptyhiother"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l07-e07",
+          "kind": "multiChoice",
+          "prompt": "Which two statements about pattern-matching switch in Java 21 are true? Choose two.",
+          "options": [
+            "Without `case null`, a null selector throws NullPointerException.",
+            "A switch over a sealed interface that covers all permitted subtypes needs no default.",
+            "Case order never matters because the compiler picks the most specific case.",
+            "`case Integer i && i > 0` is the syntax for a guard.",
+            "A record pattern can leave out components it doesn't need."
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "Null needs an explicit `case null`. Sealed hierarchies make exhaustiveness checkable without `default`. Cases are tried in order (and out-of-order dominated cases don't compile). Guards use `when`, and a record pattern must list every component.",
+          "objective": "3.5",
+          "examStyle": true
+        }
+      ]
+    },
+    {
+      "id": "u04-l08",
+      "title": "equals, hashCode & toString",
+      "summary": "The Object contract and the equals overload trap.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "What every class inherits from Object",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Method",
+                "Default behavior"
+              ],
+              "rows": [
+                [
+                  "`toString()`",
+                  "class name + `@` + hex hash, e.g. `Cat@1b6d3586`"
+                ],
+                [
+                  "`equals(Object o)`",
+                  "`this == o` (same object)"
+                ],
+                [
+                  "`hashCode()`",
+                  "an int derived from the object's identity"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "**equals contract**: reflexive (`a.equals(a)`), symmetric, transitive, consistent, and `a.equals(null)` is `false`."
+            },
+            {
+              "type": "paragraph",
+              "text": "**hashCode contract**: if `a.equals(b)`, then `a.hashCode() == b.hashCode()`. The reverse isn't required: different objects may share a hash code."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Override both or neither",
+              "text": "Override equals without hashCode, and two \"equal\" objects land in different HashSet buckets. Both get stored."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Writing equals correctly",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "class Point {\n    final int x, y;\n    Point(int x, int y) {\n        this.x = x;\n        this.y = y;\n    }\n    @Override\n    public boolean equals(Object o) {\n        return o instanceof Point p\n            && x == p.x && y == p.y;\n    }\n    @Override\n    public int hashCode() {\n        return Objects.hash(x, y);\n    }\n}"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "The parameter must be `Object`. The method must be `public`.",
+                "`instanceof` handles `null` for free: it returns false.",
+                "Records generate `equals`, `hashCode` and `toString` from their components."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "The overload trap",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "public boolean equals(Point p) {\n    return x == p.x && y == p.y;\n}",
+              "caption": "Overloads equals. It does NOT override it."
+            },
+            {
+              "type": "paragraph",
+              "text": "The parameter type is `Point`, not `Object`, so this is a **new overload**. Collections like `List.contains` and `HashSet` call `equals(Object)`, which still compares identity. `@Override` would catch the mistake."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l08-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Tag {\n    String v;\n    Tag(String v) { this.v = v; }\n    public boolean equals(Tag t) {\n        return v.equals(t.v);\n    }\n}\npublic class Main {\n    public static void main(String[] s) {\n        Tag a = new Tag(\"x\");\n        Tag b = new Tag(\"x\");\n        Object o = b;\n        List<Tag> list = List.of(a);\n        System.out.println(a.equals(b) + \" \"\n            + a.equals(o) + \" \"\n            + list.contains(b));\n    }\n}",
+          "options": [
+            "true false false",
+            "true true true",
+            "true true false",
+            "false false false"
+          ],
+          "answer": 0,
+          "explanation": "`a.equals(b)` with a Tag argument picks the overload `equals(Tag)`: true. With `o` declared Object, the compiler picks the inherited `equals(Object)`, which checks identity: false. `contains` also calls `equals(Object)`: false.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "true false false"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l08-e02",
+          "kind": "multiChoice",
+          "prompt": "Which two statements are required by the equals/hashCode contract? Choose two.",
+          "options": [
+            "If a.equals(b) is true, then a.hashCode() == b.hashCode().",
+            "a.equals(null) returns false.",
+            "If a.hashCode() == b.hashCode(), then a.equals(b) is true.",
+            "hashCode() returns a different value for every distinct object.",
+            "equals must take a parameter of the class's own type."
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "Equal objects must have equal hash codes, and comparing with null gives false. Hash collisions between unequal objects are allowed. A parameter of the class's own type would overload, not override, equals.",
+          "objective": "3.5",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l08-e03",
+          "kind": "trueFalse",
+          "prompt": "Adding `@Override` to `public boolean equals(Tag t)` causes a compile error.",
+          "answer": true,
+          "explanation": "Object has no `equals(Tag)` method, so this method overrides nothing, and `@Override` makes that a compile error. That's exactly why you should always use it on equals.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "compileError",
+            "source": "class Tag {\n    String v;\n    @Override\n    public boolean equals(Tag t) {\n        return v.equals(t.v);\n    }\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l08-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Id {\n    int n;\n    Id(int n) { this.n = n; }\n    @Override\n    public int hashCode() { return n; }\n}\npublic class Main {\n    public static void main(String[] a) {\n        Set<Id> set = new HashSet<>();\n        set.add(new Id(1));\n        set.add(new Id(1));\n        System.out.println(set.size());\n    }\n}",
+          "options": [
+            "1",
+            "2",
+            "0",
+            "Compilation fails"
+          ],
+          "answer": 1,
+          "explanation": "Both Ids have hash code 1, so they land in the same bucket. HashSet then calls `equals`, which is still Object's identity check: they're different objects, so both are stored. Overriding hashCode alone is not enough.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "2"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l08-e05",
+          "kind": "fillBlanks",
+          "prompt": "Complete a correct equals override.",
+          "code": "@Override\npublic boolean equals(___ o) {\n    return o ___ Money m\n        && cents == m.cents;\n}",
+          "bank": [
+            "Object",
+            "Money",
+            "instanceof",
+            "==",
+            "equals",
+            "var"
+          ],
+          "answers": [
+            "Object",
+            "instanceof"
+          ],
+          "explanation": "An override must take `Object`; `Money` would be an overload and `@Override` would reject it. The pattern `o instanceof Money m` checks the type, handles null, and gives a typed variable.",
+          "objective": "3.5",
+          "verify": {
+            "expect": "stdout",
+            "value": "true false",
+            "source": "class Money {\n    int cents;\n    Money(int c) { cents = c; }\n    @Override\n    public boolean equals(Object o) {\n        return o instanceof Money m\n            && cents == m.cents;\n    }\n}\npublic class Main {\n    public static void main(String[] a) {\n        System.out.println(new Money(5).equals(new Money(5))\n            + \" \" + new Money(5).equals(null));\n    }\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l08-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Cat {\n    String name = \"Tom\";\n    @Override\n    public String toString() {\n        return \"Cat:\" + name;\n    }\n}\npublic class Main {\n    public static void main(String[] a) {\n        Cat c = new Cat();\n        Object o = c;\n        System.out.println(o + \" \"\n            + List.of(c));\n    }\n}",
+          "options": [
+            "Cat:Tom [Cat:Tom]",
+            "Cat@1b6d3586 [Cat:Tom]",
+            "Cat:Tom Cat:Tom",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`toString()` is an overridden instance method, so the Cat version runs even through an Object reference. String concatenation calls it, and so does `List.toString()` for each element, inside brackets.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "Cat:Tom [Cat:Tom]"
+          },
+          "codeOptions": true
+        }
+      ]
+    },
+    {
+      "id": "u04-l09",
+      "title": "Interfaces",
+      "summary": "Abstract, default, static and private members; conflicts.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Interface members",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Member",
+                "Implicitly",
+                "Notes"
+              ],
+              "rows": [
+                [
+                  "`void m();`",
+                  "public abstract",
+                  "implementers must make it public"
+                ],
+                [
+                  "`default void m() { }`",
+                  "public",
+                  "inherited, can be overridden"
+                ],
+                [
+                  "`static void m() { }`",
+                  "public",
+                  "call only as `Iface.m()`"
+                ],
+                [
+                  "`private void m() { }`",
+                  "private",
+                  "helper for default methods"
+                ],
+                [
+                  "`private static void m() { }`",
+                  "private",
+                  "helper for static methods"
+                ],
+                [
+                  "`int MAX = 10;`",
+                  "public static final",
+                  "must be initialized"
+                ]
+              ]
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "A class `implements` any number of interfaces. An interface `extends` any number of interfaces.",
+                "No constructors, no instance fields, can't be `final`.",
+                "`protected` members are not allowed in interfaces."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python has no interfaces; the closest are `ABC` and `typing.Protocol`. Java default methods resemble mixins, but come with strict conflict rules."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l09-e01",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "interface Greeter {\n    String PREFIX = \"Hi \";\n    String greet(String n);\n}\nclass Friendly implements Greeter {\n    String greet(String n) {\n        return PREFIX + n;\n    }\n}",
+          "answer": 6,
+          "explanation": "Interface methods are implicitly `public`. Implementing one with package access makes it less visible, which is an illegal override. Writing `public String greet` fixes it. Using `PREFIX` is fine: it's an inherited constant.",
+          "objective": "3.6",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l09-e02",
+          "kind": "multiChoice",
+          "prompt": "Which two lines compile inside `interface Tool { }`? Choose two.",
+          "options": [
+            "int SIZE = 3;",
+            "int count;",
+            "private void help() { }",
+            "protected void use();",
+            "default static void x() { }",
+            "final void run() { }"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "Fields are constants (`public static final`), so they need a value. Private methods with a body are allowed since Java 9. `protected` isn't allowed, `default` and `static` can't be combined, and `final` makes no sense for an interface method.",
+          "objective": "3.6",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "3",
+            "source": "interface Tool {\n    int SIZE = 3;\n    private void help() { }\n}\npublic class Main {\n    public static void main(String[] a) {\n        System.out.println(Tool.SIZE);\n    }\n}"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Default method conflicts",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "interface Walker {\n    default String move() {\n        return \"walk\";\n    }\n}\ninterface Swimmer {\n    default String move() {\n        return \"swim\";\n    }\n}\nclass Duck implements Walker, Swimmer {\n    public String move() {  // required\n        return Walker.super.move()\n            + \"+\" + Swimmer.super.move();\n    }\n}"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Inheriting two defaults with the same signature: the class **must** override, or it doesn't compile.",
+                "`X.super.m()` calls interface X's default. X must be a direct superinterface.",
+                "**Class wins**: a method inherited from a superclass beats any interface default.",
+                "**More specific wins**: if B extends A and both define the default, B's is used."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "`X.super.m()` is also illegal when **another** direct superinterface already overrides X's `m()`. Here Loud overrides Greeter's `hi()`, so Bot can't skip past it:"
+            },
+            {
+              "type": "code",
+              "code": "interface Greeter {\n    default String hi() { return \"hi\"; }\n}\ninterface Loud extends Greeter {\n    default String hi() { return \"HI\"; }\n}\nclass Bot implements Greeter, Loud {\n    public String hi() { return Greeter.super.hi(); }  // error\n}",
+              "verify": {
+                "expect": "compileError",
+                "line": 8
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Re-abstracting a default",
+              "text": "A subinterface may redeclare an inherited default as abstract: `String hi();`. Implementers must then provide it, and it counts as an abstract method, so an interface that was functional may stop being one."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l09-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "interface A {\n    default String hi() { return \"A\"; }\n}\ninterface B extends A {\n    default String hi() { return \"B\"; }\n}\nclass Base {\n    public String hi() { return \"Base\"; }\n}\nclass X implements A, B { }\nclass Y extends Base implements B { }\npublic class Main {\n    public static void main(String[] s) {\n        System.out.println(new X().hi()\n            + \" \" + new Y().hi());\n    }\n}",
+          "options": [
+            "B Base",
+            "A Base",
+            "B B",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "X gets `hi()` from both A and B, but B extends A and overrides it, so B's default is more specific: no conflict. Y inherits `hi()` from its superclass Base and from B; the class always wins.",
+          "objective": "3.6",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "B Base"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l09-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "interface Cat {\n    default String name() { return \"cat\"; }\n}\ninterface Dog {\n    default String name() { return \"dog\"; }\n}\nclass CatDog implements Cat, Dog { }\npublic class Main {\n    public static void main(String[] a) {\n        var cd = new CatDog();\n        System.out.println(cd.name());\n    }\n}",
+          "options": [
+            "cat",
+            "dog",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 2,
+          "explanation": "CatDog inherits two unrelated defaults named `name()`. Java won't pick one, so CatDog must override `name()` (and may call `Cat.super.name()`). The error is on the class declaration, line 7.",
+          "objective": "3.6",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 7
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l09-e05",
+          "kind": "fillBlanks",
+          "prompt": "Complete the method so Duck uses Walker's default `move()`.",
+          "code": "class Duck implements Walker, Swimmer {\n    public String move() {\n        return ___.___.move();\n    }\n}",
+          "bank": [
+            "Walker",
+            "super",
+            "this",
+            "Duck",
+            "Object",
+            "base"
+          ],
+          "answers": [
+            "Walker",
+            "super"
+          ],
+          "explanation": "`Walker.super.move()` calls the default from the direct superinterface Walker. `Walker.this` would mean an enclosing instance, which doesn't exist, and `Duck.super` refers to Duck's superclass (Object), which has no `move()`.",
+          "objective": "3.6",
+          "verify": {
+            "expect": "stdout",
+            "value": "walk",
+            "source": "interface Walker { default String move() { return \"walk\"; } }\ninterface Swimmer { default String move() { return \"swim\"; } }\nclass Duck implements Walker, Swimmer {\n    public String move() {\n        return Walker.super.move();\n    }\n}\npublic class Main {\n    public static void main(String[] a) {\n        System.out.println(new Duck().move());\n    }\n}"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Static interface methods aren't inherited",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "interface MathUtil {\n    static int twice(int x) {\n        return 2 * x;\n    }\n}\nclass Calc implements MathUtil { }\n\nMathUtil.twice(4);    // OK\nCalc.twice(4);        // error\nnew Calc().twice(4);  // error"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Different from classes",
+              "text": "A static method of a **class** is inherited by subclasses (`Child.parentStatic()` works). A static method of an **interface** is not. Always call it through the interface name."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Static can't hide a default",
+              "text": "An interface can't declare a `static` method with the same signature as a `default` (or abstract) method it inherits. That's a compile error, not hiding."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l09-e06",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "interface Util {\n    static String id() { return \"u\"; }\n    default String tag() { return \"t\"; }\n}\nclass Impl implements Util {\n    void test() {\n        String a = tag();\n        String b = Util.id();\n        String c = id();\n    }\n}",
+          "answer": 9,
+          "explanation": "The default `tag()` is inherited, so line 7 is fine. The static `id()` is **not** inherited by Impl, so the unqualified call on line 9 fails. It must be `Util.id()`, as on line 8.",
+          "objective": "3.6",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l09-e07",
+          "kind": "trueFalse",
+          "prompt": "A field declared in an interface can be reassigned by an implementing class.",
+          "answer": false,
+          "explanation": "Interface fields are implicitly `public static final`: constants. Assigning to one anywhere is a compile error.",
+          "objective": "3.6",
+          "verify": {
+            "expect": "compileError",
+            "source": "interface U { int X = 1; }\nclass C implements U {\n    void x() { X = 2; }\n}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u04-l10",
+      "title": "Functional interfaces & lambdas",
+      "summary": "Single abstract method, @FunctionalInterface, lambda syntax.",
+      "minutes": 6,
+      "steps": [
+        {
+          "type": "page",
+          "title": "One abstract method",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A **functional interface** has exactly one abstract method (SAM: single abstract method). A lambda can only be assigned to a functional interface type."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`default`, `static` and `private` methods don't count.",
+                "Abstract methods matching a public `Object` method (`equals(Object)`, `hashCode()`, `toString()`) don't count.",
+                "Inherited abstract methods **do** count.",
+                "`@FunctionalInterface` is optional. It makes the compiler enforce the rule."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "@FunctionalInterface\ninterface Shout {\n    String loud(String s);   // the SAM\n    default Shout twice() {\n        return s -> loud(loud(s));\n    }\n    boolean equals(Object o);  // free\n}"
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l10-e01",
+          "kind": "multiChoice",
+          "prompt": "Which two interfaces are functional interfaces? Choose two.",
+          "options": [
+            "interface A { void run(); default void x() { } }",
+            "interface B { }",
+            "interface C { void a(); void b(); }",
+            "interface D { String toString(); int size(); }",
+            "interface E { boolean equals(Object o); }"
+          ],
+          "answers": [
+            0,
+            3
+          ],
+          "explanation": "A has one abstract method; the default doesn't count. D's `toString()` matches Object's public method, so only `size()` counts. B has none, C has two, and E's only method is an Object method, so it has zero abstract methods that count.",
+          "objective": "3.6",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "4",
+            "source": "interface A { void run(); default void x() { } }\ninterface D { String toString(); int size(); }\npublic class Main {\n    public static void main(String[] s) {\n        A a = () -> { };\n        D d = () -> 4;\n        a.run();\n        System.out.println(d.size());\n    }\n}"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l10-e02",
+          "kind": "tapLine",
+          "prompt": "Tap the line where javac reports the error.",
+          "code": "@FunctionalInterface\ninterface Op {\n    int apply(int a, int b);\n}\n@FunctionalInterface\ninterface Pair {\n    int left();\n    int right();\n}",
+          "answer": 5,
+          "explanation": "Pair has two abstract methods, so it's not a functional interface, and the `@FunctionalInterface` annotation on line 5 is rejected. Without the annotation, Pair would compile as a normal interface.",
+          "objective": "3.6",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Lambda basics",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Lambda",
+                "Meaning"
+              ],
+              "rows": [
+                [
+                  "`() -> 42`",
+                  "no parameters"
+                ],
+                [
+                  "`x -> x * 2`",
+                  "one parameter, parentheses optional"
+                ],
+                [
+                  "`(a, b) -> a + b`",
+                  "two parameters"
+                ],
+                [
+                  "`(int a, int b) -> a + b`",
+                  "explicit types: all or none"
+                ],
+                [
+                  "`x -> { return x * 2; }`",
+                  "block body needs `return` and `;`"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Common built-ins in `java.util.function`: `Supplier<T>` (`get`), `Consumer<T>` (`accept`), `Function<T,R>` (`apply`), `Predicate<T>` (`test`). Unit 7 covers them in depth."
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Like `lambda x: x * 2`, but you can't call a Java lambda directly as `f(3)`. You call the interface's method: `f.apply(3)`."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Lambdas and default methods together",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A lambda implements only the **abstract** method. Default methods of the interface stay available on the lambda object and can call that abstract method."
+            },
+            {
+              "type": "code",
+              "code": "interface Greeting {\n    String text();\n    default String loud() {\n        return text().toUpperCase();\n    }\n}\nGreeting g = () -> \"hi\";\nSystem.out.println(g.loud());  // HI",
+              "verify": {
+                "expect": "stdout",
+                "value": "HI"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Lambdas need a target type",
+              "text": "`var f = x -> x * 2;` does not compile: a lambda has no type of its own. It needs a functional interface on the left, or a method parameter of that type."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l10-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "interface Calc {\n    int op(int a, int b);\n    default int twice(int a, int b) {\n        return op(op(a, b), b);\n    }\n}\npublic class Main {\n    public static void main(String[] s) {\n        Calc add = (a, b) -> a + b;\n        Calc mul = (a, b) -> a * b;\n        System.out.println(add.twice(2, 3)\n            + \" \" + mul.twice(2, 3));\n    }\n}",
+          "options": [
+            "8 18",
+            "5 6",
+            "8 6",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`twice` applies `op` twice: `op(op(a, b), b)`. For add: (2+3)+3 = 8. For mul: (2*3)*3 = 18. The default method calls whichever lambda implements `op`.",
+          "objective": "3.6",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "8 18"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l10-e04",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code so it prints `true`.",
+          "code": "Function<String, Integer> len =\n    s ___ s.length();\nPredicate<Integer> big = n -> n > 3;\nSystem.out.println(\n    big.___(len.apply(\"lambda\")));",
+          "bank": [
+            "->",
+            "=>",
+            ":",
+            "test",
+            "apply",
+            "accept"
+          ],
+          "answers": [
+            "->",
+            "test"
+          ],
+          "explanation": "Java lambdas use `->` (`=>` is JavaScript/C#, `:` is Python). A Predicate's abstract method is `test`; `apply` belongs to Function and `accept` to Consumer.",
+          "objective": "3.6",
+          "verify": {
+            "expect": "stdout",
+            "value": "true"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l10-e05",
+          "kind": "singleChoice",
+          "prompt": "Which lambda compiles as a `BiFunction<Integer, Integer, Integer>`?",
+          "options": [
+            "(a, b) -> a + b",
+            "a, b -> a + b",
+            "(int a, b) -> a + b",
+            "(a, b) -> { a + b }"
+          ],
+          "answer": 0,
+          "explanation": "Two parameters need parentheses. You can't type only some parameters. A block body needs `return a + b;` with a semicolon. Only the first form is valid.",
+          "objective": "3.6",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "5",
+            "optionCheck": false,
+            "source": "import java.util.function.*;\npublic class Main {\n    public static void main(String[] s) {\n        BiFunction<Integer, Integer, Integer> f = (a, b) -> a + b;\n        System.out.println(f.apply(2, 3));\n    }\n}"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l10-e06",
+          "kind": "trueFalse",
+          "prompt": "An interface with one abstract method and three default methods is a functional interface.",
+          "answer": true,
+          "explanation": "Only abstract methods count toward the single-abstract-method rule. Default, static and private methods are free.",
+          "objective": "3.6"
+        }
+      ]
+    },
+    {
+      "id": "u04-l11",
+      "title": "Enums",
+      "summary": "values, valueOf, ordinal, constructors, bodies, switch.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Enum basics",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "enum Size { SMALL, MEDIUM, LARGE }\nSize s = Size.MEDIUM;\nSystem.out.println(s.name() + \" \"\n    + s.ordinal());\nSystem.out.println(Size.valueOf(\"LARGE\"));\nSystem.out.println(Size.values().length);",
+              "caption": "Prints MEDIUM 1, LARGE, 3.",
+              "verify": {
+                "expect": "stdout",
+                "value": "MEDIUM 1\nLARGE\n3"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`values()` returns all constants in declaration order.",
+                "`valueOf(\"X\")` is exact and case-sensitive. Unknown name: `IllegalArgumentException`.",
+                "`ordinal()` is the 0-based position. `name()` and `toString()` give the constant's name.",
+                "Each constant is a single object, so compare with `==`.",
+                "Enums can't extend a class (they already extend `java.lang.Enum`) but can implement interfaces. `new Size()` is illegal."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python's `Enum` members have `.name` and `.value`, and `Color[\"red\"]` raises KeyError. Java has `name()` and `ordinal()`, and `valueOf` throws IllegalArgumentException."
+            },
+            {
+              "type": "paragraph",
+              "text": "Every enum implicitly implements `Comparable`. `compareTo` is `final` and compares by **ordinal**; OpenJDK returns the ordinal difference."
+            },
+            {
+              "type": "code",
+              "code": "enum Level { LOW, MID, HIGH }\npublic class Main {\n    public static void main(String[] a) {\n        System.out.println(Level.HIGH.compareTo(Level.LOW));\n        System.out.println(Level.LOW.compareTo(Level.MID));\n    }\n}",
+              "verify": {
+                "expect": "stdout",
+                "value": "2\n-1"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Same enum type only",
+              "text": "`compareTo` takes the same enum type, so comparing a `Level` with a constant of another enum doesn't compile."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l11-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "enum Day { MON, TUE, WED }\nfor (Day d : Day.values())\n    System.out.print(d.ordinal() + d.name());",
+          "options": [
+            "0MON1TUE2WED",
+            "1MON2TUE3WED",
+            "MON0TUE1WED2",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`values()` returns the constants in declaration order. `ordinal()` starts at 0. `int + String` is string concatenation, so each iteration prints the number followed by the name.",
+          "objective": "3.7",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "0MON1TUE2WED"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l11-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "enum Color { RED, GREEN }\nColor c = Color.valueOf(\"red\");\nSystem.out.println(c);",
+          "options": [
+            "RED",
+            "red",
+            "null",
+            "An IllegalArgumentException is thrown"
+          ],
+          "answer": 3,
+          "explanation": "`valueOf` matches the constant name exactly, including case. There is no constant `red`, so it throws IllegalArgumentException. It never returns null.",
+          "objective": "3.7",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "IllegalArgumentException"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Fields, constructors and methods",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "enum Planet {\n    MERCURY(3.7), EARTH(9.8);  // ; !\n\n    private final double g;\n    Planet(double g) {         // private\n        this.g = g;\n    }\n    double weight(double kg) {\n        return kg * g;\n    }\n}"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Constants come first. A `;` ends the list when other members follow.",
+                "Enum constructors are implicitly `private`. Writing `public` or `protected` is a compile error.",
+                "Each constant's constructor runs exactly once, when the enum class is first used: all constants are created together."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l11-e03",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "enum Coin {\n    PENNY(1), NICKEL(5), DIME(10);\n    private final int cents;\n    public Coin(int c) { cents = c; }\n    int cents() { return cents; }\n}",
+          "answer": 4,
+          "explanation": "Enum constructors can't be `public` or `protected`; they are always private (you never call them with `new`). Removing `public` makes the code compile.",
+          "objective": "3.7",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l11-e04",
+          "kind": "fillBlanks",
+          "prompt": "Complete the enum.",
+          "code": "enum Level {\n    LOW(1), HIGH(9)___\n    private final int v;\n    ___(int v) { this.v = v; }\n}",
+          "bank": [
+            ";",
+            ",",
+            "Level",
+            "public Level",
+            "void Level",
+            "new Level"
+          ],
+          "answers": [
+            ";",
+            "Level"
+          ],
+          "explanation": "A semicolon must end the constant list before fields or methods. The constructor is named after the enum and takes no `public` (illegal for enums). `void Level` would declare a method, leaving no constructor that accepts an int.",
+          "objective": "3.7",
+          "verify": {
+            "expect": "stdout",
+            "value": "9",
+            "source": "enum Level {\n    LOW(1), HIGH(9);\n    private final int v;\n    Level(int v) { this.v = v; }\n    public static void main(String[] a) {\n        System.out.println(HIGH.v);\n    }\n}"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Constant-specific bodies",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "enum Op {\n    PLUS {\n        int apply(int a, int b) {\n            return a + b;\n        }\n    },\n    TIMES {\n        int apply(int a, int b) {\n            return a * b;\n        }\n    };\n    abstract int apply(int a, int b);\n}"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "A constant can have its own body `{ ... }` that overrides methods.",
+                "If the enum declares an `abstract` method, **every** constant must implement it.",
+                "Otherwise constants override a normal method only when they want to."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "A constant with a body is really an instance of an **anonymous subclass** of the enum. So its `getClass()` is not the enum class, but `getDeclaringClass()` is."
+            },
+            {
+              "type": "code",
+              "code": "enum Coin {\n    PENNY,\n    DIME { @Override public String toString() { return \"dime\"; } };\n}\npublic class Main {\n    public static void main(String[] a) {\n        System.out.println(Coin.PENNY.getClass() == Coin.class);\n        System.out.println(Coin.DIME.getClass() == Coin.class);\n        System.out.println(Coin.DIME.getDeclaringClass() == Coin.class);\n    }\n}",
+              "verify": {
+                "expect": "stdout",
+                "value": "true\nfalse\ntrue"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "private isn't inherited",
+              "text": "The body is a subclass, so `private` members of the enum aren't inherited there. Calling a private enum method from a constant body doesn't compile."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l11-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "enum Light {\n    RED {\n        String next() { return \"GO\"; }\n    },\n    GREEN,\n    YELLOW {\n        String next() { return \"STOP\"; }\n    };\n    String next() { return \"WAIT\"; }\n}\npublic class Main {\n    public static void main(String[] a) {\n        for (Light l : Light.values())\n            System.out.print(l.next() + \" \");\n    }\n}",
+          "options": [
+            "GO WAIT STOP",
+            "WAIT WAIT WAIT",
+            "GO GREEN STOP",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "RED and YELLOW have bodies that override `next()`. GREEN has no body, so it uses the enum's own `next()`, returning \"WAIT\". `values()` iterates in declaration order.",
+          "objective": "3.7",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "GO WAIT STOP "
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Enums in switch, and EnumMap",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "enum Size { S, M, L }\n\nstatic int price(Size s) {\n    return switch (s) {\n        case S -> 5;\n        case M -> 7;\n        case L -> 9;\n    };  // all constants: no default\n}"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Case labels normally use the bare constant name: `case S`, not `case Size.S`.",
+                "A switch **expression** that covers every constant is exhaustive. Missing one without `default`: compile error.",
+                "An old-style switch **statement** on an enum doesn't have to cover every constant.",
+                "`EnumMap<Size, Integer>` is a fast Map keyed by an enum. It iterates in **ordinal order**, not insertion order."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l11-e06",
+          "kind": "multiChoice",
+          "prompt": "Which two statements about enums are true? Choose two.",
+          "options": [
+            "An enum constructor can't be declared public.",
+            "Enum constants can be safely compared with ==.",
+            "An enum can extend another class.",
+            "`valueOf` returns null for an unknown name.",
+            "`ordinal()` of the first constant is 1."
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "Enum constructors are always private, and each constant is a singleton, so `==` is correct. Enums implicitly extend `java.lang.Enum`, so they can't extend anything else. `valueOf` throws IllegalArgumentException, and ordinals start at 0.",
+          "objective": "3.7",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l11-e07",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "enum Size { L, S, M }\nMap<Size, Integer> m =\n    new EnumMap<>(Size.class);\nm.put(Size.M, 2);\nm.put(Size.L, 3);\nm.put(Size.S, 1);\nSystem.out.println(m);",
+          "options": [
+            "{L=3, S=1, M=2}",
+            "{M=2, L=3, S=1}",
+            "{S=1, M=2, L=3}",
+            "{L=3, M=2, S=1}"
+          ],
+          "answer": 0,
+          "explanation": "EnumMap keeps its keys in the enum's **declaration** (ordinal) order: L, S, M. The order of `put` calls and the alphabet don't matter.",
+          "objective": "3.7",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "{L=3, S=1, M=2}"
+          },
+          "codeOptions": true
+        }
+      ]
+    },
+    {
+      "id": "u04-l12",
+      "title": "Nested classes",
+      "summary": "Static nested, inner, local and anonymous classes.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Four kinds of nested classes",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Kind",
+                "Declared",
+                "Tied to an outer object?"
+              ],
+              "rows": [
+                [
+                  "static nested",
+                  "`static class N` inside a class",
+                  "No"
+                ],
+                [
+                  "inner (member)",
+                  "`class I` inside a class",
+                  "Yes"
+                ],
+                [
+                  "local",
+                  "a class inside a method body",
+                  "Only in instance methods"
+                ],
+                [
+                  "anonymous",
+                  "`new Type() { ... }` expression",
+                  "Only in instance methods"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Nested classes can access the outer class's **private** members, and the outer class can access theirs."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Static nested vs inner",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "class Outer {\n    private int x = 10;\n    static class Nested {\n        int get() { return 1; }  // no x\n    }\n    class Inner {\n        int get() { return x; }  // sees x\n    }\n}\n\nvar n = new Outer.Nested();\nOuter o = new Outer();\nOuter.Inner i = o.new Inner();"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "A static nested class is like a top-level class that lives inside another. It can't use the outer **instance** fields directly.",
+                "Every inner object belongs to an outer object. Create it with `outer.new Inner()`, or just `new Inner()` inside an instance method of Outer.",
+                "Inside Inner, `Outer.this.x` reaches the outer object's field when a name is shadowed.",
+                "Since Java 16, inner classes may also declare static members."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l12-e01",
+          "kind": "fillBlanks",
+          "prompt": "Create one Inner and one Nested object.",
+          "code": "Outer out = new Outer();\nOuter.Inner in = out.___ Inner();\nOuter.Nested n = ___ Outer.Nested();",
+          "bank": [
+            "new",
+            "new",
+            "this",
+            "Outer",
+            "super",
+            "static"
+          ],
+          "answers": [
+            "new",
+            "new"
+          ],
+          "explanation": "An inner object needs an outer instance, so the syntax is `out.new Inner()`. A static nested class needs no outer object: `new Outer.Nested()`.",
+          "objective": "3.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "in nested",
+            "source": "class Outer {\n    class Inner { public String toString() { return \"in\"; } }\n    static class Nested { public String toString() { return \"nested\"; } }\n}\npublic class Main {\n    public static void main(String[] a) {\n        Outer out = new Outer();\n        Outer.Inner in = out.new Inner();\n        Outer.Nested n = new Outer.Nested();\n        System.out.println(in + \" \" + n);\n    }\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l12-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "public class Outer {\n    int x = 1;\n    class Inner {\n        int x = 2;\n        void show(int x) {\n            System.out.println(x + \" \"\n                + this.x + \" \"\n                + Outer.this.x);\n        }\n    }\n    public static void main(String[] a) {\n        new Outer().new Inner().show(3);\n    }\n}",
+          "options": [
+            "3 2 1",
+            "3 3 3",
+            "1 2 3",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "Plain `x` is the closest declaration: the parameter (3). `this.x` is the Inner object's field (2). `Outer.this.x` is the field of the enclosing Outer object (1).",
+          "objective": "3.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "3 2 1"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l12-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "public class Shop {\n    class Item { }\n    static class Receipt { }\n    public static void main(String[] a) {\n        Receipt r = new Receipt();\n        Item i = new Item();\n    }\n}",
+          "options": [
+            "It compiles.",
+            "Compilation fails on line 5 only.",
+            "Compilation fails on line 6 only.",
+            "Compilation fails on lines 5 and 6."
+          ],
+          "answer": 2,
+          "explanation": "`main` is static, so there is no Shop object. A static nested class (Receipt) needs no outer instance, so line 5 is fine. An inner class (Item) does, so `new Item()` on line 6 fails. `new Shop().new Item()` would work.",
+          "objective": "3.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 6
+          }
+        },
+        {
+          "type": "page",
+          "title": "Local and anonymous classes",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "int base = 10;  // effectively final\nclass Adder {   // local class\n    int add(int n) { return base + n; }\n}\nRunnable r = new Runnable() {  // anonymous\n    public void run() {\n        System.out.println(base);\n    }\n};"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Local and anonymous classes (and lambdas) may use a local variable only if it is **final or effectively final**: never reassigned.",
+                "An anonymous class extends one class **or** implements one interface. It has no name and can't declare a constructor.",
+                "Local classes take no access modifier: `public class` inside a method fails."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Where the error appears",
+              "text": "If a captured variable is changed later, javac reports the error at the line that **uses** it inside the class or lambda, not at the line that changes it."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l12-e04",
+          "kind": "tapLine",
+          "prompt": "This code does not compile. Tap the line javac reports the error on.",
+          "code": "public class Main {\n    public static void main(String[] a) {\n        int count = 0;\n        Runnable r = new Runnable() {\n            public void run() {\n                System.out.print(count);\n            }\n        };\n        count++;\n        r.run();\n    }\n}",
+          "answer": 6,
+          "explanation": "`count++` on line 9 means `count` is not effectively final. The rule is checked where the variable is captured, so javac reports \"local variables referenced from an inner class must be final or effectively final\" on line 6.",
+          "objective": "3.1",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l12-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "abstract class Greeter {\n    abstract String greet();\n    String twice() {\n        return greet() + greet();\n    }\n}\npublic class Main {\n    public static void main(String[] a) {\n        String w = \"hi\";\n        Greeter g = new Greeter() {\n            String greet() { return w + \"!\"; }\n        };\n        System.out.println(g.twice());\n    }\n}",
+          "options": [
+            "hi!hi!",
+            "hi!",
+            "hihi!!",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "The anonymous class extends the abstract Greeter and implements `greet()`. It captures `w`, which is effectively final. `twice()` calls `greet()` twice.",
+          "objective": "3.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "hi!hi!"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l12-e06",
+          "kind": "multiChoice",
+          "prompt": "Which two statements are true? Choose two.",
+          "options": [
+            "Creating an inner class object requires an instance of the outer class.",
+            "An anonymous class can implement an interface.",
+            "A static nested class can directly read the outer class's instance fields.",
+            "An anonymous class can declare a constructor.",
+            "A local class can reassign a local variable it captured."
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "Inner objects always belong to an outer object, and anonymous classes commonly implement an interface (or extend a class). Static nested classes have no outer instance. Anonymous classes have no name, so no constructor. Captured locals must be effectively final.",
+          "objective": "3.1",
+          "examStyle": true
+        }
+      ]
+    },
+    {
+      "id": "u04-l13",
+      "title": "Unit 4 checkpoint",
+      "summary": "12 exam-style questions on inheritance, patterns, interfaces, enums.",
+      "minutes": 12,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Checkpoint",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Twelve exam-style questions covering the whole unit: constructor chaining, overriding, casting, patterns, sealed types, interfaces, enums and nested classes."
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Exam technique",
+              "text": "For every \"What is the result?\" question, check compilation first: access, modifiers, dominance, exhaustiveness, effectively final. Only then trace the output."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l13-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class A {\n    A() { print(); }\n    void print() {\n        System.out.print(\"A\");\n    }\n}\nclass B extends A {\n    int x = 5;\n    void print() {\n        System.out.print(x);\n    }\n}\npublic class Main {\n    public static void main(String[] a) {\n        new B().print();\n    }\n}",
+          "options": [
+            "05",
+            "A5",
+            "55",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`new B()` runs A's constructor first, which calls `print()`. That's overridden, so B's version runs, but B's field initializer `x = 5` hasn't run yet: it prints 0. Then the explicit `print()` call prints 5.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "05"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l13-e02",
+          "kind": "multiChoice",
+          "prompt": "Given `class P { void run() throws IOException { } }`, which two methods compile in `class C extends P`? Choose two.",
+          "options": [
+            "public void run() { }",
+            "void run() throws Exception { }",
+            "protected void run() throws FileNotFoundException { }",
+            "private void run() { }",
+            "int run() { return 1; }"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "Wider access is fine, and an override may throw fewer or narrower checked exceptions. `Exception` is broader than `IOException`, `private` is weaker than package access, and changing the return type from `void` to `int` is incompatible.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ok",
+            "source": "import java.io.*;\nclass P { void run() throws IOException { } }\nclass C1 extends P { public void run() { } }\nclass C2 extends P { protected void run() throws FileNotFoundException { } }\npublic class Main {\n    public static void main(String[] a) { System.out.println(\"ok\"); }\n}"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l13-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "sealed interface Shape\n        permits Sq, Rect { }\nrecord Sq(int s) implements Shape { }\nrecord Rect(int w, int h)\n        implements Shape { }\npublic class Main {\n    static int area(Shape sh) {\n        return switch (sh) {\n            case Sq(int s) -> s * s;\n            case Rect(int w, int h)\n                when w == h -> -1;\n            case Rect(int w, int h) -> w * h;\n        };\n    }\n    public static void main(String[] a) {\n        System.out.println(area(new Sq(3))\n            + \" \" + area(new Rect(2, 2))\n            + \" \" + area(new Rect(2, 3)));\n    }\n}",
+          "options": [
+            "9 -1 6",
+            "9 4 6",
+            "9 -1 -1",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "Sq(3) deconstructs to s = 3: 9. Rect(2, 2) matches the guarded case first because w == h: -1. Rect(2, 3) fails the guard and falls to the unguarded Rect case: 6. Both permitted types are covered, so no default is needed.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "9 -1 6"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l13-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "class P {\n    static String go() { return \"P\"; }\n}\nclass C extends P {\n    String go() { return \"C\"; }\n}\npublic class Main {\n    public static void main(String[] a) {\n        System.out.println(new C().go());\n    }\n}",
+          "options": [
+            "P",
+            "C",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 2,
+          "explanation": "A static method can't be overridden by an instance method (or the other way round). Declaring an instance `go()` in C with the same signature as P's static `go()` is a compile error on line 5.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 5
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l13-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Object[] items = { 3, \"four\", 5L, null };\nint total = 0;\nfor (Object o : items) {\n    if (o instanceof Integer i) {\n        total += i;\n    } else if (o instanceof String s) {\n        total += s.length();\n    } else if (!(o instanceof Long l)) {\n        total += 100;\n    } else {\n        total += l;\n    }\n}\nSystem.out.println(total);",
+          "options": [
+            "112",
+            "12",
+            "107",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "3 is an Integer: +3. \"four\" is a String: +4. 5L is a Long, so the negated test is false and the `else` branch runs with `l` in scope: +5. null matches nothing, so `!(null instanceof Long l)` is true: +100. Total 112.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "112"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l13-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "enum Tier {\n    GOLD, SILVER;\n    Tier() {\n        System.out.print(name() + \" \");\n    }\n}\npublic class Main {\n    public static void main(String[] a) {\n        System.out.print(\"start \");\n        Tier t = Tier.SILVER;\n        System.out.print(t.ordinal());\n    }\n}",
+          "options": [
+            "start GOLD SILVER 1",
+            "start SILVER 1",
+            "GOLD SILVER start 1",
+            "start GOLD SILVER 2"
+          ],
+          "answer": 0,
+          "explanation": "The enum is initialized on first use, after \"start\" is printed. At that moment **all** constants are constructed in declaration order, so both GOLD and SILVER print, even though only SILVER is used. SILVER's ordinal is 1.",
+          "objective": "3.7",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "start GOLD SILVER 1"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l13-e07",
+          "kind": "multiChoice",
+          "prompt": "Which two statements about interfaces are true? Choose two.",
+          "options": [
+            "A static interface method is not inherited by implementing classes.",
+            "An interface field is implicitly public, static and final.",
+            "An interface can declare a protected abstract method.",
+            "A class inheriting two conflicting default methods compiles as long as it never calls them.",
+            "An interface can declare a constructor."
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "Static interface methods must be called through the interface name, and interface fields are constants. `protected` isn't allowed in interfaces. A default-method conflict must be resolved by overriding, whether or not it's called. Interfaces have no constructors.",
+          "objective": "3.6",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l13-e08",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "class Fruit { }\nclass Apple extends Fruit { }\nclass Pear extends Fruit { }\npublic class Main {\n    public static void main(String[] s) {\n        Fruit f = new Apple();\n        Object o = f;\n        Apple a = (Apple) o;\n        Pear p = (Pear) f;\n        System.out.println(\"ok\");\n    }\n}",
+          "options": [
+            "ok",
+            "Compilation fails",
+            "A ClassCastException is thrown",
+            "null"
+          ],
+          "answer": 2,
+          "explanation": "All casts compile: Apple and Pear are both Fruits, and Object can be cast to anything. `(Apple) o` succeeds at runtime because the object is an Apple. `(Pear) f` fails at runtime: the object is an Apple, not a Pear.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "ClassCastException",
+            "stdout": ""
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l13-e09",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "public class Counter {\n    private int n;\n    class Step {\n        void go() { n += 2; }\n    }\n    public static void main(String[] a) {\n        Counter c = new Counter();\n        Counter.Step s1 = c.new Step();\n        Counter.Step s2 = c.new Step();\n        s1.go();\n        s2.go();\n        Counter d = new Counter();\n        d.new Step().go();\n        System.out.println(c.n + \" \" + d.n);\n    }\n}",
+          "options": [
+            "4 2",
+            "2 2",
+            "6 0",
+            "4 0"
+          ],
+          "answer": 0,
+          "explanation": "Each Step belongs to the Counter that created it. s1 and s2 both belong to `c`, so `c.n` becomes 2 + 2 = 4. The third Step belongs to `d`, so `d.n` is 2. Inner classes may access the private field `n`.",
+          "objective": "3.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "4 2"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l13-e10",
+          "kind": "singleChoice",
+          "prompt": "What is the result of compiling and calling `f(\"\")`?",
+          "code": "public class Main {\n    static String f(Object o) {\n        return switch (o) {\n            case String s -> \"S\";\n            case String s when s.isEmpty()\n                -> \"E\";\n            default -> \"D\";\n        };\n    }\n}",
+          "options": [
+            "S",
+            "E",
+            "D",
+            "Compilation fails"
+          ],
+          "answer": 3,
+          "explanation": "The unguarded `case String s` matches every String, so the guarded `case String s when ...` after it could never run. It is dominated, which is a compile error. Swapping the two cases fixes it.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 5
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l13-e11",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "record P(int x) { }\nclass Q {\n    int x;\n    Q(int x) { this.x = x; }\n}\npublic class Main {\n    public static void main(String[] a) {\n        Set<Object> set = new HashSet<>();\n        set.add(new P(1));\n        set.add(new P(1));\n        set.add(new Q(1));\n        set.add(new Q(1));\n        System.out.println(\n            new P(1).equals(new P(1))\n            + \" \" + set.size());\n    }\n}",
+          "options": [
+            "true 3",
+            "true 4",
+            "false 4",
+            "false 3"
+          ],
+          "answer": 0,
+          "explanation": "Records generate equals and hashCode from their components, so the two `P(1)` objects are equal and the set keeps one. Q inherits identity-based equals, so both Q objects are stored. 1 + 2 = 3 elements.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "true 3"
+          },
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u04-l13-e12",
+          "kind": "multiChoice",
+          "prompt": "Given `sealed class Vehicle permits Car, Truck { }`, which two declarations compile (in the same file)? Choose two.",
+          "options": [
+            "final class Car extends Vehicle { }",
+            "class Truck extends Vehicle { }",
+            "non-sealed class Truck extends Vehicle { }",
+            "final class Bus extends Vehicle { }",
+            "abstract class Truck extends Vehicle { }"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "Permitted subclasses must be final, sealed, or non-sealed. A plain or merely abstract Truck has none of these. Bus is not in the permits list, so it can't extend Vehicle at all.",
+          "objective": "3.5",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ok",
+            "source": "sealed class Vehicle permits Car, Truck { }\nfinal class Car extends Vehicle { }\nnon-sealed class Truck extends Vehicle { }\npublic class Main {\n    public static void main(String[] a) { System.out.println(\"ok\"); }\n}"
+          },
+          "codeOptions": true
+        }
+      ]
+    }
+  ]
+}

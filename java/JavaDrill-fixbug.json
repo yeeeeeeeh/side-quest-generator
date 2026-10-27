@@ -1,0 +1,2488 @@
+{
+  "items": [
+    {
+      "id": "fb-u01-01",
+      "unit": "u01",
+      "objective": "1.1",
+      "title": "Integer division",
+      "goal": "Print the exact average of `total` and `count`.",
+      "output": "3.5",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        int total = 7;\n        int count = 2;\n        double avg = total / count;\n        System.out.println(avg);\n    }\n}",
+      "bugLine": 5,
+      "options": [
+        "double avg = (double) total / count;",
+        "double avg = (double) (total / count);",
+        "double avg = total / count * 1.0;",
+        "int avg = total / count;"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "output",
+        "value": "3.0"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "output",
+          "value": "3.0"
+        },
+        {
+          "kind": "output",
+          "value": "3.0"
+        },
+        {
+          "kind": "output",
+          "value": "3"
+        }
+      ],
+      "explanation": "`total / count` is `int / int`, so Java divides first (giving `3`) and only then widens to `3.0`. Casting one operand *before* the division makes it a `double` division. Casting the whole `(total / count)` is too late: the fraction is already gone."
+    },
+    {
+      "id": "fb-u01-02",
+      "unit": "u01",
+      "objective": "1.1",
+      "title": "byte arithmetic",
+      "goal": "Add 5 to the `byte` and print it.",
+      "output": "15",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        byte b = 10;\n        b = b + 5;\n        System.out.println(b);\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "b = b++ + 5;",
+        "b += 5;",
+        "b = (byte) b + 5;",
+        "b = b + (byte) 5;"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "Arithmetic on `byte`, `short` and `char` is done in `int`, so `b + 5` is an `int` and can't be assigned to a `byte` without a cast. Compound assignment (`+=`) includes an implicit cast back to `byte`. `(byte) b + 5` casts only `b`; the sum is still `int`."
+    },
+    {
+      "id": "fb-u01-03",
+      "unit": "u01",
+      "objective": "1.2",
+      "title": "Strings are immutable",
+      "goal": "Print the word in upper case.",
+      "output": "JAVA",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        String s = \"java\";\n        s.toUpperCase();\n        System.out.println(s);\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "s.concat(\"\").toUpperCase();",
+        "String t = s.toUpperCase();",
+        "s = s.toUpperCase();",
+        "s.toUpperCase(Locale.ROOT);"
+      ],
+      "answer": 2,
+      "symptom": {
+        "kind": "output",
+        "value": "java"
+      },
+      "outcomes": [
+        {
+          "kind": "output",
+          "value": "java"
+        },
+        {
+          "kind": "output",
+          "value": "java"
+        },
+        null,
+        {
+          "kind": "output",
+          "value": "java"
+        }
+      ],
+      "explanation": "`String` is immutable: `toUpperCase()` returns a **new** string and leaves `s` alone. The result must be assigned back to `s` (or printed directly)."
+    },
+    {
+      "id": "fb-u01-04",
+      "unit": "u01",
+      "objective": "1.2",
+      "title": "StringBuilder index",
+      "goal": "Remove the trailing `s`, then print the text reversed.",
+      "output": "racecar",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        StringBuilder sb = new StringBuilder(\"racecars\");\n        sb.deleteCharAt(sb.length());\n        System.out.println(sb.reverse());\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "sb.deleteCharAt(0);",
+        "sb.setLength(sb.length());",
+        "sb.delete(sb.length() - 1, 0);",
+        "sb.deleteCharAt(sb.length() - 1);"
+      ],
+      "answer": 3,
+      "symptom": {
+        "kind": "exception",
+        "value": "StringIndexOutOfBoundsException"
+      },
+      "outcomes": [
+        {
+          "kind": "output",
+          "value": "sraceca"
+        },
+        {
+          "kind": "output",
+          "value": "sracecar"
+        },
+        {
+          "kind": "exception",
+          "value": "StringIndexOutOfBoundsException"
+        },
+        null
+      ],
+      "explanation": "Indexes run from `0` to `length() - 1`, so `deleteCharAt(sb.length())` throws `StringIndexOutOfBoundsException`. `delete(start, end)` also throws when `start > end`."
+    },
+    {
+      "id": "fb-u01-05",
+      "unit": "u01",
+      "objective": "1.2",
+      "title": "== on strings",
+      "goal": "Print `same` because both strings hold the same text.",
+      "output": "same",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        String a = \"hi\";\n        String b = new String(\"hi\");\n        if (a == b) {\n            System.out.println(\"same\");\n        } else {\n            System.out.println(\"different\");\n        }\n    }\n}",
+      "bugLine": 5,
+      "options": [
+        "if (a.equals(b)) {",
+        "if (a.compareTo(b) == 1) {",
+        "if (a.hashCode() != b.hashCode()) {",
+        "if (a == b.toString()) {"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "output",
+        "value": "different"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "output",
+          "value": "different"
+        },
+        {
+          "kind": "output",
+          "value": "different"
+        },
+        {
+          "kind": "output",
+          "value": "different"
+        }
+      ],
+      "explanation": "`==` compares references. `new String(\"hi\")` is a different object from the pooled literal, so `a == b` is `false`. `equals` compares the characters. `b.toString()` returns `b` itself, so it doesn't help, and `compareTo` returns `0` (not `1`) for equal strings."
+    },
+    {
+      "id": "fb-u01-06",
+      "unit": "u01",
+      "objective": "1.1",
+      "title": "Math.round returns long",
+      "goal": "Round the price to the nearest whole number and print it.",
+      "output": "3",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        double price = 2.6;\n        int rounded = Math.round(price);\n        System.out.println(rounded);\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "int rounded = (int) Math.round(price);",
+        "int rounded = (int) Math.floor(price);",
+        "int rounded = Math.round((float) price) + 0L;",
+        "int rounded = (int) price;"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "output",
+          "value": "2"
+        },
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "output",
+          "value": "2"
+        }
+      ],
+      "explanation": "`Math.round(double)` returns a `long`, which doesn't fit in an `int` without a cast. (`Math.round(float)` returns `int`.) Casting `price` itself truncates to `2`, and so does `floor`."
+    },
+    {
+      "id": "fb-u01-07",
+      "unit": "u01",
+      "objective": "1.2",
+      "title": "Text block opening",
+      "goal": "Print the JSON text exactly as shown.",
+      "output": "{\"id\": 1}",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        String json = \"\"\"{\"id\": 1}\"\"\";\n        System.out.println(json);\n    }\n}",
+      "bugLine": 3,
+      "options": [
+        "String json = \"{\\\"id\\\": 1}\";",
+        "String json = '{\"id\": 1}';",
+        "String json = \"\\{\"id\": 1\\}\";",
+        "String json = \"{\"id\": 1}\";"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "A text block's opening `\"\"\"` must be followed by a line break, so a one-line text block doesn't compile. A normal string literal works if the inner quotes are escaped as `\\\"`. Single quotes are for one `char`, and `\\{` is not a valid escape in Java 21."
+    },
+    {
+      "id": "fb-u02-01",
+      "unit": "u02",
+      "objective": "2.1",
+      "title": "Missing break",
+      "goal": "Print `weekend` for day 6.",
+      "output": "weekend",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        int day = 6;\n        String kind;\n        switch (day) {\n            case 6, 7: kind = \"weekend\";\n            default: kind = \"weekday\";\n        }\n        System.out.println(kind);\n    }\n}",
+      "bugLine": 6,
+      "options": [
+        "case 6: case 7: kind = \"weekend\";",
+        "case 6, 7: kind = \"weekend\"; break;",
+        "case 6, 7 -> kind = \"weekend\";",
+        "case 6, 7: { kind = \"weekend\"; }"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "output",
+        "value": "weekday"
+      },
+      "outcomes": [
+        {
+          "kind": "output",
+          "value": "weekday"
+        },
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "output",
+          "value": "weekday"
+        }
+      ],
+      "explanation": "Colon-style `case` labels fall through: without `break`, the `default` line runs next and overwrites `kind`. A block `{ }` doesn't stop fall-through, and one switch can't mix `:` and `->` labels."
+    },
+    {
+      "id": "fb-u02-02",
+      "unit": "u02",
+      "objective": "2.1",
+      "title": "yield in a block",
+      "goal": "Print the price for size `M` (base 5 plus 2).",
+      "output": "7",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        String size = \"M\";\n        int price = switch (size) {\n            case \"S\" -> 5;\n            case \"M\" -> {\n                int base = 5;\n                base + 2;\n            }\n            default -> 9;\n        };\n        System.out.println(price);\n    }\n}",
+      "bugLine": 8,
+      "options": [
+        "-> base + 2;",
+        "break base + 2;",
+        "yield base + 2;",
+        "return base + 2;"
+      ],
+      "answer": 2,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        },
+        null,
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "A block on the right of `->` in a switch **expression** must produce its value with `yield`. `return` would try to leave `main`, which isn't allowed from inside a switch expression, and `break value` was preview syntax that no longer exists."
+    },
+    {
+      "id": "fb-u02-03",
+      "unit": "u02",
+      "objective": "2.1",
+      "title": "Exhaustive switch",
+      "goal": "Print `many` for code 3.",
+      "output": "many",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        int code = 3;\n        String label = switch (code) {\n            case 1 -> \"one\";\n            case 2 -> \"two\";\n            case 3, 4 -> \"many\";\n        };\n        System.out.println(label);\n    }\n}",
+      "bugLine": 7,
+      "options": [
+        "default -> \"many\";",
+        "case 3, 4, 5 -> \"many\";",
+        "case 3, 4 -> \"many\"; break;",
+        "else -> \"many\";"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "A switch **expression** must cover every possible value. For an `int` that means a `default` branch; listing more constants never makes it exhaustive."
+    },
+    {
+      "id": "fb-u02-04",
+      "unit": "u02",
+      "objective": "2.1",
+      "title": "Labeled break",
+      "goal": "Stop at the first pair whose product is 6 and print it as `ij`.",
+      "output": "23",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        int found = -1;\n        outer:\n        for (int i = 0; i < 5; i++) {\n            for (int j = 0; j < 5; j++) {\n                if (i * j == 6) {\n                    found = i * 10 + j;\n                    break;\n                }\n            }\n        }\n        System.out.println(found);\n    }\n}",
+      "bugLine": 9,
+      "options": [
+        "break found;",
+        "break outer;",
+        "continue;",
+        "continue outer;"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "output",
+        "value": "32"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        null,
+        {
+          "kind": "output",
+          "value": "32"
+        },
+        {
+          "kind": "output",
+          "value": "32"
+        }
+      ],
+      "explanation": "A plain `break` only leaves the inner loop, so the outer loop keeps going and later finds `3 * 2` (32). `break outer;` leaves both loops. `continue outer;` skips to the next `i`, which still reaches 32, and a label must name a statement, not a variable."
+    },
+    {
+      "id": "fb-u02-05",
+      "unit": "u02",
+      "objective": "2.1",
+      "title": "Off by one",
+      "goal": "Print the sum of the array.",
+      "output": "27",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        int[] nums = {4, 8, 15};\n        int sum = 0;\n        for (int i = 0; i <= nums.length; i++) {\n            sum += nums[i];\n        }\n        System.out.println(sum);\n    }\n}",
+      "bugLine": 5,
+      "options": [
+        "for (int i = 0; i < nums.length; i++) {",
+        "for (int i = 0; i <= nums.length(); i++) {",
+        "for (int i = 0; i < nums.length - 1; i++) {",
+        "for (int i = 1; i <= nums.length; i++) {"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "exception",
+        "value": "ArrayIndexOutOfBoundsException"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "output",
+          "value": "12"
+        },
+        {
+          "kind": "exception",
+          "value": "ArrayIndexOutOfBoundsException"
+        }
+      ],
+      "explanation": "Valid indexes are `0` to `length - 1`, so `i <= nums.length` reads one past the end and throws `ArrayIndexOutOfBoundsException`. Arrays have a `length` **field**; `length()` is for `String`."
+    },
+    {
+      "id": "fb-u02-06",
+      "unit": "u02",
+      "objective": "2.1",
+      "title": "switch on null",
+      "goal": "Print `unknown` when `cmd` is null.",
+      "output": "unknown",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        String cmd = null;\n        String result = switch (cmd) {\n            case \"start\" -> \"go\";\n            default -> \"unknown\";\n        };\n        System.out.println(result);\n    }\n}",
+      "bugLine": 6,
+      "options": [
+        "case null, default -> \"unknown\";",
+        "case \"\" -> \"unknown\";",
+        "case default -> \"unknown\";",
+        "default -> cmd == null ? \"unknown\" : \"other\";"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "exception",
+        "value": "NullPointerException"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "exception",
+          "value": "NullPointerException"
+        }
+      ],
+      "explanation": "A switch throws `NullPointerException` on a null selector unless it has a `case null` label; `default` does **not** match null. Java 21 lets you combine them as `case null, default ->`."
+    },
+    {
+      "id": "fb-u03-01",
+      "unit": "u03",
+      "objective": "3.4",
+      "title": "Shadowed field",
+      "goal": "Print the count passed to the constructor.",
+      "output": "5",
+      "code": "public class Main {\n    static class Counter {\n        private int count;\n        Counter(int count) {\n            count = count;\n        }\n        int get() { return count; }\n    }\n    public static void main(String[] args) {\n        System.out.println(new Counter(5).get());\n    }\n}",
+      "bugLine": 5,
+      "options": [
+        "this.count = count;",
+        "int count = count;",
+        "count = this.count;",
+        "Counter.count = count;"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "output",
+        "value": "0"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "output",
+          "value": "0"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "Inside the constructor the parameter `count` shadows the field, so `count = count` assigns the parameter to itself and the field stays `0`. `this.count` names the field. `Counter.count` would need a static field."
+    },
+    {
+      "id": "fb-u03-02",
+      "unit": "u03",
+      "objective": "3.2",
+      "title": "Static context",
+      "goal": "Count two hits from `main` and print the total.",
+      "output": "2",
+      "code": "public class Main {\n    int hits = 0;\n    public static void main(String[] args) {\n        hits++;\n        hits++;\n        System.out.println(hits);\n    }\n}",
+      "bugLine": 2,
+      "options": [
+        "static final int hits = 0;",
+        "final int hits = 0;",
+        "static int hits = 0;",
+        "private int hits = 0;"
+      ],
+      "answer": 2,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        },
+        null,
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "`main` is static, so it has no `this` and can't touch an instance field. Making `hits` static fixes it; `static final` compiles the declaration but then `hits++` can't change a constant."
+    },
+    {
+      "id": "fb-u03-03",
+      "unit": "u03",
+      "objective": "3.3",
+      "title": "Overload resolution",
+      "goal": "Make the call pick the `Integer` overload.",
+      "output": "Integer",
+      "code": "public class Main {\n    static String kind(long x) { return \"long\"; }\n    static String kind(Integer x) { return \"Integer\"; }\n    static String kind(int... x) { return \"varargs\"; }\n    public static void main(String[] args) {\n        byte b = 1;\n        System.out.println(kind(b));\n    }\n}",
+      "bugLine": 6,
+      "options": [
+        "Integer b = 1;",
+        "Byte b = 1;",
+        "short b = 1;",
+        "int b = 1;"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "output",
+        "value": "long"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "output",
+          "value": "long"
+        },
+        {
+          "kind": "output",
+          "value": "long"
+        },
+        {
+          "kind": "output",
+          "value": "long"
+        }
+      ],
+      "explanation": "Java tries overloads in phases: widening first, then boxing/unboxing, then varargs. A `byte`, `short` or `int` widens to `long` in phase 1. A `Byte` unboxes and widens to `long` too; it is not an `Integer`. Only an `Integer` argument matches `kind(Integer)` exactly."
+    },
+    {
+      "id": "fb-u03-04",
+      "unit": "u03",
+      "objective": "3.2",
+      "title": "Records can't extend",
+      "goal": "Print the square's area.",
+      "output": "9.0",
+      "code": "public class Main {\n    interface Shape { double area(); }\n    record Square(double side) extends Shape {\n        public double area() { return side * side; }\n    }\n    public static void main(String[] args) {\n        Shape s = new Square(3);\n        System.out.println(s.area());\n    }\n}",
+      "bugLine": 3,
+      "options": [
+        "record Square(double side) implements Shape {",
+        "record Square(double side) extends Object implements Shape {",
+        "class Square(double side) implements Shape {",
+        "final record Square(double side) extends Shape {"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "A record implicitly extends `java.lang.Record`, so it can't have an `extends` clause at all, not even `extends Object`. It can implement interfaces. Only records have a header like `(double side)`."
+    },
+    {
+      "id": "fb-u03-05",
+      "unit": "u03",
+      "objective": "3.2",
+      "title": "Canonical constructor",
+      "goal": "Validate the temperature and print the record.",
+      "output": "Temp[celsius=21.5]",
+      "code": "public class Main {\n    record Temp(double celsius) {\n        Temp(double celsius) {\n            if (celsius < -273.15) throw new IllegalArgumentException();\n        }\n    }\n    public static void main(String[] args) {\n        System.out.println(new Temp(21.5));\n    }\n}",
+      "bugLine": 3,
+      "options": [
+        "Temp {",
+        "Temp() {",
+        "public Temp(double celsius) {",
+        "static Temp(double celsius) {"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "A full canonical constructor must assign every field (`this.celsius = celsius;`), so this one doesn't compile. The **compact** form `Temp {` runs the check and assigns the fields automatically at the end. A `Temp()` constructor isn't canonical and would have to call `this(...)`."
+    },
+    {
+      "id": "fb-u03-06",
+      "unit": "u03",
+      "objective": "3.4",
+      "title": "var infers int",
+      "goal": "Add up the prices and print the total.",
+      "output": "2.5",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        var total = 0;\n        double[] prices = {1.25, 1.25};\n        for (double p : prices) {\n            total += p;\n        }\n        System.out.println(total);\n    }\n}",
+      "bugLine": 3,
+      "options": [
+        "var total = '0';",
+        "var total = null;",
+        "var total = 0L;",
+        "var total = 0.0;"
+      ],
+      "answer": 3,
+      "symptom": {
+        "kind": "output",
+        "value": "2"
+      },
+      "outcomes": [
+        {
+          "kind": "output",
+          "value": "2"
+        },
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "output",
+          "value": "2"
+        },
+        null
+      ],
+      "explanation": "`var` takes its type from the initializer: `0` makes `total` an `int`. `+=` silently casts each sum back to `int`, so the fractions vanish. `0L` makes it a `long` (same problem), `'0'` a `char`, and `var x = null;` doesn't compile because there's no type to infer."
+    },
+    {
+      "id": "fb-u03-07",
+      "unit": "u03",
+      "objective": "3.1",
+      "title": "Pass by value",
+      "goal": "Add one to the array's element inside `grow`.",
+      "output": "42",
+      "code": "public class Main {\n    static void grow(int[] arr) {\n        arr = new int[] {arr[0] + 1};\n    }\n    public static void main(String[] args) {\n        int[] a = {41};\n        grow(a);\n        System.out.println(a[0]);\n    }\n}",
+      "bugLine": 3,
+      "options": [
+        "int x = arr[0]; x++;",
+        "arr[0] = arr[0]++;",
+        "arr[0] = arr[0] + 1;",
+        "arr = new int[] {42};"
+      ],
+      "answer": 2,
+      "symptom": {
+        "kind": "output",
+        "value": "41"
+      },
+      "outcomes": [
+        {
+          "kind": "output",
+          "value": "41"
+        },
+        {
+          "kind": "output",
+          "value": "41"
+        },
+        null,
+        {
+          "kind": "output",
+          "value": "41"
+        }
+      ],
+      "explanation": "Java passes a **copy of the reference**. Reassigning `arr` points the local copy at a new array; the caller's array is untouched. Writing through the reference (`arr[0] = ...`) changes the shared object. `arr[0] = arr[0]++` stores the old value back, so it stays 41."
+    },
+    {
+      "id": "fb-u04-01",
+      "unit": "u04",
+      "objective": "3.5",
+      "title": "sealed permits",
+      "goal": "Print the area of a 2 by 2 square.",
+      "output": "4.0",
+      "code": "public class Main {\n    sealed interface Shape permits Circle {}\n    record Circle(double r) implements Shape {}\n    record Square(double s) implements Shape {}\n    static double area(Shape sh) {\n        return switch (sh) {\n            case Circle c -> Math.PI * c.r() * c.r();\n            case Square q -> q.s() * q.s();\n        };\n    }\n    public static void main(String[] args) {\n        System.out.println(area(new Square(2)));\n    }\n}",
+      "bugLine": 2,
+      "options": [
+        "sealed interface Shape permits Circle, Square {}",
+        "non-sealed interface Shape permits Circle {}",
+        "sealed interface Shape permits Square {}",
+        "interface Shape permits Circle, Square {}"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "`Square` implements `Shape` but isn't in the `permits` list, which is a compile error. `permits` is only allowed on a `sealed` type, and every direct subtype must be listed (or the clause omitted when they're all in the same file)."
+    },
+    {
+      "id": "fb-u04-02",
+      "unit": "u04",
+      "objective": "3.5",
+      "title": "Weaker access",
+      "goal": "Print the dog's sound through an `Animal` reference.",
+      "output": "Woof",
+      "code": "public class Main {\n    static class Animal {\n        public String sound() { return \"...\"; }\n    }\n    static class Dog extends Animal {\n        String sound() { return \"Woof\"; }\n    }\n    public static void main(String[] args) {\n        Animal a = new Dog();\n        System.out.println(a.sound());\n    }\n}",
+      "bugLine": 6,
+      "options": [
+        "public String sound() { return \"Woof\"; }",
+        "public Object sound() { return \"Woof\"; }",
+        "protected String sound() { return \"Woof\"; }",
+        "public static String sound() { return \"Woof\"; }"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "An override can't reduce visibility: `public` stays `public`. The return type may be the same or a subtype (covariant), never a supertype like `Object`, and a static method can't hide an instance method."
+    },
+    {
+      "id": "fb-u04-03",
+      "unit": "u04",
+      "objective": "3.5",
+      "title": "Pattern variable scope",
+      "goal": "Print the length of `o` when it's a non-empty string.",
+      "output": "5",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        Object o = \"hello\";\n        if (o instanceof String s || s.isEmpty()) {\n            System.out.println(s.length());\n        }\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "if (o instanceof String && !s.isEmpty()) {",
+        "if (o instanceof String s && !s.isEmpty()) {",
+        "if (o instanceof String s | !s.isEmpty()) {",
+        "if (!(o instanceof String s) || s.isEmpty()) {"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "A pattern variable is only in scope where the match is **definitely true**. After `||` the left side may have failed, so `s` isn't usable there. With `&&` it is, and also inside the body. The non-short-circuit `|` evaluates both sides, so `s` isn't in scope either."
+    },
+    {
+      "id": "fb-u04-04",
+      "unit": "u04",
+      "objective": "3.6",
+      "title": "Default method conflict",
+      "goal": "The duck should use `Walker`'s default `move`.",
+      "output": "walk",
+      "code": "public class Main {\n    interface Walker { default String move() { return \"walk\"; } }\n    interface Swimmer { default String move() { return \"swim\"; } }\n    static class Duck implements Walker, Swimmer {\n        public String move() { return Walker.move(); }\n    }\n    public static void main(String[] args) {\n        System.out.println(new Duck().move());\n    }\n}",
+      "bugLine": 5,
+      "options": [
+        "public String move() { return super.move(); }",
+        "public String move() { return Swimmer.super.move(); }",
+        "public String move() { return this.move(); }",
+        "public String move() { return Walker.super.move(); }"
+      ],
+      "answer": 3,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "output",
+          "value": "swim"
+        },
+        {
+          "kind": "exception",
+          "value": "StackOverflowError"
+        },
+        null
+      ],
+      "explanation": "To call an inherited default method from a specific interface, use `Interface.super.method()`. `Walker.move()` looks like a static call and doesn't compile; `super.move()` means `Object`, which has no `move`; and `this.move()` calls itself until `StackOverflowError`."
+    },
+    {
+      "id": "fb-u04-05",
+      "unit": "u04",
+      "objective": "3.7",
+      "title": "Enum with fields",
+      "goal": "Print the rank of `M`.",
+      "output": "2",
+      "code": "public class Main {\n    enum Size {\n        S(1), M(2), L(3)\n        final int rank;\n        Size(int rank) { this.rank = rank; }\n    }\n    public static void main(String[] args) {\n        System.out.println(Size.valueOf(\"M\").rank);\n    }\n}",
+      "bugLine": 3,
+      "options": [
+        "S = 1, M = 2, L = 3;",
+        "S(1), M(2), L(3),",
+        "S(1), M(2), L(3);",
+        "S(1); M(2); L(3);"
+      ],
+      "answer": 2,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        },
+        null,
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "When an enum has fields, constructors or methods, the constant list must end with a semicolon. Constants are separated by commas and take constructor arguments in parentheses."
+    },
+    {
+      "id": "fb-u04-06",
+      "unit": "u04",
+      "objective": "3.5",
+      "title": "Fields don't override",
+      "goal": "Print the child's name through a `Base` reference.",
+      "output": "child",
+      "code": "public class Main {\n    static class Base {\n        String name = \"base\";\n        String name() { return name; }\n    }\n    static class Child extends Base {\n        String name = \"child\";\n    }\n    public static void main(String[] args) {\n        Base b = new Child();\n        System.out.println(b.name());\n    }\n}",
+      "bugLine": 7,
+      "options": [
+        "String name() { return name; }",
+        "static String name = \"child\";",
+        "String name() { return \"child\"; }",
+        "private String name = \"child\";"
+      ],
+      "answer": 2,
+      "symptom": {
+        "kind": "output",
+        "value": "base"
+      },
+      "outcomes": [
+        {
+          "kind": "output",
+          "value": "base"
+        },
+        {
+          "kind": "output",
+          "value": "base"
+        },
+        null,
+        {
+          "kind": "output",
+          "value": "base"
+        }
+      ],
+      "explanation": "Fields are **hidden**, not overridden: `Base.name()` reads `Base`'s field no matter what `Child` declares. Only methods are polymorphic, so `Child` must override `name()`. Returning `name` from that override would still read the inherited `Base` field."
+    },
+    {
+      "id": "fb-u04-07",
+      "unit": "u04",
+      "objective": "3.1",
+      "title": "Inner class instance",
+      "goal": "Create a `Greeter` and print its greeting.",
+      "output": "Hi Ada",
+      "code": "public class Main {\n    String name = \"Ada\";\n    class Greeter {\n        String hi() { return \"Hi \" + name; }\n    }\n    public static void main(String[] args) {\n        Greeter g = new Greeter();\n        System.out.println(g.hi());\n    }\n}",
+      "bugLine": 7,
+      "options": [
+        "Greeter g = new Main().new Greeter();",
+        "Greeter g = Main.new Greeter();",
+        "Greeter g = this.new Greeter();",
+        "Greeter g = new Main.Greeter();"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "An inner (non-static) class instance needs an enclosing `Main` object, and static `main` has none. `outer.new Inner()` supplies one. `this` doesn't exist in a static method."
+    },
+    {
+      "id": "fb-u05-01",
+      "unit": "u05",
+      "objective": "4.1",
+      "title": "Multi-catch types",
+      "goal": "Catch the bad index and print its exception type.",
+      "output": "caught IndexOutOfBoundsException",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        try {\n            Object o = List.of(1).get(1);\n        } catch (IndexOutOfBoundsException | RuntimeException e) {\n            System.out.println(\"caught \" + e.getClass().getSimpleName());\n        }\n    }\n}",
+      "bugLine": 5,
+      "options": [
+        "} catch (NullPointerException | ArithmeticException e) {",
+        "} catch (IndexOutOfBoundsException | NullPointerException e) {",
+        "} catch (IndexOutOfBoundsException e | NullPointerException e) {",
+        "} catch (ArrayIndexOutOfBoundsException | RuntimeException e) {"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        {
+          "kind": "exception",
+          "value": "IndexOutOfBoundsException"
+        },
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "The alternatives in a multi-catch may not be subclasses of each other: `IndexOutOfBoundsException` already is a `RuntimeException`, so the pair doesn't compile. A multi-catch has one variable name at the end."
+    },
+    {
+      "id": "fb-u05-02",
+      "unit": "u05",
+      "objective": "4.1",
+      "title": "Unreported checked exception",
+      "goal": "Catch the failure from `load` and print its message.",
+      "output": "missing cfg",
+      "code": "public class Main {\n    static void load() throws IOException {\n        throw new FileNotFoundException(\"cfg\");\n    }\n    public static void main(String[] args) {\n        try {\n            load();\n        } catch (RuntimeException e) {\n            System.out.println(\"missing \" + e.getMessage());\n        }\n    }\n}",
+      "bugLine": 8,
+      "options": [
+        "} catch (FileNotFoundException | RuntimeException e) {",
+        "} catch (IOException e) {",
+        "} catch (Error e) {",
+        "} catch (IOException | Exception e) {"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "`load` declares `IOException`, a checked exception, so the caller must catch `IOException` (or a supertype) or declare it. Catching only the subclass `FileNotFoundException` doesn't cover what the signature allows. `IOException | Exception` is illegal because one is a subclass of the other."
+    },
+    {
+      "id": "fb-u05-03",
+      "unit": "u05",
+      "objective": "4.1",
+      "title": "Effectively final resource",
+      "goal": "Use resource `b` and close it.",
+      "output": "use b\nclose b",
+      "code": "public class Main {\n    record Res(String name) implements AutoCloseable {\n        public void close() { System.out.println(\"close \" + name); }\n    }\n    public static void main(String[] args) {\n        Res r = new Res(\"a\");\n        r = new Res(\"b\");\n        try (r) {\n            System.out.println(\"use \" + r.name());\n        }\n    }\n}",
+      "bugLine": 8,
+      "options": [
+        "try (Res s = r) {",
+        "try (Res r) {",
+        "try (var r) {",
+        "try (r = new Res(\"b\")) {"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "Since Java 9 a try-with-resources header may name an existing variable, but only if it's final or effectively final, and `r` is reassigned. Declaring a new resource variable initialized from `r` works. A resource declaration always needs an initializer."
+    },
+    {
+      "id": "fb-u05-04",
+      "unit": "u05",
+      "objective": "4.1",
+      "title": "Overriding and throws",
+      "goal": "Load through the interface and print the data.",
+      "output": "data",
+      "code": "public class Main {\n    interface Loader { String load() throws IOException; }\n    static class FileLoader implements Loader {\n        public String load() throws Exception {\n            return \"data\";\n        }\n    }\n    public static void main(String[] args) throws IOException {\n        Loader l = new FileLoader();\n        System.out.println(l.load());\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "String load() throws IOException {",
+        "public String load() {",
+        "public String load() throws IOException, Exception {",
+        "public String load() throws Throwable {"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "An overriding method may throw fewer or narrower checked exceptions, never broader ones: `Exception` and `Throwable` are wider than `IOException`. Throwing nothing is always allowed. Dropping `public` is a weaker access level, which is also illegal."
+    },
+    {
+      "id": "fb-u05-05",
+      "unit": "u05",
+      "objective": "4.1",
+      "title": "Declaring throws",
+      "goal": "Report the failure as `Exception: negative: -5`.",
+      "output": "Exception: negative: -5",
+      "code": "public class Main {\n    static void validate(int n) {\n        if (n < 0) throw new Exception(\"negative: \" + n);\n    }\n    public static void main(String[] args) {\n        try {\n            validate(-5);\n        } catch (Exception e) {\n            System.out.println(e.getClass().getSimpleName() + \": \" + e.getMessage());\n        }\n    }\n}",
+      "bugLine": 2,
+      "options": [
+        "static void validate(int n) throws RuntimeException {",
+        "static void validate(int n) throws Exception {",
+        "static void validate(int n) catch Exception {",
+        "static void validate(int n) throw Exception {"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "Throwing a checked `Exception` requires the method to declare it with `throws` (note the **s**). Declaring only `RuntimeException` doesn't cover a checked exception."
+    },
+    {
+      "id": "fb-u05-06",
+      "unit": "u05",
+      "objective": "4.1",
+      "title": "Closing order",
+      "goal": "Close `A` before `B`.",
+      "output": "xAB",
+      "code": "public class Main {\n    record R(String n) implements AutoCloseable {\n        public void close() { System.out.print(n); }\n    }\n    public static void main(String[] args) {\n        try (R a = new R(\"A\"); R b = new R(\"B\")) {\n            System.out.print(\"x\");\n        }\n        System.out.println();\n    }\n}",
+      "bugLine": 6,
+      "options": [
+        "try (R a = new R(\"A\"); R b = new R(\"B\");) {",
+        "try (R b = new R(\"B\"); R a = new R(\"A\")) {",
+        "try (R b = new R(\"A\"); R a = new R(\"B\")) {",
+        "try (R a = new R(\"A\"), R b = new R(\"B\")) {"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "output",
+        "value": "xBA"
+      },
+      "outcomes": [
+        {
+          "kind": "output",
+          "value": "xBA"
+        },
+        null,
+        {
+          "kind": "output",
+          "value": "xBA"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "Resources are closed in **reverse** order of declaration, so the last one opened closes first. To close `A` first, declare it last. Resources are separated by semicolons; a trailing semicolon is allowed but changes nothing."
+    },
+    {
+      "id": "fb-u06-01",
+      "unit": "u06",
+      "objective": "5.1",
+      "title": "Immutable list",
+      "goal": "Add `Cy`, sort and print the names.",
+      "output": "[Al, Bo, Cy]",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        List<String> names = List.of(\"Bo\", \"Al\");\n        names.add(\"Cy\");\n        Collections.sort(names);\n        System.out.println(names);\n    }\n}",
+      "bugLine": 3,
+      "options": [
+        "List<String> names = new ArrayList<>(List.of(\"Bo\", \"Al\"));",
+        "List<String> names = List.copyOf(List.of(\"Bo\", \"Al\"));",
+        "ArrayList<String> names = List.of(\"Bo\", \"Al\");",
+        "List<String> names = Arrays.asList(\"Bo\", \"Al\");"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "exception",
+        "value": "UnsupportedOperationException"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "exception",
+          "value": "UnsupportedOperationException"
+        },
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "exception",
+          "value": "UnsupportedOperationException"
+        }
+      ],
+      "explanation": "`List.of` and `List.copyOf` return unmodifiable lists, so `add` throws `UnsupportedOperationException`. `Arrays.asList` is fixed-size: `set` works but `add` throws. Copy into an `ArrayList` to get a growable list."
+    },
+    {
+      "id": "fb-u06-02",
+      "unit": "u06",
+      "objective": "5.1",
+      "title": "Removing while iterating",
+      "goal": "Remove the even numbers and print the rest.",
+      "output": "[1, 3]",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        List<Integer> nums = new ArrayList<>(List.of(1, 2, 3, 4));\n        for (Integer n : nums) if (n % 2 == 0) nums.remove(n);\n        System.out.println(nums);\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "nums.removeIf(n -> n % 2 == 0);",
+        "for (int n : nums) if (n % 2 == 0) nums.remove(n);",
+        "nums.remove(n -> n % 2 == 0);",
+        "nums.removeIf(n -> n % 2 == 1);"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "exception",
+        "value": "ConcurrentModificationException"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "exception",
+          "value": "ConcurrentModificationException"
+        },
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "output",
+          "value": "[2, 4]"
+        }
+      ],
+      "explanation": "Changing an `ArrayList` during a for-each loop makes the iterator throw `ConcurrentModificationException`. `removeIf` removes safely. With `int n`, `remove(n)` would also pick the remove-by-**index** overload."
+    },
+    {
+      "id": "fb-u06-03",
+      "unit": "u06",
+      "objective": "5.1",
+      "title": "remove(int) vs remove(Object)",
+      "goal": "Remove the value 10 and print the list.",
+      "output": "[20, 30]",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        List<Integer> ids = new ArrayList<>(List.of(10, 20, 30));\n        ids.remove(10);\n        System.out.println(ids);\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "ids.removeAll(10);",
+        "ids.remove(0, 10);",
+        "ids.remove(Integer.valueOf(10));",
+        "ids.remove((int) 10);"
+      ],
+      "answer": 2,
+      "symptom": {
+        "kind": "exception",
+        "value": "IndexOutOfBoundsException"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        },
+        null,
+        {
+          "kind": "exception",
+          "value": "IndexOutOfBoundsException"
+        }
+      ],
+      "explanation": "`List<Integer>` has `remove(int index)` and `remove(Object o)`. An `int` argument picks the index version (no boxing needed), so `remove(10)` throws `IndexOutOfBoundsException`. Pass an `Integer` to remove by value."
+    },
+    {
+      "id": "fb-u06-04",
+      "unit": "u06",
+      "objective": "5.1",
+      "title": "Reversed comparator",
+      "goal": "Sort the words longest first.",
+      "output": "[banana, kiwi, fig]",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        List<String> words = new ArrayList<>(List.of(\"kiwi\", \"fig\", \"banana\"));\n        words.sort(Comparator.comparing(String::length).reversed);\n        System.out.println(words);\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "words.sort(Comparator.comparing(String::length));",
+        "words.sort((a, b) -> a.length() - b.length());",
+        "words.sort(Comparator.reverseOrder());",
+        "words.sort(Comparator.comparing(String::length).reversed());"
+      ],
+      "answer": 3,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        {
+          "kind": "output",
+          "value": "[fig, kiwi, banana]"
+        },
+        {
+          "kind": "output",
+          "value": "[fig, kiwi, banana]"
+        },
+        {
+          "kind": "output",
+          "value": "[kiwi, fig, banana]"
+        },
+        null
+      ],
+      "explanation": "`reversed()` is a method, so it needs parentheses. `reverseOrder()` reverses the natural (alphabetical) order, not the length order."
+    },
+    {
+      "id": "fb-u06-05",
+      "unit": "u06",
+      "objective": "5.1",
+      "title": "Comparing arrays",
+      "goal": "Print whether the arrays hold the same numbers.",
+      "output": "true",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        int[] a = {1, 2, 3};\n        int[] b = {1, 2, 3};\n        System.out.println(a.equals(b));\n    }\n}",
+      "bugLine": 5,
+      "options": [
+        "System.out.println(Arrays.equals(a, b));",
+        "System.out.println(Arrays.compare(a, b));",
+        "System.out.println(Arrays.mismatch(a, b));",
+        "System.out.println(a == b);"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "output",
+        "value": "false"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "output",
+          "value": "0"
+        },
+        {
+          "kind": "output",
+          "value": "-1"
+        },
+        {
+          "kind": "output",
+          "value": "false"
+        }
+      ],
+      "explanation": "Arrays don't override `equals`, so `a.equals(b)` is `==`: two different arrays are never equal. `Arrays.equals` compares the elements. `compare` returns `0` and `mismatch` returns `-1` for equal arrays."
+    },
+    {
+      "id": "fb-u06-06",
+      "unit": "u06",
+      "objective": "5.1",
+      "title": "Counting with a map",
+      "goal": "Count each letter of `banana`.",
+      "output": "{a=3, b=1, n=2}",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        Map<Character, Integer> counts = new TreeMap<>();\n        for (char c : \"banana\".toCharArray()) {\n            counts.put(c, counts.get(c) + 1);\n        }\n        System.out.println(counts);\n    }\n}",
+      "bugLine": 5,
+      "options": [
+        "counts.putIfAbsent(c, 1);",
+        "counts.compute(c, (k, v) -> v + 1);",
+        "counts.merge(c, 1, Integer::sum);",
+        "counts.put(c, counts.getOrDefault(c, 1) + 1);"
+      ],
+      "answer": 2,
+      "symptom": {
+        "kind": "exception",
+        "value": "NullPointerException"
+      },
+      "outcomes": [
+        {
+          "kind": "output",
+          "value": "{a=1, b=1, n=1}"
+        },
+        {
+          "kind": "exception",
+          "value": "NullPointerException"
+        },
+        null,
+        {
+          "kind": "output",
+          "value": "{a=4, b=2, n=3}"
+        }
+      ],
+      "explanation": "`get` returns `null` for a missing key and unboxing `null + 1` throws `NullPointerException`. `merge(key, 1, Integer::sum)` stores `1` the first time and adds afterwards. `compute` passes `null` for a missing key too."
+    },
+    {
+      "id": "fb-u07-01",
+      "unit": "u07",
+      "objective": "6.1",
+      "title": "Reusing a stream",
+      "goal": "Print the count and the joined words.",
+      "output": "3 a-bb-ccc",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        List<String> words = List.of(\"a\", \"bb\", \"ccc\");\n        Stream<String> s = words.stream();\n        long n = s.count();\n        String joined = s.collect(Collectors.joining(\"-\"));\n        System.out.println(n + \" \" + joined);\n    }\n}",
+      "bugLine": 6,
+      "options": [
+        "String joined = words.collect(Collectors.joining(\"-\"));",
+        "String joined = words.stream().collect(Collectors.joining(\"-\"));",
+        "String joined = Stream.of(s).collect(Collectors.joining(\"-\"));",
+        "String joined = s.map(String::valueOf).collect(Collectors.joining(\"-\"));"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "exception",
+        "value": "IllegalStateException"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "exception",
+          "value": "IllegalStateException"
+        }
+      ],
+      "explanation": "A stream can be consumed only once: after `count()` any further operation on `s` throws `IllegalStateException`. Create a fresh stream from the list. Lists have no `collect` method."
+    },
+    {
+      "id": "fb-u07-02",
+      "unit": "u07",
+      "objective": "6.1",
+      "title": "Effectively final capture",
+      "goal": "Print the sum of the list.",
+      "output": "6",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        int count = 0;\n        List.of(1, 2, 3).forEach(n -> count += n);\n        System.out.println(count);\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "List.of(1, 2, 3).forEach(n -> n += count);",
+        "count += List.of(1, 2, 3).stream().count();",
+        "List.of(1, 2, 3).forEach(n -> { count = count + n; });",
+        "count = List.of(1, 2, 3).stream().mapToInt(n -> n).sum();"
+      ],
+      "answer": 3,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        {
+          "kind": "output",
+          "value": "0"
+        },
+        {
+          "kind": "output",
+          "value": "3"
+        },
+        {
+          "kind": "compile"
+        },
+        null
+      ],
+      "explanation": "A lambda may only use local variables that are final or effectively final, so it can't modify `count`. Compute the value with a stream and assign it outside the lambda. `count()` counts elements (3), it doesn't add them."
+    },
+    {
+      "id": "fb-u07-03",
+      "unit": "u07",
+      "objective": "6.2",
+      "title": "Duplicate keys in toMap",
+      "goal": "Keep the first word for each starting letter.",
+      "output": "{a=apple, b=banana}",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        List<String> words = List.of(\"apple\", \"avocado\", \"banana\");\n        Map<Character, String> byLetter = words.stream()\n            .collect(Collectors.toMap(w -> w.charAt(0), w -> w));\n        System.out.println(byLetter);\n    }\n}",
+      "bugLine": 5,
+      "options": [
+        ".collect(Collectors.toMap(w -> w.charAt(0), w -> w, (a, b) -> a));",
+        ".collect(Collectors.toMap(w -> w.charAt(0), w -> w, (a, b) -> b));",
+        ".collect(Collectors.toMap(w -> w, w -> w.charAt(0)));",
+        ".collect(Collectors.groupingBy(w -> w.charAt(0)));"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "exception",
+        "value": "IllegalStateException"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "output",
+          "value": "{a=avocado, b=banana}"
+        },
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "Two-argument `toMap` throws `IllegalStateException` on a duplicate key (`a`). The third argument is a merge function: `(a, b) -> a` keeps the existing value. `groupingBy` would build `Map<Character, List<String>>`, which doesn't match the declared type."
+    },
+    {
+      "id": "fb-u07-04",
+      "unit": "u07",
+      "objective": "6.1",
+      "title": "Empty Optional",
+      "goal": "Print the first even number, or -1 if there is none.",
+      "output": "-1",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        List<Integer> nums = List.of(3, 5, 7);\n        int firstEven = nums.stream()\n            .filter(n -> n % 2 == 0)\n            .findFirst()\n            .get();\n        System.out.println(firstEven);\n    }\n}",
+      "bugLine": 7,
+      "options": [
+        ".isPresent();",
+        ".orElse(null);",
+        ".orElse(-1);",
+        ".orElseThrow();"
+      ],
+      "answer": 2,
+      "symptom": {
+        "kind": "exception",
+        "value": "NoSuchElementException"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "exception",
+          "value": "NullPointerException"
+        },
+        null,
+        {
+          "kind": "exception",
+          "value": "NoSuchElementException"
+        }
+      ],
+      "explanation": "`findFirst()` returns an empty `Optional` here, and `get()` / `orElseThrow()` on an empty Optional throw `NoSuchElementException`. `orElse(null)` returns `null`, which fails when unboxed to `int`."
+    },
+    {
+      "id": "fb-u07-05",
+      "unit": "u07",
+      "objective": "6.2",
+      "title": "average needs a primitive stream",
+      "goal": "Print the average score.",
+      "output": "90.0",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        List<Integer> scores = List.of(80, 90, 100);\n        double avg = scores.stream().average().orElse(0);\n        System.out.println(avg);\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "double avg = scores.stream().reduce(0, Integer::sum) / 2;",
+        "double avg = scores.stream().mapToInt(Integer::intValue).average().orElse(0);",
+        "double avg = scores.stream().mapToDouble(i -> i).max().orElse(0);",
+        "double avg = scores.stream().mapToInt(Integer::intValue).average();"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        {
+          "kind": "output",
+          "value": "135.0"
+        },
+        null,
+        {
+          "kind": "output",
+          "value": "100.0"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "`Stream<Integer>` has no `average()`; only `IntStream`, `LongStream` and `DoubleStream` do. `average()` returns an `OptionalDouble`, so you still need `orElse` to get a `double`."
+    },
+    {
+      "id": "fb-u07-06",
+      "unit": "u07",
+      "objective": "6.1",
+      "title": "Lazy streams",
+      "goal": "Record every element the stream visits.",
+      "output": "[x, y, z]",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        List<String> seen = new ArrayList<>();\n        Stream.of(\"x\", \"y\", \"z\")\n            .peek(seen::add)\n            .map(String::toUpperCase);\n        System.out.println(seen);\n    }\n}",
+      "bugLine": 6,
+      "options": [
+        ".map(String::toUpperCase).toList();",
+        ".map(String::toUpperCase).count();",
+        ".map(String::toUpperCase).sorted();",
+        ".filter(s -> false);"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "output",
+        "value": "[]"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "output",
+          "value": "[]"
+        },
+        {
+          "kind": "output",
+          "value": "[]"
+        },
+        {
+          "kind": "output",
+          "value": "[]"
+        }
+      ],
+      "explanation": "Intermediate operations are lazy: nothing runs until a terminal operation such as `toList()`. `sorted()` is intermediate too. Trap: since Java 9, `count()` may skip the pipeline when the size is known, so `peek` never runs."
+    },
+    {
+      "id": "fb-u07-07",
+      "unit": "u07",
+      "objective": "6.2",
+      "title": "counting() is Long",
+      "goal": "Count words by length with `Collectors.counting()`.",
+      "output": "{3=3, 4=1}",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        List<String> words = List.of(\"ant\", \"bee\", \"cat\", \"deer\");\n        Map<Integer, Integer> byLen = words.stream()\n            .collect(Collectors.groupingBy(String::length, Collectors.counting()));\n        System.out.println(byLen);\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "Map<Long, Integer> byLen = words.stream()",
+        "Map<Integer, List<String>> byLen = words.stream()",
+        "Map<String, Long> byLen = words.stream()",
+        "Map<Integer, Long> byLen = words.stream()"
+      ],
+      "answer": 3,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        },
+        null
+      ],
+      "explanation": "`Collectors.counting()` produces a `Long`, so the map is `Map<Integer, Long>`. The key type comes from the classifier `String::length`, an `Integer`."
+    },
+    {
+      "id": "fb-u07-08",
+      "unit": "u07",
+      "objective": "6.1",
+      "title": "Choosing a functional interface",
+      "goal": "Greet with a lambda that takes and returns a `String`.",
+      "output": "hi Bo2",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        Function<String, Integer> len = String::length;\n        Supplier<String> greeting = s -> \"hi \" + s;\n        System.out.println(greeting.apply(\"Bo\") + len.apply(\"Bo\"));\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "BiFunction<String, String> greeting = s -> \"hi \" + s;",
+        "UnaryOperator<String> greeting = s -> \"hi \" + s;",
+        "Consumer<String> greeting = s -> \"hi \" + s;",
+        "Predicate<String> greeting = s -> \"hi \" + s;"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "`Supplier.get()` takes no argument. A function from `String` to `String` is `UnaryOperator<String>` (a `Function<String, String>`) with method `apply`. `Consumer` returns nothing, `Predicate` returns `boolean`, and `BiFunction` takes three type arguments."
+    },
+    {
+      "id": "fb-u08-01",
+      "unit": "u08",
+      "objective": "8.1",
+      "title": "Future.get throws",
+      "goal": "Print the task's result.",
+      "output": "42",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        try (ExecutorService ex = Executors.newSingleThreadExecutor()) {\n            Future<Integer> f = ex.submit(() -> 6 * 7);\n            System.out.println(f.get());\n        }\n    }\n}",
+      "bugLine": 2,
+      "options": [
+        "public static void main(String[] args) throws RuntimeException {",
+        "public static void main(String[] args) throws Exception {",
+        "public static void main(String[] args) throws ExecutionException {",
+        "public static void main(String[] args) throws InterruptedException {"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "`Future.get()` declares two checked exceptions, `InterruptedException` and `ExecutionException`, so both must be handled or declared. `throws Exception` covers both. (Since Java 19 `ExecutorService` is `AutoCloseable`; `close()` waits for submitted tasks.)"
+    },
+    {
+      "id": "fb-u08-02",
+      "unit": "u08",
+      "objective": "8.2",
+      "title": "Lock before unlock",
+      "goal": "Increment the counter twice under the lock.",
+      "output": "2",
+      "code": "public class Main {\n    static final ReentrantLock lock = new ReentrantLock();\n    static int counter = 0;\n    static void increment() {\n        lock.unlock();\n        try { counter++; }\n        finally { lock.unlock(); }\n    }\n    public static void main(String[] args) {\n        increment();\n        increment();\n        System.out.println(counter);\n    }\n}",
+      "bugLine": 5,
+      "options": [
+        "lock.isLocked();",
+        "lock.lock();",
+        "lock.newCondition();",
+        "synchronized (lock) { }"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "exception",
+        "value": "IllegalMonitorStateException"
+      },
+      "outcomes": [
+        {
+          "kind": "exception",
+          "value": "IllegalMonitorStateException"
+        },
+        null,
+        {
+          "kind": "exception",
+          "value": "IllegalMonitorStateException"
+        },
+        {
+          "kind": "exception",
+          "value": "IllegalMonitorStateException"
+        }
+      ],
+      "explanation": "The idiom is `lock.lock(); try { ... } finally { lock.unlock(); }`. Calling `unlock()` on a lock the thread doesn't hold throws `IllegalMonitorStateException`, and a `synchronized` block uses the object's monitor, not the `ReentrantLock`."
+    },
+    {
+      "id": "fb-u08-03",
+      "unit": "u08",
+      "objective": "8.2",
+      "title": "notifyAll needs the monitor",
+      "goal": "Notify waiting threads, then print `notified`.",
+      "output": "notified",
+      "code": "public class Main {\n    public static void main(String[] args) throws Exception {\n        Object monitor = new Object();\n        monitor.notifyAll();\n        System.out.println(\"notified\");\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "synchronized (this) { monitor.notifyAll(); }",
+        "monitor.wait(0);",
+        "synchronized (Main.class) { monitor.notifyAll(); }",
+        "synchronized (monitor) { monitor.notifyAll(); }"
+      ],
+      "answer": 3,
+      "symptom": {
+        "kind": "exception",
+        "value": "IllegalMonitorStateException"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "exception",
+          "value": "IllegalMonitorStateException"
+        },
+        {
+          "kind": "exception",
+          "value": "IllegalMonitorStateException"
+        },
+        null
+      ],
+      "explanation": "`wait`, `notify` and `notifyAll` may only be called while holding **that object's** monitor, otherwise they throw `IllegalMonitorStateException`. Locking a different object doesn't count, and `this` doesn't exist in static `main`."
+    },
+    {
+      "id": "fb-u08-04",
+      "unit": "u08",
+      "objective": "8.1",
+      "title": "Starting a virtual thread",
+      "goal": "Run the task on a virtual thread, wait for it, then print `isVirtual()`.",
+      "output": "hi\ntrue",
+      "code": "public class Main {\n    public static void main(String[] args) throws InterruptedException {\n        Thread t = Thread.ofVirtual().run(() -> System.out.println(\"hi\"));\n        t.join();\n        System.out.println(t.isVirtual());\n    }\n}",
+      "bugLine": 3,
+      "options": [
+        "Thread t = Thread.ofVirtual().start(() -> System.out.println(\"hi\"));",
+        "Thread t = Thread.ofVirtual().unstarted(() -> System.out.println(\"hi\"));",
+        "Thread t = Thread.startVirtualThread(() -> System.out.println(\"hi\")).join();",
+        "Thread t = new Thread(() -> System.out.println(\"hi\"), true);"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "output",
+          "value": "true"
+        },
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "`Thread.Builder` has `start(task)` (create and start) and `unstarted(task)` (create only); there is no `run`. Joining a thread that was never started returns at once, so the task never prints. `join()` returns `void`."
+    },
+    {
+      "id": "fb-u08-05",
+      "unit": "u08",
+      "objective": "8.2",
+      "title": "AtomicInteger isn't an int",
+      "goal": "Count 1000 hits from a thread pool.",
+      "output": "1000",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        AtomicInteger hits = new AtomicInteger();\n        try (var pool = Executors.newFixedThreadPool(4)) {\n            for (int i = 0; i < 1000; i++) {\n                pool.submit(() -> hits++);\n            }\n        }\n        System.out.println(hits);\n    }\n}",
+      "bugLine": 6,
+      "options": [
+        "pool.submit(() -> hits.get() + 1);",
+        "pool.submit(() -> hits.incrementAndGet());",
+        "pool.submit(() -> hits += 1);",
+        "pool.submit(() -> { int h = hits.intValue(); h++; });"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        {
+          "kind": "output",
+          "value": "0"
+        },
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "output",
+          "value": "0"
+        }
+      ],
+      "explanation": "`AtomicInteger` is an object, so `++` and `+=` don't compile on it. `incrementAndGet()` adds atomically. `get() + 1` only computes a value and never stores it. Closing the pool waits for all tasks, so the count is exact."
+    },
+    {
+      "id": "fb-u08-06",
+      "unit": "u08",
+      "objective": "8.3",
+      "title": "Adding while iterating",
+      "goal": "Append an exclaimed copy of each element.",
+      "output": "[a, b, a!, b!]",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        List<String> list = new ArrayList<>(List.of(\"a\", \"b\"));\n        for (String s : list) {\n            list.add(s + \"!\");\n        }\n        System.out.println(list);\n    }\n}",
+      "bugLine": 3,
+      "options": [
+        "List<String> list = new LinkedList<>(List.of(\"a\", \"b\"));",
+        "List<String> list = new CopyOnWriteArrayList<>(List.of(\"a\", \"b\"));",
+        "List<String> list = Collections.synchronizedList(new ArrayList<>(List.of(\"a\", \"b\")));",
+        "List<String> list = List.of(\"a\", \"b\");"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "exception",
+        "value": "ConcurrentModificationException"
+      },
+      "outcomes": [
+        {
+          "kind": "exception",
+          "value": "ConcurrentModificationException"
+        },
+        null,
+        {
+          "kind": "exception",
+          "value": "ConcurrentModificationException"
+        },
+        {
+          "kind": "exception",
+          "value": "UnsupportedOperationException"
+        }
+      ],
+      "explanation": "`CopyOnWriteArrayList` iterates over a snapshot, so adding during the loop is safe and the loop only sees the original two elements. A synchronized wrapper is still fail-fast and throws `ConcurrentModificationException`."
+    },
+    {
+      "id": "fb-u09-01",
+      "unit": "u09",
+      "objective": "9.3",
+      "title": "resolve with an absolute path",
+      "goal": "Build the path of today's log inside the app folder.",
+      "output": "/data/app/logs/today.txt",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        Path base = Path.of(\"/data/app\");\n        Path log = base.resolve(\"/logs/today.txt\");\n        System.out.println(log);\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "Path log = Path.of(\"logs/today.txt\").resolve(base);",
+        "Path log = base.resolveSibling(\"logs/today.txt\");",
+        "Path log = base.resolve(\"logs/today.txt\");",
+        "Path log = base.relativize(Path.of(\"logs/today.txt\"));"
+      ],
+      "answer": 2,
+      "symptom": {
+        "kind": "output",
+        "value": "/logs/today.txt"
+      },
+      "outcomes": [
+        {
+          "kind": "output",
+          "value": "/data/app"
+        },
+        {
+          "kind": "output",
+          "value": "/data/logs/today.txt"
+        },
+        null,
+        {
+          "kind": "exception",
+          "value": "IllegalArgumentException"
+        }
+      ],
+      "explanation": "`resolve` with an **absolute** argument just returns the argument. Pass a relative path to append it. `resolveSibling` resolves against the parent (`/data`), and `relativize` needs two paths of the same kind (both absolute or both relative)."
+    },
+    {
+      "id": "fb-u09-02",
+      "unit": "u09",
+      "objective": "9.3",
+      "title": "relativize direction",
+      "goal": "Print how to get from the docs folder to the picture.",
+      "output": "../pics/cat.png",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        Path from = Path.of(\"/home/ana/docs\");\n        Path to = Path.of(\"/home/ana/pics/cat.png\");\n        System.out.println(to.relativize(from));\n    }\n}",
+      "bugLine": 5,
+      "options": [
+        "System.out.println(from.relativize(to));",
+        "System.out.println(to.relativize(from).normalize());",
+        "System.out.println(from.resolve(to));",
+        "System.out.println(from.relativize(to.getFileName()));"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "output",
+        "value": "../../docs"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "output",
+          "value": "../../docs"
+        },
+        {
+          "kind": "output",
+          "value": "/home/ana/pics/cat.png"
+        },
+        {
+          "kind": "exception",
+          "value": "IllegalArgumentException"
+        }
+      ],
+      "explanation": "`a.relativize(b)` gives the path that leads **from a to b**, so the starting folder is the receiver. `to.relativize(from)` walks the other way (`../../docs`)."
+    },
+    {
+      "id": "fb-u09-03",
+      "unit": "u09",
+      "objective": "9.1",
+      "title": "readLine loop",
+      "goal": "Print each line of the file.",
+      "output": "one\ntwo",
+      "code": "public class Main {\n    public static void main(String[] args) throws IOException {\n        Files.writeString(Path.of(\"in.txt\"), \"one\\ntwo\\n\");\n        try (BufferedReader r = Files.newBufferedReader(Path.of(\"in.txt\"))) {\n            String line;\n            while (r.readLine() != null) {\n                System.out.println(line);\n            }\n        }\n    }\n}",
+      "bugLine": 6,
+      "options": [
+        "while ((line = r.readLine()).isEmpty()) {",
+        "while (r.ready()) {",
+        "while (line = r.readLine() != null) {",
+        "while ((line = r.readLine()) != null) {"
+      ],
+      "answer": 3,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        {
+          "kind": "output",
+          "value": ""
+        },
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        },
+        null
+      ],
+      "explanation": "The line read must be stored before it's tested: `(line = r.readLine()) != null`. Without the assignment `line` is never initialized, which is a compile error. The parentheses matter: `!=` binds tighter than `=`."
+    },
+    {
+      "id": "fb-u09-04",
+      "unit": "u09",
+      "objective": "9.2",
+      "title": "Serializable marker",
+      "goal": "Serialize the user, read it back and print its fields.",
+      "output": "ana 0",
+      "code": "public class Main {\n    static class User {\n        String name = \"ana\";\n        transient int visits = 7;\n    }\n    public static void main(String[] args) throws Exception {\n        var bytes = new ByteArrayOutputStream();\n        try (var out = new ObjectOutputStream(bytes)) {\n            out.writeObject(new User());\n        }\n        try (var in = new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()))) {\n            User u = (User) in.readObject();\n            System.out.println(u.name + \" \" + u.visits);\n        }\n    }\n}",
+      "bugLine": 2,
+      "options": [
+        "static class User implements Cloneable {",
+        "static class User implements Serializable {",
+        "static class User extends Serializable {",
+        "static class User implements Externalizable {"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "exception",
+        "value": "NotSerializableException"
+      },
+      "outcomes": [
+        {
+          "kind": "exception",
+          "value": "NotSerializableException"
+        },
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "`writeObject` throws `NotSerializableException` unless the class implements `Serializable`. When the object is read back its constructor and field initializers don't run, so the `transient` field gets its default value `0`, not `7`."
+    },
+    {
+      "id": "fb-u09-05",
+      "unit": "u09",
+      "objective": "9.3",
+      "title": "readAllLines returns a List",
+      "goal": "Count the lines longer than one character.",
+      "output": "2",
+      "code": "public class Main {\n    public static void main(String[] args) throws IOException {\n        Path p = Path.of(\"notes.txt\");\n        Files.writeString(p, \"a\\nbb\\nccc\");\n        long n = Files.readAllLines(p).filter(s -> s.length() > 1).count();\n        System.out.println(n);\n    }\n}",
+      "bugLine": 5,
+      "options": [
+        "long n = Files.lines(p).filter(s -> s.length() > 1).count();",
+        "long n = Files.list(p).filter(s -> s.length() > 1).count();",
+        "long n = Files.lines(p).filter(s -> s.length() > 2).count();",
+        "long n = Files.readString(p).filter(s -> s.length() > 1).count();"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "output",
+          "value": "1"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "`Files.readAllLines` returns a `List<String>`, which has no `filter`. `Files.lines` returns a lazy `Stream<String>`. `Files.list` streams the entries of a **directory** as `Path`s."
+    },
+    {
+      "id": "fb-u09-06",
+      "unit": "u09",
+      "objective": "9.3",
+      "title": "Creating nested folders",
+      "goal": "Create the report folder and confirm it exists.",
+      "output": "true",
+      "code": "public class Main {\n    public static void main(String[] args) throws IOException {\n        Path dir = Path.of(\"out/reports/2024\");\n        Files.createDirectory(dir);\n        System.out.println(Files.isDirectory(dir));\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "dir.toFile().mkdir();",
+        "Files.createDirectory(dir.getParent());",
+        "Files.createFile(dir);",
+        "Files.createDirectories(dir);"
+      ],
+      "answer": 3,
+      "symptom": {
+        "kind": "exception",
+        "value": "NoSuchFileException"
+      },
+      "outcomes": [
+        {
+          "kind": "output",
+          "value": "false"
+        },
+        {
+          "kind": "output",
+          "value": "false"
+        },
+        {
+          "kind": "exception",
+          "value": "NoSuchFileException"
+        },
+        null
+      ],
+      "explanation": "`createDirectory` creates one level and throws `NoSuchFileException` when the parent is missing. `createDirectories` creates every missing parent. `File.mkdir()` doesn't throw; it just returns `false`."
+    },
+    {
+      "id": "fb-u10-01",
+      "unit": "u10",
+      "objective": "1.3",
+      "title": "LocalDate is immutable",
+      "goal": "Move the due date one month later.",
+      "output": "2024-02-29",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        LocalDate due = LocalDate.of(2024, 1, 31);\n        due.plusMonths(1);\n        System.out.println(due);\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "due = due.plusDays(30);",
+        "due.withMonth(2);",
+        "due = due.plusMonths(1);",
+        "due = due.plusMonths(1).plusDays(1);"
+      ],
+      "answer": 2,
+      "symptom": {
+        "kind": "output",
+        "value": "2024-01-31"
+      },
+      "outcomes": [
+        {
+          "kind": "output",
+          "value": "2024-03-01"
+        },
+        {
+          "kind": "output",
+          "value": "2024-01-31"
+        },
+        null,
+        {
+          "kind": "output",
+          "value": "2024-03-01"
+        }
+      ],
+      "explanation": "`LocalDate` is immutable: `plusMonths` returns a new date that must be assigned. Adding a month to January 31 clamps to the last valid day, February 29 in a leap year."
+    },
+    {
+      "id": "fb-u10-02",
+      "unit": "u10",
+      "objective": "1.3",
+      "title": "Months start at 1",
+      "goal": "Print January 15, 2024.",
+      "output": "2024-01-15",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        LocalDate d = LocalDate.of(2024, 0, 15);\n        System.out.println(d);\n    }\n}",
+      "bugLine": 3,
+      "options": [
+        "LocalDate d = LocalDate.of(2024, Month.JANUARY, 15);",
+        "LocalDate d = LocalDate.of(2024, 1, 15, 0);",
+        "LocalDate d = LocalDate.ofYearDay(2024, 1);",
+        "LocalDate d = LocalDate.of(2024, Month.of(0), 15);"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "exception",
+        "value": "DateTimeException"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "output",
+          "value": "2024-01-01"
+        },
+        {
+          "kind": "exception",
+          "value": "DateTimeException"
+        }
+      ],
+      "explanation": "In `java.time`, months run from 1 to 12, so month `0` throws `DateTimeException`. `Month.JANUARY` (or `1`) is right. `Month.of(0)` fails the same way."
+    },
+    {
+      "id": "fb-u10-03",
+      "unit": "u10",
+      "objective": "10.1",
+      "title": "MM vs mm",
+      "goal": "Format the date as day/month/year.",
+      "output": "09/03/2024",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        LocalDateTime t = LocalDateTime.of(2024, 3, 9, 14, 5);\n        var f = DateTimeFormatter.ofPattern(\"dd/mm/yyyy\");\n        System.out.println(t.format(f));\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "var f = DateTimeFormatter.ofPattern(\"dd/MMM/yyyy\");",
+        "var f = DateTimeFormatter.ofPattern(\"dd/MM/yyyy\");",
+        "var f = DateTimeFormatter.ofPattern(\"d/M/yyyy\");",
+        "var f = DateTimeFormatter.ofPattern(\"DD/MM/yyyy\");"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "output",
+        "value": "09/05/2024"
+      },
+      "outcomes": [
+        {
+          "kind": "output",
+          "value": "09/Mar/2024"
+        },
+        null,
+        {
+          "kind": "output",
+          "value": "9/3/2024"
+        },
+        {
+          "kind": "output",
+          "value": "69/03/2024"
+        }
+      ],
+      "explanation": "Pattern letters are case-sensitive: `MM` is month, `mm` is **minute** (here `05`). `DD` is day-of-year, single letters drop the leading zero, and `MMM` gives the short month name."
+    },
+    {
+      "id": "fb-u10-04",
+      "unit": "u10",
+      "objective": "1.3",
+      "title": "Duration vs Period",
+      "goal": "Print the gap between the dates in months and days.",
+      "output": "P2M14D",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        LocalDate start = LocalDate.of(2024, 1, 1);\n        LocalDate end = LocalDate.of(2024, 3, 15);\n        Duration gap = Duration.between(start, end);\n        System.out.println(gap);\n    }\n}",
+      "bugLine": 5,
+      "options": [
+        "Duration gap = Duration.ofDays(ChronoUnit.DAYS.between(start, end));",
+        "Period gap = Period.ofDays(74);",
+        "Period gap = Duration.between(start, end);",
+        "Period gap = Period.between(start, end);"
+      ],
+      "answer": 3,
+      "symptom": {
+        "kind": "exception",
+        "value": "UnsupportedTemporalTypeException"
+      },
+      "outcomes": [
+        {
+          "kind": "output",
+          "value": "PT1776H"
+        },
+        {
+          "kind": "output",
+          "value": "P74D"
+        },
+        {
+          "kind": "compile"
+        },
+        null
+      ],
+      "explanation": "`Duration` measures time-based amounts (seconds, nanos) and needs times, so `Duration.between` on two `LocalDate`s throws `UnsupportedTemporalTypeException`. `Period` measures date-based amounts (years, months, days). A `Duration` of days prints in hours (`PT1776H`)."
+    },
+    {
+      "id": "fb-u10-05",
+      "unit": "u10",
+      "objective": "10.1",
+      "title": "NumberFormat locale",
+      "goal": "Format the number with German grouping (the default locale is en_US).",
+      "output": "1.234,5",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        Locale de = Locale.GERMANY;\n        NumberFormat nf = NumberFormat.getInstance();\n        System.out.println(nf.format(1234.5));\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "NumberFormat nf = NumberFormat.getInstance(Locale.GERMAN.getCountry());",
+        "NumberFormat nf = NumberFormat.getCurrencyInstance(de);",
+        "NumberFormat nf = NumberFormat.getInstance(de);",
+        "NumberFormat nf = NumberFormat.getIntegerInstance(de);"
+      ],
+      "answer": 2,
+      "symptom": {
+        "kind": "output",
+        "value": "1,234.5"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "output",
+          "value": "1.234,50 €"
+        },
+        null,
+        {
+          "kind": "output",
+          "value": "1.234"
+        }
+      ],
+      "explanation": "Without an argument `NumberFormat.getInstance()` uses the default locale (`1,234.5` for en_US). Pass the locale. `getIntegerInstance` rounds to a whole number (half-even: `1.234`) and `getCurrencyInstance` adds the currency."
+    },
+    {
+      "id": "fb-u10-06",
+      "unit": "u10",
+      "objective": "10.1",
+      "title": "Parsing a custom format",
+      "goal": "Parse the date text and print its weekday.",
+      "output": "FRIDAY",
+      "code": "public class Main {\n    public static void main(String[] args) {\n        String text = \"15.03.2024\";\n        LocalDate d = LocalDate.parse(text);\n        System.out.println(d.getDayOfWeek());\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "LocalDate d = LocalDate.of(text);",
+        "LocalDate d = LocalDate.parse(text, DateTimeFormatter.ofPattern(\"dd.MM.yyyy\"));",
+        "LocalDate d = LocalDate.parse(text, DateTimeFormatter.ISO_LOCAL_DATE);",
+        "LocalDate d = LocalDate.parse(text, DateTimeFormatter.ofPattern(\"dd.mm.yyyy\"));"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "exception",
+        "value": "DateTimeParseException"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        null,
+        {
+          "kind": "exception",
+          "value": "DateTimeParseException"
+        },
+        {
+          "kind": "exception",
+          "value": "DateTimeParseException"
+        }
+      ],
+      "explanation": "`LocalDate.parse(text)` expects ISO `yyyy-MM-dd` and throws `DateTimeParseException` otherwise. Pass a formatter with the matching pattern. With `mm` the `03` is read as minutes, so no month is parsed and it still fails."
+    },
+    {
+      "id": "fb-u11-01",
+      "unit": "u11",
+      "objective": "7.1",
+      "title": "Reading another module",
+      "goal": "Run `com.shop.app`, which calls `Price.tag()`.",
+      "output": "api ok",
+      "code": "// com.shop.app/module-info.java\nmodule com.shop.app {\n    exports com.shop.api;\n}\n// com.shop.app/com/shop/app/Main.java\npackage com.shop.app;\nimport com.shop.api.Price;\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(Price.tag());\n    }\n}",
+      "bugLine": 3,
+      "options": [
+        "opens com.shop.api;",
+        "requires com.shop.api;",
+        "uses com.shop.api.Price;",
+        "requires com.shop.api.Price;"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "A module reads another with `requires <module>`. `exports` and `opens` name packages of the module **itself**, and `requires` takes a module name, not a class.",
+      "context": "Module `com.shop.api` exports package `com.shop.api`, which has `Price.tag()`.",
+      "files": {
+        "com.shop.api/module-info.java": "module com.shop.api {\n    exports com.shop.api;\n}\n",
+        "com.shop.api/com/shop/api/Price.java": "package com.shop.api;\npublic class Price {\n    public static String tag() { return \"api ok\"; }\n}\n"
+      },
+      "mainModule": "com.shop.app/com.shop.app.Main"
+    },
+    {
+      "id": "fb-u11-02",
+      "unit": "u11",
+      "objective": "7.1",
+      "title": "exports takes a package",
+      "goal": "Let `com.shop.app` (which requires `com.shop.api`) call `Price.tag()`.",
+      "output": "api ok",
+      "code": "// com.shop.api/module-info.java\nmodule com.shop.api {\n    exports com.shop.api.Price;\n}\n// com.shop.api/com/shop/api/Price.java\npackage com.shop.api;\npublic class Price {\n    public static String tag() { return \"api ok\"; }\n}",
+      "bugLine": 3,
+      "options": [
+        "exports com.shop.api;",
+        "exports com.shop;",
+        "opens com.shop.api;",
+        "requires transitive com.shop.api;"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        }
+      ],
+      "explanation": "`exports` names a **package**, never a class. `opens` only allows deep reflection at run time; code in other modules still can't compile against the package. A module can't require itself.",
+      "context": "Module `com.shop.app` requires `com.shop.api` and calls `Price.tag()` from its `Main`.",
+      "files": {
+        "com.shop.app/module-info.java": "module com.shop.app {\n    requires com.shop.api;\n}\n",
+        "com.shop.app/com/shop/app/Main.java": "package com.shop.app;\nimport com.shop.api.Price;\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(Price.tag());\n    }\n}\n"
+      },
+      "mainModule": "com.shop.app/com.shop.app.Main"
+    },
+    {
+      "id": "fb-u11-03",
+      "unit": "u11",
+      "objective": "7.1",
+      "title": "uses vs provides",
+      "goal": "Load every `Payment` service and print its name.",
+      "output": "card",
+      "code": "// com.pay.app/module-info.java\nmodule com.pay.app {\n    requires com.pay.api;\n    provides com.pay.api.Payment;\n}\n// com.pay.app/com/pay/app/Main.java\npackage com.pay.app;\nimport com.pay.api.Payment;\nimport java.util.ServiceLoader;\npublic class Main {\n    public static void main(String[] args) {\n        ServiceLoader.load(Payment.class)\n            .forEach(p -> System.out.println(p.name()));\n    }\n}",
+      "bugLine": 4,
+      "options": [
+        "uses com.pay.api.Payment;",
+        "uses com.pay.card.Card;",
+        "exports com.pay.api;",
+        "requires com.pay.card;"
+      ],
+      "answer": 0,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "exception",
+          "value": "ServiceConfigurationError"
+        }
+      ],
+      "explanation": "The consumer of a service declares `uses <interface>`; the provider declares `provides <interface> with <class>`. Without `uses`, `ServiceLoader.load` throws `ServiceConfigurationError`, even if the provider module is readable.",
+      "context": "`com.pay.api` exports interface `Payment`; `com.pay.card` provides it with class `Card`.",
+      "files": {
+        "com.pay.api/module-info.java": "module com.pay.api {\n    exports com.pay.api;\n}\n",
+        "com.pay.api/com/pay/api/Payment.java": "package com.pay.api;\npublic interface Payment {\n    String name();\n}\n",
+        "com.pay.card/module-info.java": "module com.pay.card {\n    requires com.pay.api;\n    provides com.pay.api.Payment with com.pay.card.Card;\n}\n",
+        "com.pay.card/com/pay/card/Card.java": "package com.pay.card;\npublic class Card implements com.pay.api.Payment {\n    public String name() { return \"card\"; }\n}\n"
+      },
+      "mainModule": "com.pay.app/com.pay.app.Main"
+    },
+    {
+      "id": "fb-u11-04",
+      "unit": "u11",
+      "objective": "7.1",
+      "title": "Implied readability",
+      "goal": "Let `com.app`, which requires only `com.lib.util`, use the `Core` it gets back.",
+      "output": "core says hi",
+      "code": "// com.lib.util/module-info.java\nmodule com.lib.util {\n    requires com.lib.core;\n    exports com.lib.util;\n}\n// com.lib.util/com/lib/util/Util.java\npackage com.lib.util;\nimport com.lib.core.Core;\npublic class Util {\n    public static Core make() { return new Core(); }\n}",
+      "bugLine": 3,
+      "options": [
+        "opens com.lib.core;",
+        "exports com.lib.core;",
+        "requires static com.lib.core;",
+        "requires transitive com.lib.core;"
+      ],
+      "answer": 3,
+      "symptom": {
+        "kind": "compile"
+      },
+      "outcomes": [
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "compile"
+        },
+        null
+      ],
+      "explanation": "`requires transitive` passes readability on: every module that reads `com.lib.util` also reads `com.lib.core`. Use it when your exported API exposes another module's types. `requires static` is a compile-time-only dependency and isn't passed on.",
+      "context": "`com.lib.core` exports `Core`. `com.app` requires only `com.lib.util`, and its `Main` does `Core c = Util.make();`.",
+      "files": {
+        "com.lib.core/module-info.java": "module com.lib.core {\n    exports com.lib.core;\n}\n",
+        "com.lib.core/com/lib/core/Core.java": "package com.lib.core;\npublic class Core {\n    public String hello() { return \"core says hi\"; }\n}\n",
+        "com.app/module-info.java": "module com.app {\n    requires com.lib.util;\n}\n",
+        "com.app/com/app/Main.java": "package com.app;\nimport com.lib.core.Core;\nimport com.lib.util.Util;\npublic class Main {\n    public static void main(String[] args) {\n        Core c = Util.make();\n        System.out.println(c.hello());\n    }\n}\n"
+      },
+      "mainModule": "com.app/com.app.Main"
+    },
+    {
+      "id": "fb-u11-05",
+      "unit": "u11",
+      "objective": "7.1",
+      "title": "Deep reflection needs opens",
+      "goal": "Let `com.app` read the private field by reflection.",
+      "output": "42",
+      "code": "// com.data/module-info.java\nmodule com.data {\n    exports com.data;\n}\n// com.data/com/data/Secret.java\npackage com.data;\npublic class Secret {\n    private static String code = \"42\";\n}",
+      "bugLine": 3,
+      "options": [
+        "exports com.data to com.app;",
+        "opens com.data;",
+        "requires transitive com.data;",
+        "uses com.data.Secret;"
+      ],
+      "answer": 1,
+      "symptom": {
+        "kind": "exception",
+        "value": "InaccessibleObjectException"
+      },
+      "outcomes": [
+        {
+          "kind": "exception",
+          "value": "InaccessibleObjectException"
+        },
+        null,
+        {
+          "kind": "compile"
+        },
+        {
+          "kind": "exception",
+          "value": "InaccessibleObjectException"
+        }
+      ],
+      "explanation": "`exports` gives access to **public** members only; `setAccessible(true)` on a private field throws `InaccessibleObjectException` unless the package is **opened** (`opens`, or an `open module`).",
+      "context": "`com.app` requires `com.data` and does `Class.forName(\"com.data.Secret\").getDeclaredField(\"code\")`, then `setAccessible(true)`.",
+      "files": {
+        "com.app/module-info.java": "module com.app {\n    requires com.data;\n}\n",
+        "com.app/com/app/Main.java": "package com.app;\nimport java.lang.reflect.Field;\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        Field f = Class.forName(\"com.data.Secret\").getDeclaredField(\"code\");\n        f.setAccessible(true);\n        System.out.println(f.get(null));\n    }\n}\n"
+      },
+      "mainModule": "com.app/com.app.Main"
+    }
+  ]
+}

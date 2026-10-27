@@ -1,0 +1,1047 @@
+{
+  "items": [
+    {
+      "id": "wr-u01-01",
+      "unit": "u01",
+      "objective": "1.2",
+      "title": "Text block",
+      "prompt": "Declare `String text` as a **text block** holding the two lines `Hello` and `World`, ending with a line break (put the closing `\"\"\"` on its own line).",
+      "hint": "The opening `\"\"\"` must be followed by a new line.",
+      "solutions": [
+        "String text = \"\"\"\n    Hello\n    World\n    \"\"\";",
+        "var text = \"\"\"\n    Hello\n    World\n    \"\"\";"
+      ],
+      "renameable": [],
+      "explanation": "A text block starts with `\"\"\"` and a line break. The common indentation is stripped, and a closing `\"\"\"` on its own line adds the final line break. Indentation doesn't matter for the check.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n\n/*SOLUTION*/\n        System.out.print(text.replace(\"\\n\", \"|\"));\n    }\n}\n",
+      "output": "Hello|World|"
+    },
+    {
+      "id": "wr-u01-02",
+      "unit": "u01",
+      "objective": "1.2",
+      "title": "Reverse with StringBuilder",
+      "prompt": "Given `String word`, declare `String reversed` holding `word` backwards. Use a `StringBuilder` in one statement.",
+      "solutions": [
+        "String reversed = new StringBuilder(word).reverse().toString();",
+        "var reversed = new StringBuilder(word).reverse().toString();"
+      ],
+      "renameable": [],
+      "explanation": "`StringBuilder.reverse()` changes the builder in place and returns it, so the calls chain; `toString()` turns it back into a `String`.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        String word = \"stressed\";\n/*SOLUTION*/\n        System.out.println(reversed);\n    }\n}\n",
+      "output": "desserts"
+    },
+    {
+      "id": "wr-u01-03",
+      "unit": "u01",
+      "objective": "1.2",
+      "title": "strip and upper case",
+      "prompt": "Given `String raw`, declare `String clean`: `raw` without leading and trailing whitespace (use the Unicode-aware method), in upper case.",
+      "hint": "Not `trim()`.",
+      "solutions": [
+        "String clean = raw.strip().toUpperCase();",
+        "String clean = raw.toUpperCase().strip();",
+        "var clean = raw.strip().toUpperCase();",
+        "var clean = raw.toUpperCase().strip();"
+      ],
+      "renameable": [],
+      "explanation": "`strip()` removes all Unicode whitespace; the older `trim()` only removes characters up to `U+0020`, so it would leave the em space in this test.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        String raw = \"  Java 21\\u2003\";\n/*SOLUTION*/\n        System.out.println(\"[\" + clean + \"]\");\n    }\n}\n",
+      "output": "[JAVA 21]"
+    },
+    {
+      "id": "wr-u01-04",
+      "unit": "u01",
+      "objective": "1.1",
+      "title": "Parse to a primitive",
+      "prompt": "Convert `String s` to a primitive `int n` with the `Integer` method that returns a primitive (not a wrapper).",
+      "solutions": [
+        "int n = Integer.parseInt(s);",
+        "var n = Integer.parseInt(s);"
+      ],
+      "renameable": [],
+      "explanation": "`Integer.parseInt` returns an `int`; `Integer.valueOf` returns an `Integer` (a cached wrapper for -128 to 127). Both throw `NumberFormatException` for bad input.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        String s = \"42\";\n/*SOLUTION*/\n        System.out.println(n + 1);\n    }\n}\n",
+      "output": "43"
+    },
+    {
+      "id": "wr-u01-05",
+      "unit": "u01",
+      "objective": "1.1",
+      "title": "char arithmetic",
+      "prompt": "Given `char c`, declare `char next` holding the following letter. `c + 1` is an `int`, so cast it.",
+      "solutions": [
+        "char next = (char) (c + 1);"
+      ],
+      "renameable": [],
+      "explanation": "Adding to a `char` promotes it to `int`. The cast must wrap the whole sum: `(char) c + 1` would still be an `int`.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        char c = 'a';\n/*SOLUTION*/\n        System.out.println(next);\n    }\n}\n",
+      "output": "b"
+    },
+    {
+      "id": "wr-u02-01",
+      "unit": "u02",
+      "objective": "2.1",
+      "title": "Switch expression",
+      "prompt": "Assign `String type` from `int day` with a switch **expression** using arrow labels: 6 and 7 give `\"weekend\"`, anything else `\"weekday\"`.",
+      "solutions": [
+        "String type = switch (day) {\n    case 6, 7 -> \"weekend\";\n    default -> \"weekday\";\n};",
+        "var type = switch (day) {\n    case 6, 7 -> \"weekend\";\n    default -> \"weekday\";\n};"
+      ],
+      "renameable": [],
+      "explanation": "Arrow labels never fall through, one `case` can list several constants, and a switch expression over an `int` needs `default`. Don't forget the `;` after the closing brace: it's an assignment.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        for (int day = 5; day <= 7; day++) {\n/*SOLUTION*/\n            System.out.println(type);\n        }\n    }\n}\n",
+      "output": "weekday\nweekend\nweekend"
+    },
+    {
+      "id": "wr-u02-02",
+      "unit": "u02",
+      "objective": "2.1",
+      "title": "Labeled break",
+      "prompt": "Search `int[][] grid` for `target` with two enhanced `for` loops. Label the outer loop `outer`, set the existing `boolean found` to `true` and leave **both** loops when you find it.",
+      "solutions": [
+        "outer:\nfor (int[] row : grid) {\n    for (int cell : row) {\n        if (cell == target) {\n            found = true;\n            break outer;\n        }\n    }\n}"
+      ],
+      "renameable": [
+        "row",
+        "cell"
+      ],
+      "explanation": "A label goes right before the loop it names. `break outer;` exits the labeled loop, not just the innermost one.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        int[][] grid = {{1, 2}, {3, 4}, {5, 6}};\n        int target = 3;\n        boolean found = false;\n/*SOLUTION*/\n        System.out.println(found);\n    }\n}\n",
+      "output": "true"
+    },
+    {
+      "id": "wr-u02-03",
+      "unit": "u02",
+      "objective": "2.1",
+      "title": "yield from a block",
+      "prompt": "Assign `int score` from `String grade` with a switch expression: `\"A\"` gives 4, `\"B\"` gives 3, and any other grade prints `unknown grade` and yields 0 (use a block with `yield`).",
+      "solutions": [
+        "int score = switch (grade) {\n    case \"A\" -> 4;\n    case \"B\" -> 3;\n    default -> {\n        System.out.println(\"unknown grade\");\n        yield 0;\n    }\n};",
+        "var score = switch (grade) {\n    case \"A\" -> 4;\n    case \"B\" -> 3;\n    default -> {\n        System.out.println(\"unknown grade\");\n        yield 0;\n    }\n};"
+      ],
+      "renameable": [],
+      "explanation": "A block on the right of `->` must end by producing a value with `yield` (or throwing). `return` isn't allowed inside a switch expression.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        for (String grade : new String[] {\"A\", \"B\", \"F\"}) {\n/*SOLUTION*/\n            System.out.println(score);\n        }\n    }\n}\n",
+      "output": "4\n3\nunknown grade\n0"
+    },
+    {
+      "id": "wr-u02-04",
+      "unit": "u02",
+      "objective": "2.1",
+      "title": "do-while",
+      "prompt": "With a `do`/`while` loop, print `n`, then halve it with `n /= 2`, repeating while `n > 0`. `int n` is already declared.",
+      "solutions": [
+        "do {\n    System.out.println(n);\n    n /= 2;\n} while (n > 0);",
+        "do {\n    System.out.println(n);\n    n = n / 2;\n} while (n > 0);"
+      ],
+      "renameable": [],
+      "explanation": "A `do`/`while` body always runs at least once, and the statement ends with a semicolon after the condition.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        int n = 10;\n/*SOLUTION*/\n\n    }\n}\n",
+      "output": "10\n5\n2\n1"
+    },
+    {
+      "id": "wr-u02-05",
+      "unit": "u02",
+      "objective": "2.1",
+      "title": "continue",
+      "prompt": "Print the numbers 1 to 10 except multiples of 3, using a classic `for` loop with `int i` and `continue`.",
+      "solutions": [
+        "for (int i = 1; i <= 10; i++) {\n    if (i % 3 == 0) {\n        continue;\n    }\n    System.out.println(i);\n}",
+        "for (int i = 1; i <= 10; i++) {\n    if (i % 3 == 0) continue;\n    System.out.println(i);\n}"
+      ],
+      "renameable": [],
+      "explanation": "`continue` skips the rest of the body and goes on with the update (`i++`) and the condition.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n\n/*SOLUTION*/\n\n    }\n}\n",
+      "output": "1\n2\n4\n5\n7\n8\n10"
+    },
+    {
+      "id": "wr-u03-01",
+      "unit": "u03",
+      "objective": "3.2",
+      "title": "Record with a compact constructor",
+      "prompt": "Declare `record Point(int x, int y)` with a **compact** constructor that throws `new IllegalArgumentException()` (no message) when `x` or `y` is negative.",
+      "hint": "The compact constructor is just `Point { ... }`.",
+      "solutions": [
+        "record Point(int x, int y) {\n    Point {\n        if (x < 0 || y < 0) {\n            throw new IllegalArgumentException();\n        }\n    }\n}",
+        "record Point(int x, int y) {\n    Point {\n        if (x < 0 || y < 0) throw new IllegalArgumentException();\n    }\n}",
+        "record Point(int x, int y) {\n    Point {\n        if (y < 0 || x < 0) {\n            throw new IllegalArgumentException();\n        }\n    }\n}",
+        "record Point(int x, int y) {\n    Point {\n        if (y < 0 || x < 0) throw new IllegalArgumentException();\n    }\n}"
+      ],
+      "renameable": [],
+      "explanation": "A compact constructor has no parameter list; it sees the parameters and the fields are assigned automatically after its body runs.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        System.out.println(new Point(1, 2));\n        try {\n            new Point(-1, 0);\n            System.out.println(\"accepted\");\n        } catch (IllegalArgumentException e) {\n            System.out.println(\"rejected\");\n        }\n    }\n}\n/*SOLUTION*/\n",
+      "output": "Point[x=1, y=2]\nrejected"
+    },
+    {
+      "id": "wr-u03-02",
+      "unit": "u03",
+      "objective": "3.3",
+      "title": "Varargs",
+      "prompt": "Write `static int sum(int... nums)` that returns the total of its arguments using an enhanced `for` loop.",
+      "solutions": [
+        "static int sum(int... nums) {\n    int total = 0;\n    for (int n : nums) {\n        total += n;\n    }\n    return total;\n}",
+        "static int sum(int... nums) {\n    int total = 0;\n    for (int n : nums) total += n;\n    return total;\n}"
+      ],
+      "renameable": [
+        "total",
+        "n"
+      ],
+      "explanation": "Inside the method a varargs parameter is an ordinary array. Calling `sum()` with no arguments passes an empty array, not `null`.",
+      "harness": "public class Main {\n/*SOLUTION*/\n    public static void main(String[] args) {\n        System.out.println(sum());\n        System.out.println(sum(1, 2, 3));\n    }\n}\n",
+      "output": "0\n6"
+    },
+    {
+      "id": "wr-u03-03",
+      "unit": "u03",
+      "objective": "3.2",
+      "title": "Constructor chaining",
+      "prompt": "Class `Box` already has fields `int w, h` and a constructor `Box(int w, int h)`. Add a constructor `Box(int side)` that delegates to it to make a square.",
+      "solutions": [
+        "Box(int side) {\n    this(side, side);\n}",
+        "public Box(int side) {\n    this(side, side);\n}"
+      ],
+      "renameable": [
+        "side"
+      ],
+      "explanation": "`this(...)` calls another constructor of the same class and must be the first statement.",
+      "harness": "class Box {\n    int w, h;\n    Box(int w, int h) {\n        this.w = w;\n        this.h = h;\n    }\n/*SOLUTION*/\n}\npublic class Main {\n    public static void main(String[] args) {\n        Box b = new Box(3);\n        System.out.println(b.w + \"x\" + b.h);\n    }\n}\n",
+      "output": "3x3"
+    },
+    {
+      "id": "wr-u03-04",
+      "unit": "u03",
+      "objective": "3.2",
+      "title": "Static counter",
+      "prompt": "Declare `class Widget` with a `static int created` field and a no-argument constructor that counts every new `Widget`.",
+      "solutions": [
+        "class Widget {\n    static int created;\n    Widget() {\n        created++;\n    }\n}",
+        "class Widget {\n    static int created;\n    Widget() {\n        created += 1;\n    }\n}",
+        "class Widget {\n    static int created;\n    Widget() {\n        ++created;\n    }\n}",
+        "class Widget {\n    static int created;\n    Widget() {\n        Widget.created++;\n    }\n}"
+      ],
+      "renameable": [],
+      "explanation": "A static field belongs to the class, so all instances share one counter. Static fields default to `0`.",
+      "harness": "/*SOLUTION*/\npublic class Main {\n    public static void main(String[] args) {\n        new Widget();\n        new Widget();\n        new Widget();\n        System.out.println(Widget.created);\n    }\n}\n",
+      "output": "3"
+    },
+    {
+      "id": "wr-u03-05",
+      "unit": "u03",
+      "objective": "3.4",
+      "title": "var with generics",
+      "prompt": "Declare a local variable `names` with `var`, initialized to a new empty `ArrayList` of `String`.",
+      "hint": "The diamond `<>` has nothing to infer from here.",
+      "solutions": [
+        "var names = new ArrayList<String>();"
+      ],
+      "renameable": [],
+      "explanation": "With `var` the type comes from the right side, so the type argument must be written there. `var names = new ArrayList<>();` would infer `ArrayList<Object>`.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n\n/*SOLUTION*/\n        names.add(\"Ana\");\n        System.out.println(names + \" \" + names.get(0).length());\n    }\n}\n",
+      "output": "[Ana] 3"
+    },
+    {
+      "id": "wr-u04-01",
+      "unit": "u04",
+      "objective": "3.5",
+      "title": "Switch over a sealed type",
+      "prompt": "Write `static double area(Shape s)` returning a switch expression over the sealed `Shape`: a `Circle` (component `r`) gives `Math.PI * r * r`, a `Square` (component `side`) gives `side * side`. Use patterns and no `default`.",
+      "solutions": [
+        "static double area(Shape s) {\n    return switch (s) {\n        case Circle c -> Math.PI * c.r() * c.r();\n        case Square q -> q.side() * q.side();\n    };\n}",
+        "static double area(Shape s) {\n    return switch (s) {\n        case Square q -> q.side() * q.side();\n        case Circle c -> Math.PI * c.r() * c.r();\n    };\n}",
+        "static double area(Shape s) {\n    return switch (s) {\n        case Circle(double r) -> Math.PI * r * r;\n        case Square(double side) -> side * side;\n    };\n}",
+        "static double area(Shape s) {\n    return switch (s) {\n        case Square(double side) -> side * side;\n        case Circle(double r) -> Math.PI * r * r;\n    };\n}"
+      ],
+      "renameable": [
+        "s",
+        "c",
+        "q"
+      ],
+      "explanation": "Because `Shape` is sealed and every permitted subtype has a case, the switch is exhaustive without `default`. Type patterns (`Circle c`) and record patterns (`Circle(double r)`) both work.",
+      "harness": "sealed interface Shape permits Circle, Square {}\nrecord Circle(double r) implements Shape {}\nrecord Square(double side) implements Shape {}\npublic class Main {\n/*SOLUTION*/\n    public static void main(String[] args) {\n        System.out.println(area(new Square(2)));\n        System.out.println(area(new Circle(1)));\n    }\n}\n",
+      "output": "4.0\n3.141592653589793"
+    },
+    {
+      "id": "wr-u04-02",
+      "unit": "u04",
+      "objective": "3.6",
+      "title": "Functional interface",
+      "prompt": "Declare `interface Validator`, annotated with `@FunctionalInterface`, with one abstract method `boolean isValid(String s)`.",
+      "solutions": [
+        "@FunctionalInterface\ninterface Validator {\n    boolean isValid(String s);\n}",
+        "@FunctionalInterface\ninterface Validator {\n    public boolean isValid(String s);\n}"
+      ],
+      "renameable": [
+        "s"
+      ],
+      "explanation": "A functional interface has exactly one abstract method, so a lambda can implement it. The annotation is optional but makes the compiler check that rule.",
+      "harness": "/*SOLUTION*/\npublic class Main {\n    public static void main(String[] args) {\n        Validator notBlank = x -> !x.isBlank();\n        System.out.println(notBlank.isValid(\" \") + \" \" + notBlank.isValid(\"ok\"));\n    }\n}\n",
+      "output": "false true"
+    },
+    {
+      "id": "wr-u04-03",
+      "unit": "u04",
+      "objective": "3.7",
+      "title": "Enum with a constructor",
+      "prompt": "Declare `enum Planet` with constants `MERCURY(3.7)` and `EARTH(9.8)`, a `final double gravity` field and a constructor that sets it.",
+      "solutions": [
+        "enum Planet {\n    MERCURY(3.7), EARTH(9.8);\n    final double gravity;\n    Planet(double gravity) {\n        this.gravity = gravity;\n    }\n}",
+        "enum Planet {\n    MERCURY(3.7), EARTH(9.8);\n    private final double gravity;\n    Planet(double gravity) {\n        this.gravity = gravity;\n    }\n}",
+        "enum Planet {\n    MERCURY(3.7), EARTH(9.8);\n    final double gravity;\n    private Planet(double gravity) {\n        this.gravity = gravity;\n    }\n}",
+        "enum Planet {\n    MERCURY(3.7), EARTH(9.8);\n    private final double gravity;\n    private Planet(double gravity) {\n        this.gravity = gravity;\n    }\n}"
+      ],
+      "renameable": [],
+      "explanation": "Enum constants come first and end with `;` when more members follow. Enum constructors are always private (writing `private` is optional), and each constant's arguments go to the constructor.",
+      "harness": "public class Main {\n/*SOLUTION*/\n    public static void main(String[] args) {\n        System.out.println(Planet.EARTH.gravity);\n        System.out.println(Planet.valueOf(\"MERCURY\").ordinal());\n    }\n}\n",
+      "output": "9.8\n0"
+    },
+    {
+      "id": "wr-u04-04",
+      "unit": "u04",
+      "objective": "3.5",
+      "title": "Pattern matching for instanceof",
+      "prompt": "Given `Object o`, write an `if` that binds `String s` with pattern matching when `o` is a `String` longer than 3 characters, and then prints `s.toUpperCase()`.",
+      "solutions": [
+        "if (o instanceof String s && s.length() > 3) {\n    System.out.println(s.toUpperCase());\n}",
+        "if (o instanceof String s && s.length() > 3) System.out.println(s.toUpperCase());"
+      ],
+      "renameable": [
+        "s"
+      ],
+      "explanation": "The pattern variable `s` is in scope on the right of `&&` and inside the body, where the match is known to have succeeded.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        for (Object o : List.of(\"hi\", \"java\", 42)) {\n/*SOLUTION*/\n        }\n    }\n}\n",
+      "output": "JAVA"
+    },
+    {
+      "id": "wr-u04-05",
+      "unit": "u04",
+      "objective": "3.5",
+      "title": "Override with @Override",
+      "prompt": "Write `class Dog` extending the abstract class `Animal` and overriding its package-private `String sound()` to return `\"Woof\"`. Mark it with `@Override`.",
+      "solutions": [
+        "class Dog extends Animal {\n    @Override\n    String sound() {\n        return \"Woof\";\n    }\n}",
+        "class Dog extends Animal {\n    @Override\n    public String sound() {\n        return \"Woof\";\n    }\n}",
+        "class Dog extends Animal {\n    @Override\n    protected String sound() {\n        return \"Woof\";\n    }\n}"
+      ],
+      "renameable": [],
+      "explanation": "An override may keep or widen the access level (package-private, `protected` or `public`), never narrow it. `@Override` makes the compiler check that a method is really overridden.",
+      "harness": "abstract class Animal {\n    abstract String sound();\n}\n/*SOLUTION*/\npublic class Main {\n    public static void main(String[] args) {\n        Animal a = new Dog();\n        System.out.println(a.sound());\n    }\n}\n",
+      "output": "Woof"
+    },
+    {
+      "id": "wr-u04-06",
+      "unit": "u04",
+      "objective": "3.6",
+      "title": "Default method",
+      "prompt": "Declare `interface Greeter` with an abstract `String name()` and a default method `String greet()` that returns `\"Hi \" + name()`.",
+      "solutions": [
+        "interface Greeter {\n    String name();\n    default String greet() {\n        return \"Hi \" + name();\n    }\n}",
+        "interface Greeter {\n    default String greet() {\n        return \"Hi \" + name();\n    }\n    String name();\n}"
+      ],
+      "renameable": [],
+      "explanation": "A default method has a body and can call the interface's abstract methods. With only one abstract method left, `Greeter` is still a functional interface.",
+      "harness": "/*SOLUTION*/\npublic class Main {\n    public static void main(String[] args) {\n        Greeter g = () -> \"Bo\";\n        System.out.println(g.greet());\n    }\n}\n",
+      "output": "Hi Bo"
+    },
+    {
+      "id": "wr-u05-01",
+      "unit": "u05",
+      "objective": "4.1",
+      "title": "Custom checked exception",
+      "prompt": "Declare a **checked** exception `InsufficientFundsException` with a constructor taking `String message` that passes it to the superclass.",
+      "solutions": [
+        "class InsufficientFundsException extends Exception {\n    InsufficientFundsException(String message) {\n        super(message);\n    }\n}",
+        "class InsufficientFundsException extends Exception {\n    public InsufficientFundsException(String message) {\n        super(message);\n    }\n}"
+      ],
+      "renameable": [
+        "message"
+      ],
+      "explanation": "Extending `Exception` (but not `RuntimeException`) makes an exception checked. `super(message)` stores the text that `getMessage()` returns.",
+      "harness": "/*SOLUTION*/\npublic class Main {\n    static void withdraw(int amount) throws InsufficientFundsException {\n        throw new InsufficientFundsException(\"need \" + amount);\n    }\n    public static void main(String[] args) {\n        try {\n            withdraw(5);\n        } catch (InsufficientFundsException e) {\n            Object o = e;\n            System.out.println(e.getMessage() + \" \" + (o instanceof RuntimeException ? \"unchecked\" : \"checked\"));\n        }\n    }\n}\n",
+      "output": "need 5 checked"
+    },
+    {
+      "id": "wr-u05-02",
+      "unit": "u05",
+      "objective": "4.1",
+      "title": "Multi-catch",
+      "prompt": "Call `parse(text)` and print the result. With **one** multi-catch, print `bad input` for a `NumberFormatException` or a `NullPointerException`.",
+      "solutions": [
+        "try {\n    System.out.println(parse(text));\n} catch (NumberFormatException | NullPointerException e) {\n    System.out.println(\"bad input\");\n}",
+        "try {\n    System.out.println(parse(text));\n} catch (NullPointerException | NumberFormatException e) {\n    System.out.println(\"bad input\");\n}"
+      ],
+      "renameable": [
+        "e"
+      ],
+      "explanation": "Alternatives are separated by `|` and share one (implicitly final) variable. They may not be subclasses of each other.",
+      "harness": "public class Main {\n    static int parse(String s) {\n        return Integer.parseInt(s.trim());\n    }\n    public static void main(String[] args) {\n        for (String text : new String[] {\"12\", \"x\", null}) {\n/*SOLUTION*/\n        }\n    }\n}\n",
+      "output": "12\nbad input\nbad input"
+    },
+    {
+      "id": "wr-u05-03",
+      "unit": "u05",
+      "objective": "4.1",
+      "title": "Two resources and finally",
+      "prompt": "Open `Res a = new Res(\"A\")` and then `Res b = new Res(\"B\")` in one try-with-resources header, print `body` inside, and print `finally` in a `finally` block.",
+      "solutions": [
+        "try (Res a = new Res(\"A\"); Res b = new Res(\"B\")) {\n    System.out.println(\"body\");\n} finally {\n    System.out.println(\"finally\");\n}",
+        "try (var a = new Res(\"A\"); var b = new Res(\"B\")) {\n    System.out.println(\"body\");\n} finally {\n    System.out.println(\"finally\");\n}"
+      ],
+      "renameable": [
+        "a",
+        "b"
+      ],
+      "explanation": "Resources close in reverse order (B, then A) right after the body, **before** `catch` and `finally` run.",
+      "harness": "record Res(String n) implements AutoCloseable {\n    public void close() { System.out.println(\"close \" + n); }\n}\npublic class Main {\n    public static void main(String[] args) {\n/*SOLUTION*/\n    }\n}\n",
+      "output": "body\nclose B\nclose A\nfinally"
+    },
+    {
+      "id": "wr-u05-04",
+      "unit": "u05",
+      "objective": "4.1",
+      "title": "Throwing an exception",
+      "prompt": "Write `static void check(int age)` that throws `new IllegalArgumentException(\"age < 0\")` when `age` is negative.",
+      "solutions": [
+        "static void check(int age) {\n    if (age < 0) {\n        throw new IllegalArgumentException(\"age < 0\");\n    }\n}",
+        "static void check(int age) {\n    if (age < 0) throw new IllegalArgumentException(\"age < 0\");\n}"
+      ],
+      "renameable": [
+        "age"
+      ],
+      "explanation": "`IllegalArgumentException` is unchecked, so `check` needs no `throws` clause.",
+      "harness": "public class Main {\n/*SOLUTION*/\n    public static void main(String[] args) {\n        check(3);\n        System.out.println(\"ok\");\n        try {\n            check(-1);\n        } catch (IllegalArgumentException e) {\n            System.out.println(e.getMessage());\n        }\n    }\n}\n",
+      "output": "ok\nage < 0"
+    },
+    {
+      "id": "wr-u05-05",
+      "unit": "u05",
+      "objective": "4.1",
+      "title": "catch and finally",
+      "prompt": "Call `risky()`. Catch any `Exception` and print `\"failed: \"` plus its message; always print `cleanup` in a `finally` block.",
+      "solutions": [
+        "try {\n    risky();\n} catch (Exception e) {\n    System.out.println(\"failed: \" + e.getMessage());\n} finally {\n    System.out.println(\"cleanup\");\n}"
+      ],
+      "renameable": [
+        "e"
+      ],
+      "explanation": "`finally` runs whether or not an exception was thrown or caught.",
+      "harness": "public class Main {\n    static void risky() throws Exception {\n        throw new Exception(\"disk\");\n    }\n    public static void main(String[] args) {\n/*SOLUTION*/\n    }\n}\n",
+      "output": "failed: disk\ncleanup"
+    },
+    {
+      "id": "wr-u06-01",
+      "unit": "u06",
+      "objective": "5.1",
+      "title": "Comparator chain",
+      "prompt": "Sort `List<Person> people` in place by `age()`, then by `name()`, using `Comparator.comparing` (or `comparingInt`) and `thenComparing` with method references.",
+      "solutions": [
+        "people.sort(Comparator.comparing(Person::age).thenComparing(Person::name));",
+        "people.sort(Comparator.comparingInt(Person::age).thenComparing(Person::name));",
+        "Collections.sort(people, Comparator.comparing(Person::age).thenComparing(Person::name));",
+        "Collections.sort(people, Comparator.comparingInt(Person::age).thenComparing(Person::name));"
+      ],
+      "renameable": [],
+      "explanation": "`thenComparing` breaks ties of the first comparator. `List.sort` and `Collections.sort` both sort in place.",
+      "harness": "record Person(String name, int age) {}\npublic class Main {\n    public static void main(String[] args) {\n        List<Person> people = new ArrayList<>(List.of(\n            new Person(\"Cy\", 30), new Person(\"Al\", 30), new Person(\"Bo\", 25)));\n/*SOLUTION*/\n        people.forEach(p -> System.out.println(p.name()));\n    }\n}\n",
+      "output": "Bo\nAl\nCy"
+    },
+    {
+      "id": "wr-u06-02",
+      "unit": "u06",
+      "objective": "5.1",
+      "title": "Counting with merge",
+      "prompt": "Count each word of `String[] words` into the existing `Map<String, Integer> counts` using a for-each loop and `merge`.",
+      "solutions": [
+        "for (String w : words) {\n    counts.merge(w, 1, Integer::sum);\n}",
+        "for (String w : words) counts.merge(w, 1, Integer::sum);",
+        "for (String w : words) {\n    counts.merge(w, 1, (a, b) -> a + b);\n}"
+      ],
+      "renameable": [
+        "w",
+        "a",
+        "b"
+      ],
+      "explanation": "`merge(key, 1, Integer::sum)` puts `1` for a new key and otherwise combines the old value with `1`.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        String[] words = {\"to\", \"be\", \"or\", \"not\", \"to\", \"be\"};\n        Map<String, Integer> counts = new TreeMap<>();\n/*SOLUTION*/\n        System.out.println(counts);\n    }\n}\n",
+      "output": "{be=2, not=1, or=1, to=2}"
+    },
+    {
+      "id": "wr-u06-03",
+      "unit": "u06",
+      "objective": "5.1",
+      "title": "2D array",
+      "prompt": "Declare `int[][] grid` with 3 rows and 4 columns (all zeros), then set the last cell of the last row to 9.",
+      "solutions": [
+        "int[][] grid = new int[3][4];\ngrid[2][3] = 9;",
+        "var grid = new int[3][4];\ngrid[2][3] = 9;"
+      ],
+      "renameable": [],
+      "explanation": "`new int[3][4]` creates 3 row arrays of 4 zeros. Indexes start at 0, so the last cell is `[2][3]`.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n\n/*SOLUTION*/\n        System.out.println(Arrays.deepToString(grid));\n    }\n}\n",
+      "output": "[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 9]]"
+    },
+    {
+      "id": "wr-u06-04",
+      "unit": "u06",
+      "objective": "5.1",
+      "title": "Deque as a stack",
+      "prompt": "Declare `Deque<Integer> stack` as a new `ArrayDeque`, push 1, 2 and 3, then print `stack.pop()`.",
+      "solutions": [
+        "Deque<Integer> stack = new ArrayDeque<>();\nstack.push(1);\nstack.push(2);\nstack.push(3);\nSystem.out.println(stack.pop());"
+      ],
+      "renameable": [],
+      "explanation": "`push` and `pop` work at the **head** of the deque, so it behaves like a stack: last in, first out.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n\n/*SOLUTION*/\n        System.out.println(stack);\n    }\n}\n",
+      "output": "3\n[2, 1]"
+    },
+    {
+      "id": "wr-u06-05",
+      "unit": "u06",
+      "objective": "5.1",
+      "title": "computeIfAbsent",
+      "prompt": "In one statement, add `item` to the list stored under `key` in `Map<String, List<String>> groups`, creating a new `ArrayList` when the key is missing. Use `computeIfAbsent`.",
+      "solutions": [
+        "groups.computeIfAbsent(key, k -> new ArrayList<>()).add(item);"
+      ],
+      "renameable": [
+        "k"
+      ],
+      "explanation": "`computeIfAbsent` returns the existing value, or creates, stores and returns a new one, so `.add` can follow directly.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        Map<String, List<String>> groups = new TreeMap<>();\n        String[][] pairs = {{\"fruit\", \"apple\"}, {\"veg\", \"leek\"}, {\"fruit\", \"fig\"}};\n        for (String[] pair : pairs) {\n            String key = pair[0];\n            String item = pair[1];\n/*SOLUTION*/\n        }\n        System.out.println(groups);\n    }\n}\n",
+      "output": "{fruit=[apple, fig], veg=[leek]}"
+    },
+    {
+      "id": "wr-u07-01",
+      "unit": "u07",
+      "objective": "6.1",
+      "title": "filter, map, toList",
+      "prompt": "From `List<String> names`, build `List<String> result` with the names longer than 3 characters, in upper case, using one stream ending in `toList()`.",
+      "solutions": [
+        "List<String> result = names.stream()\n    .filter(n -> n.length() > 3)\n    .map(String::toUpperCase)\n    .toList();",
+        "List<String> result = names.stream()\n    .filter(n -> n.length() > 3)\n    .map(n -> n.toUpperCase())\n    .toList();",
+        "List<String> result = names.stream()\n    .map(String::toUpperCase)\n    .filter(n -> n.length() > 3)\n    .toList();",
+        "var result = names.stream()\n    .filter(n -> n.length() > 3)\n    .map(String::toUpperCase)\n    .toList();"
+      ],
+      "renameable": [
+        "n"
+      ],
+      "explanation": "`filter` keeps matching elements, `map` transforms them, and `toList()` (Java 16+) collects into an unmodifiable list.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        List<String> names = List.of(\"Bo\", \"Anna\", \"Chris\", \"Ed\");\n/*SOLUTION*/\n        System.out.println(result);\n    }\n}\n",
+      "output": "[ANNA, CHRIS]"
+    },
+    {
+      "id": "wr-u07-02",
+      "unit": "u07",
+      "objective": "6.2",
+      "title": "groupingBy with counting",
+      "prompt": "Build `Map<Integer, Long> byLength` that groups `List<String> words` by length and counts each group.",
+      "solutions": [
+        "Map<Integer, Long> byLength = words.stream()\n    .collect(Collectors.groupingBy(String::length, Collectors.counting()));",
+        "Map<Integer, Long> byLength = words.stream()\n    .collect(Collectors.groupingBy(w -> w.length(), Collectors.counting()));"
+      ],
+      "renameable": [
+        "w"
+      ],
+      "explanation": "The classifier gives the key and the downstream collector the value; `counting()` yields a `Long`.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        List<String> words = List.of(\"ant\", \"bee\", \"deer\", \"cat\", \"horse\");\n/*SOLUTION*/\n        System.out.println(new TreeMap<>(byLength));\n    }\n}\n",
+      "output": "{3=3, 4=1, 5=1}"
+    },
+    {
+      "id": "wr-u07-03",
+      "unit": "u07",
+      "objective": "6.2",
+      "title": "reduce",
+      "prompt": "Compute `int product` of `List<Integer> nums` with `reduce`, using the identity `1`.",
+      "solutions": [
+        "int product = nums.stream().reduce(1, (a, b) -> a * b);",
+        "int product = nums.stream().reduce(1, Math::multiplyExact);"
+      ],
+      "renameable": [
+        "a",
+        "b"
+      ],
+      "explanation": "With an identity, `reduce` returns a plain value (not an `Optional`), and the identity is the result for an empty stream.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        List<Integer> nums = List.of(2, 3, 7);\n/*SOLUTION*/\n        System.out.println(product);\n    }\n}\n",
+      "output": "42"
+    },
+    {
+      "id": "wr-u07-04",
+      "unit": "u07",
+      "objective": "6.2",
+      "title": "partitioningBy",
+      "prompt": "Build `Map<Boolean, List<Integer>> parts` that splits `nums` into even (`true`) and odd (`false`) numbers.",
+      "solutions": [
+        "Map<Boolean, List<Integer>> parts = nums.stream()\n    .collect(Collectors.partitioningBy(n -> n % 2 == 0));"
+      ],
+      "renameable": [
+        "n"
+      ],
+      "explanation": "`partitioningBy` always produces both keys, `false` and `true`, even when one list is empty.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        List<Integer> nums = List.of(1, 2, 3, 4);\n/*SOLUTION*/\n        System.out.println(parts);\n    }\n}\n",
+      "output": "{false=[1, 3], true=[2, 4]}"
+    },
+    {
+      "id": "wr-u07-05",
+      "unit": "u07",
+      "objective": "6.1",
+      "title": "BiFunction lambda",
+      "prompt": "Declare `BiFunction<Integer, Integer, Integer> max` as a lambda that returns the larger argument using the conditional operator `? :`.",
+      "solutions": [
+        "BiFunction<Integer, Integer, Integer> max = (a, b) -> a > b ? a : b;",
+        "BiFunction<Integer, Integer, Integer> max = (a, b) -> a >= b ? a : b;"
+      ],
+      "renameable": [
+        "a",
+        "b"
+      ],
+      "explanation": "A `BiFunction<T, U, R>` takes two arguments and returns an `R`. A single-expression lambda needs no braces or `return`.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n\n/*SOLUTION*/\n        System.out.println(max.apply(3, 9) + \" \" + max.apply(5, 2));\n    }\n}\n",
+      "output": "9 5"
+    },
+    {
+      "id": "wr-u07-06",
+      "unit": "u07",
+      "objective": "6.1",
+      "title": "Constructor reference",
+      "prompt": "Declare `Supplier<List<String>> maker` as a constructor reference that creates a new `ArrayList`.",
+      "solutions": [
+        "Supplier<List<String>> maker = ArrayList::new;"
+      ],
+      "renameable": [],
+      "explanation": "`ArrayList::new` is short for `() -> new ArrayList<>()`; each `get()` makes a new list.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n\n/*SOLUTION*/\n        List<String> list = maker.get();\n        list.add(\"x\");\n        System.out.println(list + \" \" + (maker.get() != list));\n    }\n}\n",
+      "output": "[x] true"
+    },
+    {
+      "id": "wr-u07-07",
+      "unit": "u07",
+      "objective": "6.2",
+      "title": "joining",
+      "prompt": "Join `List<String> parts` into `String csv`, separated by `, ` and wrapped in `[` and `]`, with the three-argument `Collectors.joining`.",
+      "solutions": [
+        "String csv = parts.stream().collect(Collectors.joining(\", \", \"[\", \"]\"));"
+      ],
+      "renameable": [],
+      "explanation": "`joining(delimiter, prefix, suffix)` adds the prefix and suffix once, around the whole result.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        List<String> parts = List.of(\"a\", \"b\", \"c\");\n/*SOLUTION*/\n        System.out.println(csv);\n    }\n}\n",
+      "output": "[a, b, c]"
+    },
+    {
+      "id": "wr-u08-01",
+      "unit": "u08",
+      "objective": "8.1",
+      "title": "Virtual thread",
+      "prompt": "Start a virtual thread that prints `working`, keep it in `Thread t`, and wait for it to finish.",
+      "solutions": [
+        "Thread t = Thread.ofVirtual().start(() -> System.out.println(\"working\"));\nt.join();",
+        "Thread t = Thread.startVirtualThread(() -> System.out.println(\"working\"));\nt.join();",
+        "var t = Thread.ofVirtual().start(() -> System.out.println(\"working\"));\nt.join();"
+      ],
+      "renameable": [],
+      "explanation": "`Thread.ofVirtual().start(task)` and `Thread.startVirtualThread(task)` both create and start a virtual thread. `join()` waits for it (and throws `InterruptedException`).",
+      "harness": "public class Main {\n    public static void main(String[] args) throws Exception {\n\n/*SOLUTION*/\n        System.out.println(\"done\");\n    }\n}\n",
+      "output": "working\ndone"
+    },
+    {
+      "id": "wr-u08-02",
+      "unit": "u08",
+      "objective": "8.1",
+      "title": "Callable and Future",
+      "prompt": "In a try-with-resources, create `ExecutorService pool` with `Executors.newVirtualThreadPerTaskExecutor()`, submit a task returning `6 * 7` into `Future<Integer> f`, and print `f.get()`.",
+      "solutions": [
+        "try (ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor()) {\n    Future<Integer> f = pool.submit(() -> 6 * 7);\n    System.out.println(f.get());\n}",
+        "try (var pool = Executors.newVirtualThreadPerTaskExecutor()) {\n    Future<Integer> f = pool.submit(() -> 6 * 7);\n    System.out.println(f.get());\n}",
+        "try (ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor()) {\n    var f = pool.submit(() -> 6 * 7);\n    System.out.println(f.get());\n}",
+        "try (var pool = Executors.newVirtualThreadPerTaskExecutor()) {\n    var f = pool.submit(() -> 6 * 7);\n    System.out.println(f.get());\n}"
+      ],
+      "renameable": [],
+      "explanation": "A lambda that returns a value is a `Callable`, so `submit` returns a `Future` of that type. `ExecutorService` is `AutoCloseable` since Java 19.",
+      "harness": "public class Main {\n    public static void main(String[] args) throws Exception {\n\n/*SOLUTION*/\n\n    }\n}\n",
+      "output": "42"
+    },
+    {
+      "id": "wr-u08-03",
+      "unit": "u08",
+      "objective": "8.2",
+      "title": "Lock idiom",
+      "prompt": "Inside `increment()`, add one to `count` while holding `lock` (a `ReentrantLock`). Release the lock in a `finally` block.",
+      "solutions": [
+        "lock.lock();\ntry {\n    count++;\n} finally {\n    lock.unlock();\n}",
+        "lock.lock();\ntry {\n    count += 1;\n} finally {\n    lock.unlock();\n}",
+        "lock.lock();\ntry {\n    ++count;\n} finally {\n    lock.unlock();\n}"
+      ],
+      "renameable": [],
+      "explanation": "Call `lock()` **before** the `try`: if it were inside and failed, `finally` would unlock a lock you don't hold.",
+      "harness": "public class Main {\n    static final Lock lock = new ReentrantLock();\n    static int count = 0;\n    static void increment() {\n/*SOLUTION*/\n    }\n    public static void main(String[] args) {\n        try (var pool = Executors.newFixedThreadPool(4)) {\n            for (int i = 0; i < 4000; i++) {\n                pool.submit(Main::increment);\n            }\n        }\n        System.out.println(count);\n    }\n}\n",
+      "output": "4000"
+    },
+    {
+      "id": "wr-u08-04",
+      "unit": "u08",
+      "objective": "8.2",
+      "title": "synchronized method",
+      "prompt": "In class `Counter` (field `int total`), write a `synchronized` instance method `void add(int n)` that adds `n` to `total`.",
+      "solutions": [
+        "synchronized void add(int n) {\n    total += n;\n}",
+        "public synchronized void add(int n) {\n    total += n;\n}",
+        "synchronized void add(int n) {\n    this.total += n;\n}"
+      ],
+      "renameable": [
+        "n"
+      ],
+      "explanation": "A synchronized instance method locks `this`, so only one thread at a time runs it on the same object.",
+      "harness": "class Counter {\n    int total;\n/*SOLUTION*/\n}\npublic class Main {\n    public static void main(String[] args) {\n        Counter c = new Counter();\n        try (var pool = Executors.newFixedThreadPool(4)) {\n            for (int i = 0; i < 4000; i++) {\n                pool.submit(() -> c.add(2));\n            }\n        }\n        System.out.println(c.total);\n    }\n}\n",
+      "output": "8000"
+    },
+    {
+      "id": "wr-u08-05",
+      "unit": "u08",
+      "objective": "8.3",
+      "title": "Atomic update in a ConcurrentHashMap",
+      "prompt": "Inside a parallel `forEach`, increment the count for `word` in `ConcurrentHashMap<String, Integer> counts` atomically with `merge`.",
+      "solutions": [
+        "counts.merge(word, 1, Integer::sum);",
+        "counts.merge(word, 1, (a, b) -> a + b);"
+      ],
+      "renameable": [
+        "a",
+        "b"
+      ],
+      "explanation": "`ConcurrentHashMap.merge` is atomic per key. A `get` followed by `put` would lose updates under contention.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        ConcurrentHashMap<String, Integer> counts = new ConcurrentHashMap<>();\n        List<String> words = Collections.nCopies(500, List.of(\"a\", \"b\")).stream()\n            .flatMap(List::stream).toList();\n        words.parallelStream().forEach(word -> {\n/*SOLUTION*/\n        });\n        System.out.println(new TreeMap<>(counts));\n    }\n}\n",
+      "output": "{a=500, b=500}"
+    },
+    {
+      "id": "wr-u09-01",
+      "unit": "u09",
+      "objective": "9.1",
+      "title": "try-with-resources over a BufferedReader",
+      "prompt": "Open `Path path` with `Files.newBufferedReader` in try-with-resources and print every line with a `readLine()` loop. `main` already `throws IOException`.",
+      "solutions": [
+        "try (BufferedReader reader = Files.newBufferedReader(path)) {\n    String line;\n    while ((line = reader.readLine()) != null) {\n        System.out.println(line);\n    }\n}",
+        "try (var reader = Files.newBufferedReader(path)) {\n    String line;\n    while ((line = reader.readLine()) != null) {\n        System.out.println(line);\n    }\n}",
+        "try (BufferedReader reader = Files.newBufferedReader(path)) {\n    String line;\n    while ((line = reader.readLine()) != null) System.out.println(line);\n}"
+      ],
+      "renameable": [
+        "reader",
+        "line"
+      ],
+      "explanation": "`readLine()` returns `null` at the end of the file, so assign and test in one expression. The reader is closed automatically, even when an exception is thrown.",
+      "harness": "public class Main {\n    public static void main(String[] args) throws IOException {\n        Path path = Path.of(\"in.txt\");\n        Files.writeString(path, \"alpha\\nbeta\\n\");\n/*SOLUTION*/\n\n    }\n}\n",
+      "output": "alpha\nbeta"
+    },
+    {
+      "id": "wr-u09-02",
+      "unit": "u09",
+      "objective": "9.3",
+      "title": "Write and read a file",
+      "prompt": "Write the text `\"x\\ny\"` to `Path file` with `Files.writeString`, then read it back into `List<String> lines` with `Files.readAllLines`.",
+      "solutions": [
+        "Files.writeString(file, \"x\\ny\");\nList<String> lines = Files.readAllLines(file);",
+        "Files.writeString(file, \"x\\ny\");\nvar lines = Files.readAllLines(file);"
+      ],
+      "renameable": [],
+      "explanation": "`writeString` creates or truncates the file (UTF-8 by default); `readAllLines` reads it fully into a list, splitting at line breaks.",
+      "harness": "public class Main {\n    public static void main(String[] args) throws IOException {\n        Path file = Path.of(\"data.txt\");\n/*SOLUTION*/\n        System.out.println(lines.size() + \" \" + lines);\n    }\n}\n",
+      "output": "2 [x, y]"
+    },
+    {
+      "id": "wr-u09-03",
+      "unit": "u09",
+      "objective": "9.3",
+      "title": "normalize",
+      "prompt": "Declare `Path p` for `/a/b/../c`, normalized, in one statement.",
+      "solutions": [
+        "Path p = Path.of(\"/a/b/../c\").normalize();",
+        "Path p = Paths.get(\"/a/b/../c\").normalize();",
+        "var p = Path.of(\"/a/b/../c\").normalize();"
+      ],
+      "renameable": [],
+      "explanation": "`normalize()` removes `.` and `name/..` pairs without touching the file system. `Path.of` (Java 11+) and `Paths.get` are equivalent.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n\n/*SOLUTION*/\n        System.out.println(p);\n    }\n}\n",
+      "output": "/a/c"
+    },
+    {
+      "id": "wr-u09-04",
+      "unit": "u09",
+      "objective": "9.2",
+      "title": "Serializable with transient",
+      "prompt": "Declare `class Session` that can be serialized, with a `String user` field and a `transient String token` field.",
+      "solutions": [
+        "class Session implements Serializable {\n    String user;\n    transient String token;\n}",
+        "class Session implements Serializable {\n    transient String token;\n    String user;\n}"
+      ],
+      "renameable": [],
+      "explanation": "Implementing `Serializable` is enough to serialize; `transient` fields are skipped and come back as their default value (`null`).",
+      "harness": "/*SOLUTION*/\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        Session s = new Session();\n        s.user = \"ana\";\n        s.token = \"secret\";\n        var bytes = new ByteArrayOutputStream();\n        try (var out = new ObjectOutputStream(bytes)) {\n            out.writeObject(s);\n        }\n        try (var in = new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()))) {\n            Session back = (Session) in.readObject();\n            System.out.println(back.user + \" \" + back.token);\n        }\n    }\n}\n",
+      "output": "ana null"
+    },
+    {
+      "id": "wr-u09-05",
+      "unit": "u09",
+      "objective": "9.3",
+      "title": "Files.list in try-with-resources",
+      "prompt": "Declare `long count` and set it to the number of regular files directly inside `Path dir`. Close the stream from `Files.list` with try-with-resources.",
+      "solutions": [
+        "long count;\ntry (Stream<Path> entries = Files.list(dir)) {\n    count = entries.filter(Files::isRegularFile).count();\n}",
+        "long count;\ntry (var entries = Files.list(dir)) {\n    count = entries.filter(Files::isRegularFile).count();\n}"
+      ],
+      "renameable": [
+        "entries"
+      ],
+      "explanation": "`Files.list` and `Files.walk` keep a directory handle open, so their streams should be closed. `Files.list` isn't recursive.",
+      "harness": "public class Main {\n    public static void main(String[] args) throws IOException {\n        Path dir = Path.of(\"box\");\n        Files.createDirectories(dir.resolve(\"sub\"));\n        Files.writeString(dir.resolve(\"a.txt\"), \"1\");\n        Files.writeString(dir.resolve(\"b.txt\"), \"2\");\n/*SOLUTION*/\n        System.out.println(count);\n    }\n}\n",
+      "output": "2"
+    },
+    {
+      "id": "wr-u10-01",
+      "unit": "u10",
+      "objective": "1.3",
+      "title": "Adding days",
+      "prompt": "Declare `LocalDate due` as 30 days after `LocalDate start`.",
+      "solutions": [
+        "LocalDate due = start.plusDays(30);",
+        "LocalDate due = start.plus(30, ChronoUnit.DAYS);",
+        "LocalDate due = start.plus(Period.ofDays(30));",
+        "var due = start.plusDays(30);"
+      ],
+      "renameable": [],
+      "explanation": "`LocalDate` is immutable, so `plusDays` returns a new date; keep the result.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        LocalDate start = LocalDate.of(2024, 2, 20);\n/*SOLUTION*/\n        System.out.println(due);\n    }\n}\n",
+      "output": "2024-03-21"
+    },
+    {
+      "id": "wr-u10-02",
+      "unit": "u10",
+      "objective": "1.3",
+      "title": "Period between dates",
+      "prompt": "Declare `Period age` as the period from `LocalDate birth` to `LocalDate today`.",
+      "solutions": [
+        "Period age = Period.between(birth, today);",
+        "var age = Period.between(birth, today);"
+      ],
+      "renameable": [],
+      "explanation": "`Period.between(start, end)` counts whole years, months and days; the end date is exclusive.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        LocalDate birth = LocalDate.of(1990, 5, 15);\n        LocalDate today = LocalDate.of(2024, 3, 10);\n/*SOLUTION*/\n        System.out.println(age + \" \" + age.getYears());\n    }\n}\n",
+      "output": "P33Y9M24D 33"
+    },
+    {
+      "id": "wr-u10-03",
+      "unit": "u10",
+      "objective": "10.1",
+      "title": "Formatting a date",
+      "prompt": "Format `LocalDate d` as day/month/year with two-digit day and month (like `09/03/2024`) into `String s`.",
+      "solutions": [
+        "String s = d.format(DateTimeFormatter.ofPattern(\"dd/MM/yyyy\"));",
+        "String s = DateTimeFormatter.ofPattern(\"dd/MM/yyyy\").format(d);"
+      ],
+      "renameable": [],
+      "explanation": "`MM` is the month and `mm` the minute; `dd` is the day of the month and `DD` the day of the year.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        LocalDate d = LocalDate.of(2024, 3, 9);\n/*SOLUTION*/\n        System.out.println(s);\n    }\n}\n",
+      "output": "09/03/2024"
+    },
+    {
+      "id": "wr-u10-04",
+      "unit": "u10",
+      "objective": "10.1",
+      "title": "Locale-specific numbers",
+      "prompt": "Format `double amount` for `Locale.GERMANY` with `NumberFormat.getInstance` into `String text`.",
+      "solutions": [
+        "String text = NumberFormat.getInstance(Locale.GERMANY).format(amount);",
+        "var text = NumberFormat.getInstance(Locale.GERMANY).format(amount);"
+      ],
+      "renameable": [],
+      "explanation": "German formatting uses `.` for grouping and `,` for decimals. The default `NumberFormat` shows up to three fraction digits.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        double amount = 1234567.891;\n/*SOLUTION*/\n        System.out.println(text);\n    }\n}\n",
+      "output": "1.234.567,891"
+    },
+    {
+      "id": "wr-u10-05",
+      "unit": "u10",
+      "objective": "1.3",
+      "title": "Time zones",
+      "prompt": "`LocalDateTime meeting` is Paris time. Declare `ZonedDateTime tokyo`: the same instant in `Asia/Tokyo`.",
+      "solutions": [
+        "ZonedDateTime tokyo = meeting.atZone(ZoneId.of(\"Europe/Paris\"))\n    .withZoneSameInstant(ZoneId.of(\"Asia/Tokyo\"));",
+        "var tokyo = meeting.atZone(ZoneId.of(\"Europe/Paris\"))\n    .withZoneSameInstant(ZoneId.of(\"Asia/Tokyo\"));"
+      ],
+      "renameable": [],
+      "explanation": "`atZone` attaches a zone to a local date-time; `withZoneSameInstant` converts to another zone, while `withZoneSameLocal` would keep the wall-clock time.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n        LocalDateTime meeting = LocalDateTime.of(2024, 7, 1, 10, 0);\n/*SOLUTION*/\n        System.out.println(tokyo);\n    }\n}\n",
+      "output": "2024-07-01T17:00+09:00[Asia/Tokyo]"
+    },
+    {
+      "id": "wr-u10-06",
+      "unit": "u10",
+      "objective": "10.1",
+      "title": "Creating a Locale",
+      "prompt": "Declare `Locale swiss` for French as spoken in Switzerland (`fr`, `CH`) with the Java 19+ factory method.",
+      "solutions": [
+        "Locale swiss = Locale.of(\"fr\", \"CH\");",
+        "var swiss = Locale.of(\"fr\", \"CH\");"
+      ],
+      "renameable": [],
+      "explanation": "`Locale.of(language, country)` replaces the deprecated `Locale` constructors. Language codes are lower case, country codes upper case.",
+      "harness": "public class Main {\n    public static void main(String[] args) {\n\n/*SOLUTION*/\n        System.out.println(swiss + \" \" + swiss.getDisplayCountry(Locale.ENGLISH));\n    }\n}\n",
+      "output": "fr_CH Switzerland"
+    },
+    {
+      "id": "wr-u11-01",
+      "unit": "u11",
+      "objective": "7.1",
+      "title": "module-info basics",
+      "prompt": "Write `module-info.java` for module `com.shop.app`: it reads module `com.shop.api` and makes its own package `com.shop.app` available to other modules.",
+      "solutions": [
+        "module com.shop.app {\n    requires com.shop.api;\n    exports com.shop.app;\n}",
+        "module com.shop.app {\n    exports com.shop.app;\n    requires com.shop.api;\n}"
+      ],
+      "renameable": [],
+      "explanation": "`requires` takes a module name; `exports` takes a package of this module. `java.base` is read implicitly.",
+      "output": "[com.shop.api, java.base]\n[com.shop.app]\napi ok",
+      "files": {
+        "com.shop.api/module-info.java": "module com.shop.api {\n    exports com.shop.api;\n}\n",
+        "com.shop.api/com/shop/api/Price.java": "package com.shop.api;\npublic class Price {\n    public static String tag() { return \"api ok\"; }\n}\n",
+        "com.shop.app/module-info.java": "/*SOLUTION*/\n",
+        "com.shop.app/com/shop/app/Main.java": "package com.shop.app;\nimport java.lang.module.ModuleDescriptor;\npublic class Main {\n    public static void main(String[] args) {\n        ModuleDescriptor d = Main.class.getModule().getDescriptor();\n        System.out.println(d.requires().stream().map(r -> r.name()).sorted().toList());\n        System.out.println(d.exports().stream().map(e -> e.source()).sorted().toList());\n        System.out.println(com.shop.api.Price.tag());\n    }\n}\n"
+      },
+      "mainModule": "com.shop.app/com.shop.app.Main"
+    },
+    {
+      "id": "wr-u11-02",
+      "unit": "u11",
+      "objective": "7.1",
+      "title": "Providing a service",
+      "prompt": "Write `module-info.java` for `com.pay.card`: it reads `com.pay.api` and provides the service `com.pay.api.Payment` with the class `com.pay.card.Card`.",
+      "solutions": [
+        "module com.pay.card {\n    requires com.pay.api;\n    provides com.pay.api.Payment with com.pay.card.Card;\n}",
+        "module com.pay.card {\n    provides com.pay.api.Payment with com.pay.card.Card;\n    requires com.pay.api;\n}"
+      ],
+      "renameable": [],
+      "explanation": "`provides <interface> with <implementation>` registers the provider; the consumer declares `uses <interface>`. The provider's package doesn't need to be exported.",
+      "output": "card",
+      "files": {
+        "com.pay.api/module-info.java": "module com.pay.api {\n    exports com.pay.api;\n}\n",
+        "com.pay.api/com/pay/api/Payment.java": "package com.pay.api;\npublic interface Payment {\n    String name();\n}\n",
+        "com.pay.card/module-info.java": "/*SOLUTION*/\n",
+        "com.pay.card/com/pay/card/Card.java": "package com.pay.card;\npublic class Card implements com.pay.api.Payment {\n    public String name() { return \"card\"; }\n}\n",
+        "com.pay.app/module-info.java": "module com.pay.app {\n    requires com.pay.api;\n    uses com.pay.api.Payment;\n}\n",
+        "com.pay.app/com/pay/app/Main.java": "package com.pay.app;\nimport com.pay.api.Payment;\nimport java.util.ServiceLoader;\npublic class Main {\n    public static void main(String[] args) {\n        ServiceLoader.load(Payment.class).forEach(p -> System.out.println(p.name()));\n    }\n}\n"
+      },
+      "mainModule": "com.pay.app/com.pay.app.Main"
+    },
+    {
+      "id": "wr-u11-03",
+      "unit": "u11",
+      "objective": "7.1",
+      "title": "requires transitive, qualified exports",
+      "prompt": "Write `module-info.java` for `com.lib.util`: every module that reads it must also read `com.lib.core`, and its package `com.lib.util` is exported **only** to module `com.app`.",
+      "solutions": [
+        "module com.lib.util {\n    requires transitive com.lib.core;\n    exports com.lib.util to com.app;\n}",
+        "module com.lib.util {\n    exports com.lib.util to com.app;\n    requires transitive com.lib.core;\n}"
+      ],
+      "renameable": [],
+      "explanation": "`requires transitive` gives readers of this module implied readability of `com.lib.core`. `exports ... to` is a qualified export, visible only to the listed modules.",
+      "output": "core says hi\ncom.lib.util to [com.app]",
+      "files": {
+        "com.lib.core/module-info.java": "module com.lib.core {\n    exports com.lib.core;\n}\n",
+        "com.lib.core/com/lib/core/Core.java": "package com.lib.core;\npublic class Core {\n    public String hello() { return \"core says hi\"; }\n}\n",
+        "com.lib.util/module-info.java": "/*SOLUTION*/\n",
+        "com.lib.util/com/lib/util/Util.java": "package com.lib.util;\nimport com.lib.core.Core;\npublic class Util {\n    public static Core make() { return new Core(); }\n}\n",
+        "com.app/module-info.java": "module com.app {\n    requires com.lib.util;\n}\n",
+        "com.app/com/app/Main.java": "package com.app;\nimport com.lib.core.Core;\nimport com.lib.util.Util;\npublic class Main {\n    public static void main(String[] args) {\n        Core c = Util.make();\n        System.out.println(c.hello());\n        Util.class.getModule().getDescriptor().exports()\n            .forEach(e -> System.out.println(e.source() + \" to \" + e.targets()));\n    }\n}\n"
+      },
+      "mainModule": "com.app/com.app.Main"
+    },
+    {
+      "id": "wr-u11-04",
+      "unit": "u11",
+      "objective": "7.1",
+      "title": "opens for reflection",
+      "prompt": "Write `module-info.java` for `com.data` that exports nothing but allows deep reflection on its package `com.data`, using an `opens` directive.",
+      "solutions": [
+        "module com.data {\n    opens com.data;\n}"
+      ],
+      "renameable": [],
+      "explanation": "`opens` grants run-time reflective access (including private members) but no compile-time access. `open module` would open every package.",
+      "output": "42",
+      "files": {
+        "com.data/module-info.java": "/*SOLUTION*/\n",
+        "com.data/com/data/Secret.java": "package com.data;\npublic class Secret {\n    private static String code = \"42\";\n}\n",
+        "com.app/module-info.java": "module com.app {\n    requires com.data;\n}\n",
+        "com.app/com/app/Main.java": "package com.app;\nimport java.lang.reflect.Field;\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        Field f = Class.forName(\"com.data.Secret\").getDeclaredField(\"code\");\n        f.setAccessible(true);\n        System.out.println(f.get(null));\n    }\n}\n"
+      },
+      "mainModule": "com.app/com.app.Main"
+    },
+    {
+      "id": "wr-u11-05",
+      "unit": "u11",
+      "objective": "7.2",
+      "title": "javac in module mode",
+      "prompt": "Write one `javac` command that compiles module `com.app`, whose sources are in `src/com.app`, into the directory `out`, using the module source path.",
+      "solutions": [
+        "javac -d out --module-source-path src -m com.app",
+        "javac --module-source-path src -d out -m com.app",
+        "javac -d out --module-source-path src --module com.app",
+        "javac --module-source-path src -d out --module com.app"
+      ],
+      "renameable": [],
+      "explanation": "`--module-source-path src` expects one folder per module (`src/com.app/...`); `-m` (`--module`) names the modules to compile and `-d` the output folder, which gets one subfolder per module.",
+      "output": "hello from com.app",
+      "files": {
+        "src/com.app/module-info.java": "module com.app {\n}\n",
+        "src/com.app/com/app/Main.java": "package com.app;\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(\"hello from \" + Main.class.getModule().getName());\n    }\n}\n"
+      },
+      "shell": true,
+      "check": "java --module-path out -m com.app/com.app.Main"
+    },
+    {
+      "id": "wr-u11-06",
+      "unit": "u11",
+      "objective": "7.2",
+      "title": "Executable jar",
+      "prompt": "The compiled classes are in `classes`. Write one `jar` command that creates `app.jar` from them with `com.app.Main` as the entry point.",
+      "solutions": [
+        "jar --create --file app.jar --main-class com.app.Main -C classes .",
+        "jar --create --main-class com.app.Main --file app.jar -C classes .",
+        "jar cfe app.jar com.app.Main -C classes .",
+        "jar -c -f app.jar -e com.app.Main -C classes ."
+      ],
+      "renameable": [],
+      "explanation": "`--main-class` (`-e`) writes `Main-Class` into the manifest so `java -jar app.jar` can run it, and `-C classes .` adds everything under `classes` without the `classes/` prefix.",
+      "output": "hello from jar",
+      "files": {
+        "src/com/app/Main.java": "package com.app;\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(\"hello from jar\");\n    }\n}\n"
+      },
+      "shell": true,
+      "setup": [
+        "javac -d classes src/com/app/Main.java"
+      ],
+      "check": "java -jar app.jar"
+    },
+    {
+      "id": "wr-u11-07",
+      "unit": "u11",
+      "objective": "7.2",
+      "title": "Custom runtime image",
+      "prompt": "Module `com.app` is compiled in `out`. Write one `jlink` command that builds a runtime image in folder `image` containing `com.app` and what it needs.",
+      "solutions": [
+        "jlink --module-path out --add-modules com.app --output image",
+        "jlink --add-modules com.app --module-path out --output image",
+        "jlink -p out --add-modules com.app --output image",
+        "jlink --module-path out --output image --add-modules com.app"
+      ],
+      "renameable": [],
+      "explanation": "`jlink` links the root modules from `--add-modules` and everything they require into a minimal JRE at `--output`. The JDK's own modules are found automatically.",
+      "output": "hello from com.app",
+      "files": {
+        "src/com.app/module-info.java": "module com.app {\n}\n",
+        "src/com.app/com/app/Main.java": "package com.app;\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(\"hello from \" + Main.class.getModule().getName());\n    }\n}\n"
+      },
+      "shell": true,
+      "setup": [
+        "javac -d out --module-source-path src -m com.app"
+      ],
+      "check": "image/bin/java -m com.app/com.app.Main"
+    }
+  ]
+}

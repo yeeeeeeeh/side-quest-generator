@@ -1,0 +1,3082 @@
+{
+  "unitId": "u01",
+  "lessons": [
+    {
+      "id": "u01-l01",
+      "title": "Hello Java",
+      "summary": "Classes, main, javac and java, statements and comments.",
+      "minutes": 6,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Your first Java program",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "In Java, all code lives inside a **class**. The JVM starts your program by calling a method named `main`."
+            },
+            {
+              "type": "code",
+              "code": "public class Hello {\n    public static void main(String[] args) {\n        System.out.println(\"Hello, Java!\");\n    }\n}",
+              "caption": "Hello.java"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`System.out.println` prints a value and then a line break.",
+                "Every statement ends with a semicolon `;`.",
+                "Curly braces `{ }` mark where a class or method starts and ends."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "text": "Python runs a file from top to bottom. Java needs a class with a `main` method. Indentation is only for humans: the braces define the blocks."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Anatomy of main",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Part",
+                "Meaning"
+              ],
+              "rows": [
+                [
+                  "`public`",
+                  "The JVM can call it from outside"
+                ],
+                [
+                  "`static`",
+                  "Runs without creating an object"
+                ],
+                [
+                  "`void`",
+                  "Returns nothing"
+                ],
+                [
+                  "`main`",
+                  "The exact name the JVM looks for"
+                ],
+                [
+                  "`String[] args`",
+                  "Command-line arguments"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "These variations are also valid entry points:"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`String args[]` or `String... args` (varargs)",
+                "Any parameter name: `String[] x`",
+                "`final String[] args`",
+                "Modifier order can swap: `static public void main`"
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "text": "Not entry points: a non-`static` main, a return type other than `void`, a parameter that is not a `String` array, or the name `Main`. Some of these still compile, but `java` refuses to run them."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l01-e01",
+          "kind": "multiChoice",
+          "prompt": "Which two methods can be the entry point when you run `java Main`? Choose two.",
+          "options": [
+            "public static void main(String... args)",
+            "public void main(String[] args)",
+            "static public void main(String[] x)",
+            "public static int main(String[] args)",
+            "public static void main(String args)"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "Varargs `String...` is the same as `String[]`, and modifier order and the parameter name do not matter. A missing `static`, an `int` return type or a single `String` parameter means it is not the entry point.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Compile and run",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Command",
+                "What it does"
+              ],
+              "rows": [
+                [
+                  "`javac Hello.java`",
+                  "Compiles source into `Hello.class` (bytecode)"
+                ],
+                [
+                  "`java Hello`",
+                  "Runs the class; give the class name, not the file"
+                ],
+                [
+                  "`java Hello.java`",
+                  "Single-file mode: compiles in memory and runs; no `.class` file"
+                ]
+              ]
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "A `public` class must live in a file with the same name: `Hello` goes in `Hello.java`.",
+                "`args` holds what follows the class name: `java Hello a b` gives `args[0]` = `\"a\"`."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "text": "`java Hello.class` fails (the JVM wants a class name) and `javac Hello` fails (javac wants the `.java` file)."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l01-e02",
+          "kind": "singleChoice",
+          "prompt": "`public class Greeter` is saved in `Greeter.java`. Which command compiles it?",
+          "options": [
+            "javac Greeter",
+            "javac Greeter.java",
+            "java Greeter.class",
+            "javac Greeter.class"
+          ],
+          "answer": 1,
+          "explanation": "`javac` takes the source file name with its `.java` extension. `java` (no c) runs a class by name, without `.class`.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l01-e03",
+          "kind": "orderLines",
+          "prompt": "Put the lines in order to make a program that prints `5`.",
+          "lines": [
+            "public class Main {",
+            "    public static void main(String[] args) {",
+            "        int x = 5;",
+            "        System.out.println(x);",
+            "    }",
+            "}"
+          ],
+          "distractors": [
+            "    def main(args):"
+          ],
+          "explanation": "The class wraps the method, the method wraps the statements, and each brace closes in reverse order. `def` is Python, not Java.",
+          "objective": "1.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "5\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Statements, types and comments",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Java is **statically typed**: each variable has a type that never changes."
+            },
+            {
+              "type": "code",
+              "code": "int count = 3;       // whole number\nString name = \"Ada\"; // text\ncount = count + 1;   // OK: still an int\n// count = \"four\";   // does not compile\nSystem.out.println(name + count);",
+              "caption": "Prints Ada4",
+              "verify": {
+                "expect": "stdout",
+                "value": "Ada4\n"
+              }
+            },
+            {
+              "type": "table",
+              "header": [
+                "Comment",
+                "Style"
+              ],
+              "rows": [
+                [
+                  "`// text`",
+                  "To end of line"
+                ],
+                [
+                  "`/* text */`",
+                  "Multi-line"
+                ],
+                [
+                  "`/** text */`",
+                  "Javadoc"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "text": "`#` is not a comment in Java. And unlike Python, a variable cannot switch from a number to a string."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "text": "Block comments do not nest: `/* a /* b */ c */` ends at the first `*/`, so ` c */` is left over and fails to compile."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l01-e04",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "int count = 3;\nString name = \"Ada\";\ncount = count + 1;\nname = count;\nSystem.out.println(name);",
+          "answer": 4,
+          "explanation": "`name` is a `String`, so it cannot hold an `int`. A variable's type is fixed when it is declared.",
+          "objective": "1.1",
+          "verify": {
+            "expect": "compileError",
+            "line": 4
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l01-e05",
+          "kind": "trueFalse",
+          "prompt": "This code compiles.",
+          "code": "// prints a greeting\n/* multi-line\n   comment */\nSystem.out.println(\"Hi\") // done",
+          "answer": false,
+          "explanation": "The last statement has no semicolon. The comment after it does not count. The comments themselves are fine.",
+          "objective": "1.1",
+          "verify": {
+            "expect": "compileError",
+            "line": 4
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l01-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "System.out.print(\"A\");\nSystem.out.println(\"B\");\nSystem.out.print(\"C\");",
+          "options": [
+            "ABC",
+            "AB\nC",
+            "A\nB\nC",
+            "A\nBC"
+          ],
+          "answer": 1,
+          "explanation": "`print` adds no line break. `println` adds one after its value. So you get `AB`, a line break, then `C`.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "AB\nC"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u01-l02",
+      "title": "Primitive types & literals",
+      "summary": "The 8 primitives, literal suffixes, number bases and defaults.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Eight primitive types",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Primitives hold plain values, not objects. Know their sizes for the exam."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Type",
+                "Bits",
+                "Range / example"
+              ],
+              "rows": [
+                [
+                  "`byte`",
+                  "8",
+                  "-128 to 127"
+                ],
+                [
+                  "`short`",
+                  "16",
+                  "-32,768 to 32,767"
+                ],
+                [
+                  "`int`",
+                  "32",
+                  "about ±2.1 billion"
+                ],
+                [
+                  "`long`",
+                  "64",
+                  "`9_000_000_000L`"
+                ],
+                [
+                  "`float`",
+                  "32",
+                  "`3.14f` (~7 digits)"
+                ],
+                [
+                  "`double`",
+                  "64",
+                  "`3.14` (~15 digits)"
+                ],
+                [
+                  "`char`",
+                  "16",
+                  "`'A'`, 0 to 65,535"
+                ],
+                [
+                  "`boolean`",
+                  "—",
+                  "`true` / `false`"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "text": "Python's `int` never overflows and its `float` is a 64-bit double. Java gives you fixed sizes, and `int` stops at 2,147,483,647."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l02-e01",
+          "kind": "multiChoice",
+          "prompt": "Which two are primitive types? Choose two.",
+          "options": [
+            "String",
+            "int",
+            "Integer",
+            "boolean",
+            "Long"
+          ],
+          "answers": [
+            1,
+            3
+          ],
+          "explanation": "Primitive type names are lowercase keywords. `String`, `Integer` and `Long` are classes. `Integer` and `Long` are wrapper classes for `int` and `long`.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Literal types",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A whole-number literal is an `int`. A literal with a decimal point is a `double`."
+            },
+            {
+              "type": "code",
+              "code": "long a = 2147483648L; // too big for int\nfloat f = 3.14f;      // f is required\ndouble d = 3.14;      // d is optional\nchar c = 'A';\nboolean ok = true;"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`L` (or `l`) makes a `long` literal. Prefer `L`: `l` looks like `1`.",
+                "`f` or `F` makes a `float`. Without it, `3.14` is a `double` and will not fit.",
+                "`d` or `D` marks a `double`, but it is optional."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "text": "`long big = 3000000000;` does not compile. The literal itself is too big for an `int`, even though the variable is a `long`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l02-e02",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "long big = 10_000_000_000L;\ndouble d = 2.5;\nfloat f = 2.5;\nint i = 100;",
+          "answer": 3,
+          "explanation": "`2.5` is a `double` literal. Storing a `double` in a `float` could lose precision, so you need `2.5f`.",
+          "objective": "1.1",
+          "verify": {
+            "expect": "compileError",
+            "line": 3
+          }
+        },
+        {
+          "type": "page",
+          "title": "Underscores and number bases",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Prefix",
+                "Base",
+                "Example = value"
+              ],
+              "rows": [
+                [
+                  "`0x`",
+                  "16 (hex)",
+                  "`0x1F` = 31"
+                ],
+                [
+                  "`0b`",
+                  "2 (binary)",
+                  "`0b101` = 5"
+                ],
+                [
+                  "`0`",
+                  "8 (octal)",
+                  "`017` = 15"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Underscores make long numbers readable: `1_000_000`. They are allowed **only between digits**:"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Not at the start or end: `_100` and `100_` fail",
+                "Not next to `.`: `3_.14` fails",
+                "Not before a suffix: `99_L` fails",
+                "Not right after `0x` or `0b`: `0x_FF` fails",
+                "Several in a row are fine: `1__000`"
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "text": "A leading zero means octal. `int x = 017;` stores 15, not 17. And `09` does not compile."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l02-e03",
+          "kind": "multiChoice",
+          "prompt": "Which two lines compile? Choose two.",
+          "options": [
+            "int a = 1_000_000;",
+            "int b = _1000;",
+            "double c = 3_.14;",
+            "long d = 99_L;",
+            "int e = 0b1_0;",
+            "int f = 0x_FF;"
+          ],
+          "answers": [
+            0,
+            4
+          ],
+          "explanation": "Underscores must sit between digits. `_1000` is read as a variable name that does not exist. `3_.14`, `99_L` and `0x_FF` put an underscore next to `.`, a suffix or a prefix. `0b1_0` is binary 10, which is 2.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "1000002\n",
+            "source": "int a = 1_000_000;\nint e = 0b1_0;\nSystem.out.println(a + e);"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l02-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int a = 0x10;\nint b = 010;\nint c = 0b10;\nSystem.out.println(a + \" \" + b + \" \" + c);",
+          "options": [
+            "10 10 10",
+            "16 8 2",
+            "16 10 2",
+            "Compilation fails"
+          ],
+          "answer": 1,
+          "explanation": "`0x10` is hex (16), `010` is octal because of the leading zero (8), and `0b10` is binary (2).",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "16 8 2"
+          }
+        },
+        {
+          "type": "page",
+          "title": "char is a number",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A `char` is a 16-bit unsigned number that maps to a character. `'A'` is 65."
+            },
+            {
+              "type": "code",
+              "code": "char c = 'A';\nint n = c;          // 65\nchar d = 66;        // 'B'\nSystem.out.println(n + \" \" + d);\nSystem.out.println(c + 1);",
+              "caption": "c + 1 is an int",
+              "verify": {
+                "expect": "stdout",
+                "value": "65 B\n66\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Single quotes make a `char`, double quotes make a `String`.",
+                "`'AB'` does not compile: a char holds exactly one character."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "text": "Python has no char type: `'A'` and `\"A\"` are both strings. In Java, `'A'` is a number-like `char` and `\"A\"` is a `String`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l02-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "char c = 'A';\nSystem.out.println(c + 1);\nSystem.out.println((char) (c + 1));",
+          "options": [
+            "B\nB",
+            "66\nB",
+            "A1\nB",
+            "Compilation fails"
+          ],
+          "answer": 1,
+          "explanation": "`c + 1` is int math, giving 66. Casting that result back to `char` gives `B`.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "66\nB"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Defaults vs. local variables",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "**Fields** (variables in a class) get default values. **Local variables** (inside a method) get none."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Field type",
+                "Default"
+              ],
+              "rows": [
+                [
+                  "`int`, `long`, ...",
+                  "`0`"
+                ],
+                [
+                  "`double`, `float`",
+                  "`0.0`"
+                ],
+                [
+                  "`boolean`",
+                  "`false`"
+                ],
+                [
+                  "`char`",
+                  "`'\\u0000'`"
+                ],
+                [
+                  "Any object",
+                  "`null`"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "public class Main {\n    static int count;     // 0\n    static boolean done;  // false\n    public static void main(String[] args) {\n        int local;  // OK: declared, unused\n        System.out.println(count);\n        System.out.println(done);\n    }\n}",
+              "verify": {
+                "expect": "stdout",
+                "value": "0\nfalse\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "text": "Declaring a local without a value is fine. *Reading* it before it is surely assigned does not compile."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l02-e06",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "int x;\nint y = 10;\nif (y > 5) {\n    x = 1;\n}\nSystem.out.println(x);",
+          "answer": 6,
+          "explanation": "The compiler does not run `y > 5`; it only knows `x` might not be assigned. Reading a local that might be unassigned is a compile error, so line 6 fails.",
+          "objective": "1.1",
+          "verify": {
+            "expect": "compileError",
+            "line": 6
+          }
+        }
+      ]
+    },
+    {
+      "id": "u01-l03",
+      "title": "Operators & precedence",
+      "summary": "Integer division, ++, compound assignment, logic and precedence.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Arithmetic",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Expression",
+                "Result"
+              ],
+              "rows": [
+                [
+                  "`7 / 2`",
+                  "`3`"
+                ],
+                [
+                  "`-7 / 2`",
+                  "`-3`"
+                ],
+                [
+                  "`7 % 3`",
+                  "`1`"
+                ],
+                [
+                  "`-7 % 3`",
+                  "`-1`"
+                ],
+                [
+                  "`7.0 / 2`",
+                  "`3.5`"
+                ]
+              ]
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`int / int` is an `int`: the fraction is cut off (toward zero).",
+                "The sign of `%` follows the **left** operand.",
+                "If either side is a `double`, the math is `double`."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "text": "Python's `/` always gives a float and `//` rounds *down* (`-7 // 2` is -4). Java's `/` on ints truncates *toward zero* (-3). Python's `-7 % 3` is 2; Java's is -1."
+            },
+            {
+              "type": "paragraph",
+              "text": "`Math.floorDiv` and `Math.floorMod` round toward **negative infinity** instead of toward zero. The sign of `floorMod` follows the **right** operand (the divisor)."
+            },
+            {
+              "type": "code",
+              "code": "System.out.println(-9 / 4 + \" \" + -9 % 4);\nSystem.out.println(Math.floorDiv(-9, 4) + \" \" + Math.floorMod(-9, 4));\nSystem.out.println(Math.floorMod(9, -4));",
+              "caption": "-9 / 4 is -2 but floorDiv gives -3; -9 % 4 is -1 but floorMod gives 3",
+              "verify": {
+                "expect": "stdout",
+                "value": "-2 -1\n-3 3\n-3\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l03-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int a = -7;\nSystem.out.println(a / 2 + \" \" + a % 3);",
+          "options": [
+            "-4 2",
+            "-3 -1",
+            "-3.5 -1",
+            "-4 -1"
+          ],
+          "answer": 1,
+          "explanation": "Integer division truncates toward zero: -7 / 2 is -3. The remainder keeps the sign of -7, so -7 % 3 is -1.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "-3 -1"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Increment and decrement",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "int x = 5;\nint a = x++; // a = 5, then x = 6\nint b = ++x; // x = 7, then b = 7\nSystem.out.println(a + \" \" + b + \" \" + x);",
+              "verify": {
+                "expect": "stdout",
+                "value": "5 7 7\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "**Post**fix `x++`: the expression uses the old value, then x changes.",
+                "**Pre**fix `++x`: x changes first, then the new value is used."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "text": "Python has no `++`. In Java, `x++` both changes `x` and produces a value."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "text": "`x = x++;` leaves `x` unchanged: the old value is saved, `x` is incremented, then the old value is assigned back."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l03-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int x = 3;\nint y = x++ + ++x;\nSystem.out.println(x + \" \" + y);",
+          "options": [
+            "5 8",
+            "5 7",
+            "4 8",
+            "5 9"
+          ],
+          "answer": 0,
+          "explanation": "Left to right: `x++` gives 3 (x becomes 4), then `++x` makes x 5 and gives 5. y = 3 + 5 = 8, and x ends at 5.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "5 8"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Compound assignment",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`x += 2` is not exactly `x = x + 2`. It includes a hidden cast to the type of `x`."
+            },
+            {
+              "type": "code",
+              "code": "int i = 10;\ni += 2.7;       // i = (int) (i + 2.7)\n// i = i + 2.7; // does not compile\nSystem.out.println(i);",
+              "caption": "12.7 is cut to 12",
+              "verify": {
+                "expect": "stdout",
+                "value": "12\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Works for `+=`, `-=`, `*=`, `/=`, `%=` and more.",
+                "Assignment is also an expression: `a = b = 4;` sets both to 4 (right to left)."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "text": "For `short` and `byte`, `s = s + 1` fails but `s += 1` and `s++` compile."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l03-e03",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "short s = 5;\ns += 10;\ns *= 2;\ns = s + 1;\ns++;",
+          "answer": 4,
+          "explanation": "`s + 1` is an `int` (short is promoted in arithmetic), and an int cannot go into a short without a cast. `+=`, `*=` and `++` include the cast for you.",
+          "objective": "1.1",
+          "verify": {
+            "expect": "compileError",
+            "line": 4
+          }
+        },
+        {
+          "type": "page",
+          "title": "Logical operators",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Op",
+                "Meaning"
+              ],
+              "rows": [
+                [
+                  "`&&`",
+                  "AND, short-circuit"
+                ],
+                [
+                  "`||`",
+                  "OR, short-circuit"
+                ],
+                [
+                  "`&`  `|`",
+                  "AND / OR, always evaluate both sides"
+                ],
+                [
+                  "`^`",
+                  "XOR: true if exactly one is true"
+                ],
+                [
+                  "`!`",
+                  "NOT"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "int n = 0;\nboolean r = false && (++n > 0); // skipped\nboolean s = false & (++n > 0);  // runs\nSystem.out.println(n);",
+              "caption": "Only & ran ++n",
+              "verify": {
+                "expect": "stdout",
+                "value": "1\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "text": "Python uses `and`, `or`, `not`. Java has no truthiness: `if (count)` does not compile for an `int`, and an empty String is not `false`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l03-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int a = 5, b = 10;\nif (a > 5 && ++b > 10) { }\nif (a < 10 || ++b > 10) { }\nif (a < 10 | ++b > 10) { }\nSystem.out.println(b);",
+          "options": [
+            "10",
+            "11",
+            "12",
+            "13"
+          ],
+          "answer": 1,
+          "explanation": "Line 2: `a > 5` is false, so `&&` skips `++b`. Line 3: `a < 10` is true, so `||` skips `++b`. Line 4: `|` always evaluates both sides, so b becomes 11.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "11"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Ternary and precedence",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`cond ? a : b` picks `a` if `cond` is true, else `b`."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Higher first",
+                "Operators"
+              ],
+              "rows": [
+                [
+                  "postfix",
+                  "`x++` `x--`"
+                ],
+                [
+                  "unary",
+                  "`++x` `--x` `-` `!` `(cast)`"
+                ],
+                [
+                  "multiplicative",
+                  "`*` `/` `%`"
+                ],
+                [
+                  "additive",
+                  "`+` `-`"
+                ],
+                [
+                  "shift",
+                  "`<<` `>>` `>>>`"
+                ],
+                [
+                  "relational",
+                  "`<` `>` `<=` `>=` `instanceof`"
+                ],
+                [
+                  "equality",
+                  "`==` `!=`"
+                ],
+                [
+                  "logical",
+                  "`&` then `^` then `|`"
+                ],
+                [
+                  "short-circuit",
+                  "`&&` then `||`"
+                ],
+                [
+                  "ternary",
+                  "`? :`"
+                ],
+                [
+                  "assignment",
+                  "`=` `+=` `-=` ..."
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "`*`, `/` and `%` share a level and run left to right. On primitives, `==` compares values, after promotion: `5 == 5.0` and `'a' == 97` are both `true`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l03-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int x = 4;\nint y = 2 + x * 3 % 5;\nString s = y > 5 ? \"big\" : \"small\";\nSystem.out.println(y + s);",
+          "options": [
+            "4small",
+            "5small",
+            "9big",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`*` and `%` bind tighter than `+` and run left to right: 4 * 3 = 12, 12 % 5 = 2, so y = 2 + 2 = 4. 4 is not > 5, so you get `small`.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "4small"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l03-e06",
+          "kind": "fillBlanks",
+          "prompt": "Fill the gaps so the code prints `true`.",
+          "code": "int a = 7;\nint b = 2;\nboolean r = a ___ b == 1 ___ a > b;\nSystem.out.println(r);",
+          "answers": [
+            "%",
+            "&&"
+          ],
+          "bank": [
+            "%",
+            "&&",
+            "/",
+            "+",
+            "="
+          ],
+          "explanation": "7 % 2 is 1, so `a % b == 1` is true, and `a > b` is true. `&&` joins them. `%` binds tighter than `==`, which binds tighter than `&&`, so no parentheses are needed.",
+          "objective": "1.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "true\n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u01-l04",
+      "title": "Casting & promotion",
+      "summary": "Widening, narrowing, promotion to int, overflow and char math.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Widening and narrowing",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "**Widening** (small type to big type) is automatic:"
+            },
+            {
+              "type": "paragraph",
+              "text": "`byte` → `short` → `int` → `long` → `float` → `double`, and `char` → `int`."
+            },
+            {
+              "type": "code",
+              "code": "int i = 100;\nlong l = i;         // widening: OK\ndouble d = l;       // widening: OK\nint back = (int) d; // narrowing: cast\nSystem.out.println((int) 3.99);",
+              "caption": "Casting a double to int truncates: 3",
+              "verify": {
+                "expect": "stdout",
+                "value": "3\n"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "**Narrowing** (big type to small type) needs an explicit cast, because data may be lost."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l04-e01",
+          "kind": "multiChoice",
+          "prompt": "Which two lines compile? Choose two.",
+          "options": [
+            "long a = 5;",
+            "int b = 5L;",
+            "float c = 5L;",
+            "int d = 3.0;",
+            "char e = -1;"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "int to long and long to float are widening, so they are automatic. `5L` to int and `3.0` to int are narrowing and need a cast. A `char` cannot hold a negative value.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "5 5.0\n",
+            "source": "long a = 5;\nfloat c = 5L;\nSystem.out.println(a + \" \" + c);"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Numeric promotion",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Before any arithmetic, Java promotes the operands:"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "If either is `double`, both become `double`.",
+                "Else if either is `float`, both become `float`.",
+                "Else if either is `long`, both become `long`.",
+                "Otherwise **both become `int`**, even `byte + byte` or `char + char`."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "byte a = 10, b = 20;\n// byte c = a + b;  // error: a + b is int\nint c = a + b;\nbyte d = (byte) (a + b);\nfinal byte x = 5;\nbyte y = x + 1;     // OK: constant 6 fits\nSystem.out.println(c + \" \" + d + \" \" + y);",
+              "verify": {
+                "expect": "stdout",
+                "value": "30 30 6\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "text": "If both sides are compile-time constants (literals or `final` variables with constant values) and the result fits, no cast is needed. `byte b = 10 + 20;` compiles."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l04-e02",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "byte a = 1;\nfinal byte b = 2;\nbyte c = a + b;\nbyte d = b + 3;\nshort e = (short) (a + b);",
+          "answer": 3,
+          "explanation": "`a` is not `final`, so `a + b` is an ordinary `int` expression and needs a cast. `b + 3` is a constant (5) that fits in a byte, so line 4 compiles.",
+          "objective": "1.1",
+          "verify": {
+            "expect": "compileError",
+            "line": 3
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l04-e03",
+          "kind": "singleChoice",
+          "prompt": "Given `short x`, `float y` and `long z`, what is the type of `x * y + z`?",
+          "options": [
+            "int",
+            "long",
+            "float",
+            "double"
+          ],
+          "answer": 2,
+          "explanation": "`x * y` promotes the short to float, giving a float. float + long is float, because float is the wider of the two. No double is involved, so it never becomes double.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "float\n",
+            "source": "short x = 1; float y = 2; long z = 3;\nvar r = x * y + z;\nObject o = r;\nSystem.out.println(o instanceof Float ? \"float\" : \"other\");"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Overflow wraps around",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Integer types silently **wrap around** when they overflow. No exception is thrown."
+            },
+            {
+              "type": "code",
+              "code": "int max = Integer.MAX_VALUE;\nSystem.out.println(max + 1);\nSystem.out.println((byte) 200);",
+              "caption": "Wraps to MIN_VALUE; 200 - 256 = -56",
+              "verify": {
+                "expect": "stdout",
+                "value": "-2147483648\n-56\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "text": "Python ints grow as big as needed. Java's `int` wraps from 2,147,483,647 to -2,147,483,648 without any error."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "text": "In `long r = a * b;` with int a and b, the multiplication happens in `int` first and may overflow. The result is widened only afterwards."
+            },
+            {
+              "type": "paragraph",
+              "text": "When you'd rather fail than wrap, use the `Math.*Exact` methods: `addExact`, `subtractExact`, `multiplyExact`, `incrementExact`, `decrementExact` and `negateExact` throw `ArithmeticException` on overflow. Each has an `int` and a `long` overload. `Math.toIntExact(long)` throws if the value doesn't fit in an `int`."
+            },
+            {
+              "type": "code",
+              "code": "int big = Integer.MAX_VALUE;\nSystem.out.println(Math.addExact((long) big, 1)); // long overload: fine\nSystem.out.println(Math.addExact(big, 1));        // int overload: throws",
+              "caption": "Prints 2147483648, then ArithmeticException",
+              "verify": {
+                "expect": "exception",
+                "value": "ArithmeticException",
+                "stdout": "2147483648\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l04-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int big = 1_000_000;\nlong r1 = big * big;\nlong r2 = (long) big * big;\nSystem.out.println(r1 == r2);",
+          "options": [
+            "true",
+            "false",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 1,
+          "explanation": "`big * big` is computed as an int and overflows before being widened to long. Casting one operand first makes the multiplication `long`, so r2 is 1,000,000,000,000 and the two differ.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "false"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Precision and char math",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "int to float and long to double are widening, yet they can **lose precision**: a float keeps only about 7 digits."
+            },
+            {
+              "type": "code",
+              "code": "float f = 123_456_789;\nSystem.out.println(f);\nchar c = 'a';\nc += 2;\nSystem.out.println(c);\nSystem.out.println('a' + 'b');",
+              "caption": "The float really stores 123,456,792",
+              "verify": {
+                "expect": "stdout",
+                "value": "1.2345679E8\nc\n195\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`c += 2` and `c++` work on a char (hidden cast).",
+                "`'a' + 'b'` is int math: 97 + 98 = 195.",
+                "`char d = c + 1;` does not compile: `c + 1` is an int."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l04-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "char c = 'x';\nc++;\nSystem.out.println(c + \"\" + 1);\nSystem.out.println(c + 1);",
+          "options": [
+            "y1\n122",
+            "y1\nz",
+            "121\n122",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`c++` moves `x` to `y`. With `\"\"` in the middle, the + becomes String concatenation: `y1`. Without a String, `c + 1` is int math: 121 + 1 = 122.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "y1\n122"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l04-e06",
+          "kind": "fillBlanks",
+          "prompt": "Fill the gaps so the code compiles.",
+          "code": "byte b = 10;\nb = (___) (b * 2);\nlong big = 5_000_000_000___;\nfloat f = 1.5___;\nSystem.out.println(b + \" \" + big + \" \" + f);",
+          "answers": [
+            "byte",
+            "L",
+            "f"
+          ],
+          "bank": [
+            "byte",
+            "L",
+            "f",
+            "int",
+            "d",
+            "short"
+          ],
+          "explanation": "`b * 2` is an int, so it needs a `(byte)` cast to go back into b. 5 billion does not fit in an int, so it needs `L`. `1.5` is a double unless you add `f`.",
+          "objective": "1.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "20 5000000000 1.5\n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u01-l05",
+      "title": "Wrappers & autoboxing",
+      "summary": "Integer and friends, parse vs valueOf, the cache, null traps.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Wrapper classes",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Primitive",
+                "Wrapper"
+              ],
+              "rows": [
+                [
+                  "`byte`",
+                  "`Byte`"
+                ],
+                [
+                  "`short`",
+                  "`Short`"
+                ],
+                [
+                  "`int`",
+                  "`Integer`"
+                ],
+                [
+                  "`long`",
+                  "`Long`"
+                ],
+                [
+                  "`float`",
+                  "`Float`"
+                ],
+                [
+                  "`double`",
+                  "`Double`"
+                ],
+                [
+                  "`char`",
+                  "`Character`"
+                ],
+                [
+                  "`boolean`",
+                  "`Boolean`"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "Integer boxed = 5;  // autoboxing\nint plain = boxed;  // unboxing\nList<Integer> list = new ArrayList<>();\nlist.add(7);        // boxed for you"
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "text": "In Python everything is an object. Java has both primitives and wrapper objects, and they differ: wrappers can be `null`, and `==` compares them by identity."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l05-e01",
+          "kind": "multiChoice",
+          "prompt": "Which two lines compile? Choose two.",
+          "options": [
+            "Integer a = 5;",
+            "Long b = 5;",
+            "Double c = 5.0;",
+            "Character d = \"x\";",
+            "List<int> e = new ArrayList<>();"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "Autoboxing only boxes to the matching wrapper: an `int` literal cannot become a `Long` (you need `5L`). `\"x\"` is a String, not a char. Generics cannot use primitives: `List<int>` is not allowed.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "5 5.0\n",
+            "source": "Integer a = 5;\nDouble c = 5.0;\nSystem.out.println(a + \" \" + c);"
+          }
+        },
+        {
+          "type": "page",
+          "title": "parse vs. valueOf",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Call",
+                "Returns"
+              ],
+              "rows": [
+                [
+                  "`Integer.parseInt(\"42\")`",
+                  "`int` 42"
+                ],
+                [
+                  "`Integer.valueOf(\"42\")`",
+                  "`Integer` 42"
+                ],
+                [
+                  "`Integer.valueOf(42)`",
+                  "`Integer` 42"
+                ],
+                [
+                  "`boxed.intValue()`",
+                  "`int`"
+                ]
+              ]
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Bad input such as `\"4.2\"`, `\"\"` or `\" 42\"` throws `NumberFormatException`.",
+                "`Boolean.parseBoolean(\"TRUE\")` is `true`. Any text other than `true` (ignoring case) gives `false`, with no exception.",
+                "`Double.parseDouble(\"1e3\")` is `1000.0`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l05-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "int a = Integer.parseInt(\"12\");\nSystem.out.println(a + 1);\nint b = Integer.parseInt(\"1.5\");\nSystem.out.println(b);",
+          "options": [
+            "13\n1.5",
+            "13\n1",
+            "13 is printed, then an exception is thrown",
+            "Compilation fails"
+          ],
+          "answer": 2,
+          "explanation": "`\"12\"` parses fine, so `13` is printed. `\"1.5\"` is not an int, so `parseInt` throws `NumberFormatException` at runtime. The compiler cannot check the contents of a String.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "exception",
+            "value": "NumberFormatException",
+            "stdout": "13\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "The Integer cache and ==",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Autoboxing calls `Integer.valueOf`, which reuses cached objects for **-128 to 127**. `==` on two wrappers compares references, not values."
+            },
+            {
+              "type": "code",
+              "code": "Integer a = 127, b = 127;\nInteger c = 128, d = 128;\nSystem.out.println(a == b);\nSystem.out.println(c == d);\nSystem.out.println(c.equals(d));",
+              "caption": "true / false / true",
+              "verify": {
+                "expect": "stdout",
+                "value": "true\nfalse\ntrue\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "text": "Compare wrappers with `equals`. If one side of `==` is a primitive, the wrapper is unboxed and values are compared."
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "text": "`Short`, `Byte`, `Long` and `Character` (0 to 127) cache small values too. `Double` and `Float` do not."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l05-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Integer x = 1000;\nint y = 1000;\nInteger z = 1000;\nSystem.out.print(x == y);\nSystem.out.print(\" \");\nSystem.out.print(x == z);",
+          "options": [
+            "true true",
+            "true false",
+            "false false",
+            "false true"
+          ],
+          "answer": 1,
+          "explanation": "`x == y` unboxes x because y is a primitive, so it compares values (true). `x == z` compares two different objects (1000 is outside the cache), so it is false.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "true false"
+          }
+        },
+        {
+          "type": "page",
+          "title": "equals across types",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "Long big = 5L;\nInteger small = 5;\nSystem.out.println(big.equals(small));\nSystem.out.println(big.equals(5));\nSystem.out.println(big.equals(5L));\nSystem.out.println(big == 5);",
+              "caption": "false / false / true / true",
+              "verify": {
+                "expect": "stdout",
+                "value": "false\nfalse\ntrue\ntrue\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`equals` on a wrapper is `true` only for the **same wrapper class** with the same value.",
+                "`big.equals(5)` boxes 5 to an `Integer`, so it is false.",
+                "`big == small` does not compile: `Long` and `Integer` are unrelated types."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "text": "`new Integer(5)` is deprecated. Use `Integer.valueOf(5)` or autoboxing."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l05-e04",
+          "kind": "multiChoice",
+          "prompt": "Given the code, which two expressions are `true`? Choose two.",
+          "code": "Long big = 10L;\nInteger small = 10;",
+          "options": [
+            "big.equals(small)",
+            "big.equals(10)",
+            "big.equals(10L)",
+            "big == 10",
+            "small.equals(10L)"
+          ],
+          "answers": [
+            2,
+            3
+          ],
+          "explanation": "`equals` needs the same wrapper class: `10` boxes to Integer and `10L` boxes to Long. `big == 10` unboxes `big` and compares the numbers.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "false\nfalse\ntrue\ntrue\nfalse\n",
+            "source": "Long big = 10L;\nInteger small = 10;\nSystem.out.println(big.equals(small));\nSystem.out.println(big.equals(10));\nSystem.out.println(big.equals(10L));\nSystem.out.println(big == 10);\nSystem.out.println(small.equals(10L));"
+          }
+        },
+        {
+          "type": "page",
+          "title": "null, immutability and Character",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "Integer count = null;\nint n = count; // NullPointerException",
+              "caption": "Unboxing null fails at runtime",
+              "verify": {
+                "expect": "exception",
+                "value": "NullPointerException"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Wrappers are **immutable**. `count++` on an `Integer` creates a new object.",
+                "`Character.isDigit('7')`, `isLetter`, `isLetterOrDigit`, `isWhitespace`",
+                "`Character.isUpperCase('a')` is `false`; `Character.toUpperCase('a')` is `'A'`"
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "isDigit is not just 0-9",
+              "text": "`Character.isDigit` is Unicode-aware: it is `true` for any Unicode decimal digit, such as Arabic-Indic `'\\u0663'` or full-width `'\\uFF15'`, whatever the locale. To accept only ASCII digits, test `c >= '0' && c <= '9'`."
+            },
+            {
+              "type": "code",
+              "code": "char c = '\\u0663'; // Arabic-Indic three\nSystem.out.println(Character.isDigit(c) + \" \" + (c >= '0' && c <= '9'));",
+              "caption": "Prints true false",
+              "verify": {
+                "expect": "stdout",
+                "value": "true false\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l05-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "Integer a = 5;\nInteger b = null;\nSystem.out.println(a);\nint sum = a + b;\nSystem.out.println(sum);",
+          "options": [
+            "5\n5",
+            "5\n0",
+            "5 is printed, then an exception is thrown",
+            "Compilation fails"
+          ],
+          "answer": 2,
+          "explanation": "It compiles: `a + b` unboxes both. At runtime, unboxing `null` throws `NullPointerException` after `5` is printed.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "exception",
+            "value": "NullPointerException",
+            "stdout": "5\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l05-e06",
+          "kind": "fillBlanks",
+          "prompt": "Fill the gaps so the code prints `true 7 A`.",
+          "code": "char c = 'a';\nboolean d = Character.___('7');\nint n = Integer.___(\"7\");\nchar up = Character.___(c);\nSystem.out.println(d + \" \" + n + \" \" + up);",
+          "answers": [
+            "isDigit",
+            "parseInt",
+            "toUpperCase"
+          ],
+          "bank": [
+            "isDigit",
+            "parseInt",
+            "toUpperCase",
+            "isLetter",
+            "parseInteger",
+            "toLowerCase"
+          ],
+          "explanation": "`isDigit('7')` is true, `parseInt(\"7\")` gives 7, and `toUpperCase('a')` is `'A'`. There is no `parseInteger` method.",
+          "objective": "1.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "true 7 A\n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u01-l06",
+      "title": "The Math class",
+      "summary": "round, floor, ceil, pow, random and floating-point surprises.",
+      "minutes": 6,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Math basics",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Call",
+                "Result"
+              ],
+              "rows": [
+                [
+                  "`Math.abs(-5)`",
+                  "`5`"
+                ],
+                [
+                  "`Math.max(3, 7)`",
+                  "`7`"
+                ],
+                [
+                  "`Math.min(2.0, 1)`",
+                  "`1.0` (promoted to double)"
+                ],
+                [
+                  "`Math.pow(2, 3)`",
+                  "`8.0` (always double)"
+                ],
+                [
+                  "`Math.sqrt(16)`",
+                  "`4.0` (always double)"
+                ],
+                [
+                  "`Math.random()`",
+                  "a double from 0.0 up to, not including, 1.0"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "text": "`int p = Math.pow(2, 3);` does not compile: `pow` returns a `double` even for int arguments."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l06-e01",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "int a = Math.abs(-4);\nlong b = Math.max(3, 7L);\nint c = Math.pow(2, 4);\ndouble d = Math.sqrt(9);",
+          "answer": 3,
+          "explanation": "`Math.pow` always returns `double`, and a double cannot be stored in an int without a cast. `Math.max(3, 7L)` picks the `long` version, which is fine for a `long`.",
+          "objective": "1.1",
+          "verify": {
+            "expect": "compileError",
+            "line": 3
+          }
+        },
+        {
+          "type": "page",
+          "title": "round, floor and ceil",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Method",
+                "Returns",
+                "Example"
+              ],
+              "rows": [
+                [
+                  "`round(double)`",
+                  "`long`",
+                  "`round(2.5)` = 3"
+                ],
+                [
+                  "`round(float)`",
+                  "`int`",
+                  "`round(2.5f)` = 3"
+                ],
+                [
+                  "`floor(double)`",
+                  "`double`",
+                  "`floor(-1.5)` = -2.0"
+                ],
+                [
+                  "`ceil(double)`",
+                  "`double`",
+                  "`ceil(1.2)` = 2.0"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "`round` rounds .5 **up toward positive infinity**:"
+            },
+            {
+              "type": "code",
+              "code": "System.out.println(Math.round(2.5));\nSystem.out.println(Math.round(-2.5));\nSystem.out.println(Math.round(-2.6));\nSystem.out.println(Math.floor(-1.5));",
+              "verify": {
+                "expect": "stdout",
+                "value": "3\n-2\n-3\n-2.0\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "text": "Python's `round(2.5)` is 2 (banker's rounding) and `math.floor` returns an int. Java's `Math.round(2.5)` is 3 and `Math.floor` returns a double."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l06-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "long r = Math.round(-3.5);\ndouble c = Math.ceil(-3.5);\nSystem.out.println(r + c);",
+          "options": [
+            "-7.0",
+            "-6.0",
+            "-6",
+            "-7"
+          ],
+          "answer": 1,
+          "explanation": "`Math.round(-3.5)` rounds up to -3 (a long). `Math.ceil(-3.5)` is -3.0 (a double). long + double is a double: -6.0.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "-6.0"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l06-e03",
+          "kind": "multiChoice",
+          "prompt": "Which two lines compile? Choose two.",
+          "options": [
+            "int a = Math.round(2.5f);",
+            "int b = Math.round(2.5);",
+            "long c = Math.round(2.5);",
+            "int d = Math.floor(2.5);",
+            "int e = Math.ceil(2);"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "`round(float)` returns `int` and `round(double)` returns `long`. `floor` and `ceil` always return `double`, so they need a cast to fit in an int.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "3 3\n",
+            "source": "int a = Math.round(2.5f);\nlong c = Math.round(2.5);\nSystem.out.println(a + \" \" + c);"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l06-e04",
+          "kind": "trueFalse",
+          "prompt": "`Math.random()` can return `1.0`.",
+          "answer": false,
+          "explanation": "`Math.random()` returns a double that is at least 0.0 and **less than** 1.0. It can return 0.0 but never 1.0.",
+          "objective": "1.1"
+        },
+        {
+          "type": "page",
+          "title": "Floating-point surprises",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "System.out.println(0.1 + 0.2);\nSystem.out.println(0.1 + 0.2 == 0.3);\nSystem.out.println(5.0 / 0);\nSystem.out.println(0.0 / 0);",
+              "verify": {
+                "expect": "stdout",
+                "value": "0.30000000000000004\nfalse\nInfinity\nNaN\n"
+              }
+            },
+            {
+              "type": "table",
+              "header": [
+                "Expression",
+                "Result"
+              ],
+              "rows": [
+                [
+                  "`5 / 0` (ints)",
+                  "`ArithmeticException`"
+                ],
+                [
+                  "`5 % 0` (ints)",
+                  "`ArithmeticException`"
+                ],
+                [
+                  "`5.0 / 0`",
+                  "`Infinity`"
+                ],
+                [
+                  "`-5.0 / 0`",
+                  "`-Infinity`"
+                ],
+                [
+                  "`0.0 / 0`",
+                  "`NaN`"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "text": "Python raises `ZeroDivisionError` even for `5.0 / 0`. Java only throws for integer division; floating-point division gives `Infinity` or `NaN`."
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "text": "`NaN` is not equal to anything, not even itself. Test it with `Double.isNaN(x)`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l06-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "double d = 10 / 0.0;\nSystem.out.println(d);\nint zero = 0;\nint i = 10 / zero;\nSystem.out.println(i);",
+          "options": [
+            "Infinity\n0",
+            "Infinity is printed, then an exception is thrown",
+            "An exception is thrown before anything is printed",
+            "Compilation fails"
+          ],
+          "answer": 1,
+          "explanation": "`10 / 0.0` is floating-point division, so it gives `Infinity`. `10 / zero` is int division by zero, which throws `ArithmeticException` at runtime.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "exception",
+            "value": "ArithmeticException",
+            "stdout": "Infinity\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l06-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "double nan = 0.0 / 0;\nSystem.out.println(nan == nan);\nSystem.out.println(Double.isNaN(nan));",
+          "options": [
+            "true\ntrue",
+            "false\ntrue",
+            "false\nfalse",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 1,
+          "explanation": "`0.0 / 0` is NaN, with no exception. NaN is never `==` to anything, even itself, so use `Double.isNaN`.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "false\ntrue"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Recap",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "`pow`, `sqrt`, `floor` and `ceil` return `double`.",
+                "`round(double)` returns `long`; `round(float)` returns `int`. Halves round toward positive infinity.",
+                "`Math.random()` is in [0.0, 1.0).",
+                "Integer division by zero throws `ArithmeticException`; floating-point division gives `Infinity` or `NaN`.",
+                "Never compare doubles that came from arithmetic with `==`."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "u01-l07",
+      "title": "Strings",
+      "summary": "Immutability, the pool, == vs equals, key methods and + rules.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Strings are immutable",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A `String` is an object that never changes. Methods return a **new** String."
+            },
+            {
+              "type": "code",
+              "code": "String s = \"java\";\ns.toUpperCase();      // result thrown away\nSystem.out.println(s);\ns = s.toUpperCase();  // keep the result\nSystem.out.println(s);",
+              "verify": {
+                "expect": "stdout",
+                "value": "java\nJAVA\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "text": "Python strs are immutable too. But Java uses `s.length()` instead of `len(s)` and `s.charAt(i)` instead of `s[i]`. There are no negative indexes and no slicing: use `substring`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l07-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "String s = \"hello\";\ns.concat(\" world\");\ns.toUpperCase();\nSystem.out.println(s);",
+          "options": [
+            "hello",
+            "HELLO",
+            "hello world",
+            "HELLO WORLD"
+          ],
+          "answer": 0,
+          "explanation": "Both calls return new Strings that are ignored. `s` still points to the original `\"hello\"`.",
+          "objective": "1.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "hello"
+          }
+        },
+        {
+          "type": "page",
+          "title": "The string pool",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "String literals are stored once in the **string pool**. The same literal gives the same object."
+            },
+            {
+              "type": "code",
+              "code": "String a = \"hi\";\nString b = \"hi\";\nString c = new String(\"hi\");\nSystem.out.println(a == b);\nSystem.out.println(a == c);\nSystem.out.println(a.equals(c));\nSystem.out.println(a == c.intern());",
+              "caption": "true / false / true / true",
+              "verify": {
+                "expect": "stdout",
+                "value": "true\nfalse\ntrue\ntrue\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`new String(...)` always creates a new object.",
+                "`intern()` returns the pooled copy.",
+                "Constant expressions like `\"a\" + \"b\"` are joined at compile time and pooled. Concatenation that uses a non-`final` variable builds a new String at runtime."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "text": "Python's `==` compares content. Java's `==` on objects compares identity, like Python's `is`. Use `equals` to compare text."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l07-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "String a = \"ab\";\nString b = \"a\";\nString c = b + \"b\";\nfinal String d = \"a\";\nString e = d + \"b\";\nSystem.out.println(a == c);\nSystem.out.println(a == e);",
+          "options": [
+            "true\ntrue",
+            "false\ntrue",
+            "false\nfalse",
+            "true\nfalse"
+          ],
+          "answer": 1,
+          "explanation": "`b` is not final, so `b + \"b\"` is built at runtime as a new object. `d` is a final constant, so `d + \"b\"` is folded to the literal `\"ab\"` at compile time and comes from the pool.",
+          "objective": "1.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "false\ntrue"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l07-e03",
+          "kind": "multiChoice",
+          "prompt": "Given the code, which two expressions are `true`? Choose two.",
+          "code": "String x = \"Java\";\nString y = new String(\"Java\");\nString z = \"Ja\" + \"va\";",
+          "options": [
+            "x == y",
+            "x == z",
+            "x.equals(y)",
+            "y == z",
+            "x == y.toString()"
+          ],
+          "answers": [
+            1,
+            2
+          ],
+          "explanation": "`\"Ja\" + \"va\"` is a compile-time constant, so `z` is the pooled `\"Java\"`, the same object as `x`. `y` is a separate object, so only `equals` matches it. `toString()` on a String returns the same object.",
+          "objective": "1.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "false\ntrue\ntrue\nfalse\nfalse\n",
+            "source": "String x = \"Java\";\nString y = new String(\"Java\");\nString z = \"Ja\" + \"va\";\nSystem.out.println(x == y);\nSystem.out.println(x == z);\nSystem.out.println(x.equals(y));\nSystem.out.println(y == z);\nSystem.out.println(x == y.toString());"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Common methods",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "With `String s = \"banana\";`"
+            },
+            {
+              "type": "table",
+              "header": [
+                "Call",
+                "Result"
+              ],
+              "rows": [
+                [
+                  "`s.length()`",
+                  "`6`"
+                ],
+                [
+                  "`s.charAt(1)`",
+                  "`'a'`"
+                ],
+                [
+                  "`s.indexOf('n')`",
+                  "`2`"
+                ],
+                [
+                  "`s.indexOf(\"na\", 3)`",
+                  "`4`"
+                ],
+                [
+                  "`s.lastIndexOf('a')`",
+                  "`5`"
+                ],
+                [
+                  "`s.substring(2)`",
+                  "`\"nana\"`"
+                ],
+                [
+                  "`s.substring(1, 3)`",
+                  "`\"an\"`"
+                ],
+                [
+                  "`s.replace('a', 'o')`",
+                  "`\"bonono\"`"
+                ],
+                [
+                  "`s.contains(\"nan\")`",
+                  "`true`"
+                ],
+                [
+                  "`s.startsWith(\"ba\")`",
+                  "`true`"
+                ],
+                [
+                  "`s.repeat(2)`",
+                  "`\"bananabanana\"`"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "text": "`substring(begin, end)` excludes `end`. `charAt(6)` throws an exception, but `substring(6)` returns `\"\"`. `indexOf` returns -1 when nothing is found."
+            },
+            {
+              "type": "code",
+              "code": "System.out.println(Arrays.toString(\",a,,b,,\".split(\",\")));\nSystem.out.println(\"x\\ny\\n\".lines().count());\nSystem.out.println(\"%s=%d\".formatted(\"n\", 5));",
+              "caption": "Prints [, a, , b], 2 and n=5",
+              "verify": {
+                "expect": "stdout",
+                "value": "[, a, , b]\n2\nn=5\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "split, lines and formatted",
+              "text": "`split` keeps leading and interior empty strings but **drops trailing** ones. Its argument is a regex, so `\"a.b\".split(\".\")` is an empty array. `lines()` gives no empty last line for a trailing line break. `\"%s=%d\".formatted(...)` (Java 15) does the same as `String.format(\"%s=%d\", ...)`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l07-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "String s = \"programming\";\nint i = s.indexOf('g');\nint j = s.lastIndexOf('g');\nSystem.out.println(s.substring(i, j));",
+          "options": [
+            "grammin",
+            "gramming",
+            "rammin",
+            "rammi"
+          ],
+          "answer": 0,
+          "explanation": "The first `g` is at index 3 and the last is at 10. `substring(3, 10)` includes index 3 and stops before 10: `grammin`.",
+          "objective": "1.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "grammin"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l07-e05",
+          "kind": "fillBlanks",
+          "prompt": "Fill the gaps so the code prints `4`.",
+          "code": "String s = \"Hello, Java\";\nint i = s.___(',');\nString w = s.___(i + 2);\nSystem.out.println(w.___());",
+          "answers": [
+            "indexOf",
+            "substring",
+            "length"
+          ],
+          "bank": [
+            "indexOf",
+            "substring",
+            "length",
+            "charAt",
+            "size",
+            "repeat"
+          ],
+          "explanation": "The comma is at index 5. `substring(7)` is `\"Java\"`, and its `length()` is 4. Strings have `length()`, not `size()`.",
+          "objective": "1.2",
+          "verify": {
+            "expect": "stdout",
+            "value": "4\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Blank, strip and compare",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Call",
+                "Result"
+              ],
+              "rows": [
+                [
+                  "`\"\".isEmpty()`",
+                  "`true`"
+                ],
+                [
+                  "`\"  \".isEmpty()`",
+                  "`false`"
+                ],
+                [
+                  "`\"  \".isBlank()`",
+                  "`true`"
+                ],
+                [
+                  "`\" hi \".strip()`",
+                  "`\"hi\"`"
+                ],
+                [
+                  "`\" hi \".stripLeading()`",
+                  "`\"hi \"`"
+                ],
+                [
+                  "`\"Hi\".equalsIgnoreCase(\"HI\")`",
+                  "`true`"
+                ]
+              ]
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`strip()` removes all Unicode whitespace. `trim()` removes only characters up to the space character, `' '`.",
+                "Calls can be chained: `s.strip().toLowerCase().replace(\"a\", \"b\")`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "+ with Strings and numbers",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`+` runs left to right. Once one side is a String, `+` joins text."
+            },
+            {
+              "type": "code",
+              "code": "System.out.println(1 + 2 + \"3\");\nSystem.out.println(\"1\" + 2 + 3);\nSystem.out.println(\"1\" + (2 + 3));\nSystem.out.println('a' + 'b' + \"c\");",
+              "verify": {
+                "expect": "stdout",
+                "value": "33\n123\n15\n195c\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "text": "`'a' + 'b'` is int math (195) because neither side is a String yet. `null` concatenates as the text `\"null\"`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l07-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int a = 1, b = 2;\nString s = a + b + \"x\" + a + b;\nSystem.out.println(s);",
+          "options": [
+            "3x3",
+            "3x12",
+            "12x12",
+            "12x3"
+          ],
+          "answer": 1,
+          "explanation": "Left to right: `1 + 2` is 3 (number math). `3 + \"x\"` is `\"3x\"`. From then on everything is joined as text: `\"3x1\"`, then `\"3x12\"`.",
+          "objective": "1.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "3x12"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u01-l08",
+      "title": "StringBuilder",
+      "summary": "A mutable string: editing methods, chaining, equals and capacity.",
+      "minutes": 6,
+      "steps": [
+        {
+          "type": "page",
+          "title": "A mutable string",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`StringBuilder` changes **in place**. Most methods return the same builder (`this`), so calls can be chained."
+            },
+            {
+              "type": "code",
+              "code": "StringBuilder sb = new StringBuilder();\nsb.append(\"Ja\").append('v').append(4);\nSystem.out.println(sb);",
+              "caption": "Prints Jav4",
+              "verify": {
+                "expect": "stdout",
+                "value": "Jav4\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "text": "It is like building a Python list and calling `\"\".join(...)` at the end. Use it when a String is built step by step, for example in a loop."
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "StringBuffer",
+              "text": "`StringBuffer` is the older twin of `StringBuilder`: the same methods, but each one is `synchronized`, which makes it slower. Prefer `StringBuilder` unless threads share the object. Neither class overrides `equals`, so two builders holding the same text are not `equals`; compare their `toString()` values instead."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l08-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "StringBuilder a = new StringBuilder(\"x\");\nStringBuilder b = a.append(\"y\");\nb.append(\"z\");\nSystem.out.println(a + \" \" + (a == b));",
+          "options": [
+            "x false",
+            "xy false",
+            "xyz true",
+            "xyz false"
+          ],
+          "answer": 2,
+          "explanation": "`append` returns the same object, so `a` and `b` point to one builder. Both appends change it.",
+          "objective": "1.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "xyz true"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Editing methods",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Each row starts again from `\"abcdef\"`:"
+            },
+            {
+              "type": "table",
+              "header": [
+                "Call",
+                "Builder becomes"
+              ],
+              "rows": [
+                [
+                  "`insert(1, \"-\")`",
+                  "`a-bcdef`"
+                ],
+                [
+                  "`delete(1, 3)`",
+                  "`adef`"
+                ],
+                [
+                  "`deleteCharAt(0)`",
+                  "`bcdef`"
+                ],
+                [
+                  "`replace(1, 4, \"X\")`",
+                  "`aXef`"
+                ],
+                [
+                  "`reverse()`",
+                  "`fedcba`"
+                ],
+                [
+                  "`setLength(2)`",
+                  "`ab`"
+                ]
+              ]
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Ranges are `[start, end)`: the end index is excluded, just like `substring`.",
+                "`delete` and `replace` accept an end index past the length; it is treated as the length.",
+                "`charAt`, `indexOf`, `length` and `substring` work as they do on String."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "text": "`substring` returns a new **String** and does not change the builder."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l08-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var sb = new StringBuilder(\"abcdef\");\nsb.delete(1, 3).insert(2, \"XY\");\nsb.deleteCharAt(sb.length() - 1);\nSystem.out.println(sb);",
+          "options": [
+            "adXYe",
+            "aXYde",
+            "adXYef",
+            "abXYe"
+          ],
+          "answer": 0,
+          "explanation": "`delete(1, 3)` removes `bc`, leaving `adef`. `insert(2, \"XY\")` gives `adXYef`. Deleting the last char gives `adXYe`.",
+          "objective": "1.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "adXYe"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l08-e03",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "StringBuilder sb = new StringBuilder(\"hi\");\nsb.append(1).append(true);\nString s = sb.reverse();\nsb.setLength(1);\nSystem.out.println(sb);",
+          "answer": 3,
+          "explanation": "`reverse()` returns a `StringBuilder`, not a String. You would need `sb.reverse().toString()`.",
+          "objective": "1.2",
+          "verify": {
+            "expect": "compileError",
+            "line": 3
+          }
+        },
+        {
+          "type": "page",
+          "title": "equals and ==",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "StringBuilder does **not** override `equals`, so `equals` works like `==` and compares references."
+            },
+            {
+              "type": "code",
+              "code": "var b1 = new StringBuilder(\"abc\");\nvar b2 = new StringBuilder(\"abc\");\nSystem.out.println(b1.equals(b2));\nSystem.out.println(b1.compareTo(b2) == 0);\nSystem.out.println(\"abc\".contentEquals(b1));",
+              "verify": {
+                "expect": "stdout",
+                "value": "false\ntrue\ntrue\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "To compare content, use `toString().equals(...)`, `compareTo`, or `String.contentEquals`.",
+                "`\"abc\" == sb` does not compile: String and StringBuilder are unrelated types.",
+                "`\"abc\".equals(sb)` compiles but is `false` (different classes)."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l08-e04",
+          "kind": "multiChoice",
+          "prompt": "Given the code, which two expressions are `true`? Choose two.",
+          "code": "var s = \"abc\";\nvar b1 = new StringBuilder(\"abc\");\nvar b2 = new StringBuilder(\"abc\");",
+          "options": [
+            "b1 == b2",
+            "b1.equals(b2)",
+            "s.equals(b1)",
+            "s.contentEquals(b1)",
+            "b1.toString().equals(s)"
+          ],
+          "answers": [
+            3,
+            4
+          ],
+          "explanation": "Two builders are two different objects, and `equals` is not overridden, so it compares references. `String.equals` needs another String. `contentEquals` and `toString().equals` compare the characters.",
+          "objective": "1.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "false\nfalse\nfalse\ntrue\ntrue\n",
+            "source": "var s = \"abc\";\nvar b1 = new StringBuilder(\"abc\");\nvar b2 = new StringBuilder(\"abc\");\nSystem.out.println(b1 == b2);\nSystem.out.println(b1.equals(b2));\nSystem.out.println(s.equals(b1));\nSystem.out.println(s.contentEquals(b1));\nSystem.out.println(b1.toString().equals(s));"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Length vs. capacity",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "`length()` is the number of characters stored.",
+                "`capacity()` is the size of the internal buffer. It grows automatically.",
+                "`new StringBuilder()` starts with capacity 16.",
+                "`new StringBuilder(50)` is empty, with capacity 50. It does **not** contain \"50\".",
+                "`new StringBuilder(\"hi\")` has capacity 16 + 2 = 18."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "text": "`charAt(i)` throws an exception for any `i >= length()`, even if `i` is less than the capacity."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l08-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var sb = new StringBuilder(10);\nsb.append(\"hey\");\nSystem.out.println(sb.length() + \" \"\n    + sb.capacity());",
+          "options": [
+            "3 10",
+            "10 10",
+            "3 16",
+            "3 19"
+          ],
+          "answer": 0,
+          "explanation": "The int argument sets the starting capacity (10), not the content. After appending `hey`, the length is 3. The capacity stays 10 because 3 chars fit.",
+          "objective": "1.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "3 10"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l08-e06",
+          "kind": "orderLines",
+          "prompt": "Put the lines in order so the program prints `olleh!`.",
+          "lines": [
+            "var sb = new StringBuilder();",
+            "sb.append(\"hello\");",
+            "sb.reverse();",
+            "sb.append('!');",
+            "System.out.println(sb);"
+          ],
+          "distractors": [
+            "sb.toUpperCase();"
+          ],
+          "explanation": "Create the builder, add `hello`, reverse it to `olleh`, then add `!` and print. `toUpperCase` is a String method; StringBuilder does not have it.",
+          "objective": "1.2",
+          "verify": {
+            "expect": "stdout",
+            "value": "olleh!\n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u01-l09",
+      "title": "Text blocks",
+      "summary": "Multi-line strings, incidental whitespace and escapes.",
+      "minutes": 6,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Multi-line strings",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A **text block** starts with `\"\"\"` followed by a line break and ends with `\"\"\"`."
+            },
+            {
+              "type": "code",
+              "code": "String json = \"\"\"\n    {\n      \"name\": \"Duke\"\n    }\n    \"\"\";\nSystem.out.print(json);",
+              "caption": "Quotes need no escaping",
+              "verify": {
+                "expect": "stdout",
+                "value": "{\n  \"name\": \"Duke\"\n}\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Nothing except whitespace may follow the opening `\"\"\"` on its line.",
+                "The result is an ordinary `String`, with all the usual methods.",
+                "Text blocks are compile-time constants, so they are pooled like literals."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "text": "They look like Python's triple-quoted strings, but Java removes the shared indentation for you and the opening `\"\"\"` must end its line. `\"\"\"hi\"\"\"` on one line does not compile."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l09-e01",
+          "kind": "trueFalse",
+          "prompt": "This code compiles.",
+          "code": "String s = \"\"\"Hello\"\"\";\nSystem.out.println(s);",
+          "answer": false,
+          "explanation": "The opening `\"\"\"` must be followed by a line break. Text cannot start on the same line.",
+          "objective": "1.2",
+          "verify": {
+            "expect": "compileError",
+            "line": 1
+          }
+        },
+        {
+          "type": "page",
+          "title": "Incidental whitespace",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Java removes the indentation that **all** content lines share, counting the closing `\"\"\"` line too."
+            },
+            {
+              "type": "code",
+              "code": "String a = \"\"\"\n    Hi\n    \"\"\";\nString b = \"\"\"\n    Hi\"\"\";\nString c = \"\"\"\n      Hi\n    \"\"\";\nSystem.out.print(a + b + \"|\" + c);",
+              "caption": "a = \"Hi\\n\", b = \"Hi\", c = \"  Hi\\n\"",
+              "verify": {
+                "expect": "stdout",
+                "value": "Hi\nHi|  Hi\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Closing `\"\"\"` on its own line: the text ends with a newline.",
+                "Closing `\"\"\"` right after the text: no trailing newline.",
+                "Moving the closing `\"\"\"` further left adds indentation to every line."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l09-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "String s = \"\"\"\n      red\n    green\n    \"\"\";\nSystem.out.print(\"[\" + s + \"]\");",
+          "options": [
+            "[red\ngreen]",
+            "[  red\ngreen\n]",
+            "[red\ngreen\n]",
+            "[      red\n    green\n]"
+          ],
+          "answer": 1,
+          "explanation": "The smallest indentation is shared by `green` and the closing delimiter, so it is removed. `red` keeps its 2 extra spaces, and the closing `\"\"\"` on its own line adds a final newline.",
+          "objective": "1.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "[  red\ngreen\n]"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Escapes in text blocks",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Write",
+                "Meaning"
+              ],
+              "rows": [
+                [
+                  "`\\` at line end",
+                  "Join with the next line (no newline)"
+                ],
+                [
+                  "`\\s`",
+                  "One space that is never stripped"
+                ],
+                [
+                  "`\\\"\"\"`",
+                  "A literal `\"\"\"` inside the block"
+                ],
+                [
+                  "`\\n`, `\\t`",
+                  "Newline, tab (as usual)"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "String s = \"\"\"\n    one \\\n    two\\s\n    \"quoted\"\n    \"\"\";\nSystem.out.print(s.replace(\" \", \"_\"));",
+              "caption": "Spaces shown as _",
+              "verify": {
+                "expect": "stdout",
+                "value": "one_two_\n\"quoted\"\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "text": "Trailing spaces at the end of each line are removed silently. Use `\\s` to keep one."
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "Order of processing",
+              "text": "The compiler handles a text block in three steps: (1) line breaks become `\\n`, (2) incidental indentation and trailing spaces are stripped, (3) escapes are interpreted. In step 2 an escape is still just a backslash and a letter, so `\\s` survives the stripping, and an escaped `\\n` does not start a new line for indentation purposes."
+            },
+            {
+              "type": "code",
+              "code": "String s = \"\"\"\n    a\\n  b\n    \"\"\";\nSystem.out.print(s);",
+              "caption": "One source line, indentation stripped first, then \\n becomes a newline",
+              "verify": {
+                "expect": "stdout",
+                "value": "a\n  b\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l09-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "String t = \"\"\"\n    a\\\n    b\n    c\\n\"\"\";\nSystem.out.print(\"[\" + t + \"]\");",
+          "options": [
+            "[a\nb\nc\n]",
+            "[ab\nc\n]",
+            "[ab\nc\n\n]",
+            "[ab c\n]"
+          ],
+          "answer": 1,
+          "explanation": "`\\` at the end of a line joins it with the next, giving `ab`. The block ends right after `c\\n`, so there is exactly one final newline.",
+          "objective": "1.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "[ab\nc\n]"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l09-e04",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "String a = \"\"\"\n    say \"hi\"\n    \"\"\";\nint n = \"\"\"\n    42\n    \"\"\";\nString c = \"\"\"\n    a \\\"\"\" b\n    \"\"\";",
+          "answer": 4,
+          "explanation": "A text block is always a `String`, even if it looks like a number, so it cannot go into an `int`. Line 2 is fine (plain quotes are allowed) and `\\\"\"\"` escapes three quotes.",
+          "objective": "1.2",
+          "verify": {
+            "expect": "compileError",
+            "line": 4
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l09-e05",
+          "kind": "multiChoice",
+          "prompt": "Which two statements about text blocks are true? Choose two.",
+          "options": [
+            "The opening \"\"\" must be followed by a line terminator.",
+            "Trailing spaces on each line are kept.",
+            "A text block is a String and has all String methods.",
+            "\\s is translated into a tab.",
+            "The closing \"\"\" must be on its own line."
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "Trailing spaces are stripped, `\\s` is a single space, and the closing delimiter may follow the last text (then there is no trailing newline).",
+          "objective": "1.2",
+          "examStyle": true,
+          "codeOptions": false
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l09-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "String a = \"\"\"\n    hi\"\"\";\nString b = \"hi\";\nSystem.out.println(a == b);",
+          "options": [
+            "true",
+            "false",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "A text block is a compile-time constant, just like a literal. Both are the same pooled `\"hi\"` object.",
+          "objective": "1.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "true"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Recap",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "Opening `\"\"\"` then a line break; the closing `\"\"\"` decides the trailing newline.",
+                "Shared indentation (including the closing line) is removed.",
+                "Trailing spaces are stripped; `\\s` keeps one space.",
+                "`\\` at the end of a line joins it with the next line.",
+                "A text block is a normal, pooled `String`."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "u01-l10",
+      "title": "Unit 1 checkpoint",
+      "summary": "Exam-style mixed review of the whole unit.",
+      "minutes": 10,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Checkpoint",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "11 exam-style questions covering the whole unit. Read every line: on the real exam, `Compilation fails` is often the right answer."
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "text": "For an output question, first check that every line compiles. Then trace the values, and watch for int division, promotion, `++`, the String pool and `==`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l10-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "long x = 5;\nint y = 2;\nvar z = x / y * 2.0;\nSystem.out.println(z);",
+          "options": [
+            "5.0",
+            "4.0",
+            "4",
+            "Compilation fails"
+          ],
+          "answer": 1,
+          "explanation": "`x / y` is long division: 5 / 2 = 2. Multiplying by `2.0` promotes to double: 4.0.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "4.0"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l10-e02",
+          "kind": "multiChoice",
+          "prompt": "Which three lines compile? Choose three.",
+          "options": [
+            "byte b = 127;",
+            "byte c = 128;",
+            "char d = 65;",
+            "short e = 'a';",
+            "float f = 1.0;",
+            "int g = 10L;"
+          ],
+          "answers": [
+            0,
+            2,
+            3
+          ],
+          "explanation": "A constant int may go into byte, short or char if it fits: 127 fits a byte, 65 fits a char, and `'a'` (97) fits a short. 128 is too big for a byte, `1.0` is a double, and `10L` is a long.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "127 A 97\n",
+            "source": "byte b = 127;\nchar d = 65;\nshort e = 'a';\nSystem.out.println(b + \" \" + d + \" \" + e);"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l10-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "String s = \"Java\";\ns.concat(\"21\");\nStringBuilder sb = new StringBuilder(s);\nsb.append(\"21\");\nSystem.out.println(s + sb);",
+          "options": [
+            "Java21Java21",
+            "JavaJava21",
+            "JavaJava",
+            "Compilation fails"
+          ],
+          "answer": 1,
+          "explanation": "`concat` returns a new String that is ignored, so `s` stays `Java`. The builder is changed in place to `Java21`.",
+          "objective": "1.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "JavaJava21"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l10-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Long a = 100L, b = 100L;\nLong c = 200L, d = 200L;\nSystem.out.println(a == b);\nSystem.out.println(c == d);",
+          "options": [
+            "true\ntrue",
+            "true\nfalse",
+            "false\nfalse",
+            "Compilation fails"
+          ],
+          "answer": 1,
+          "explanation": "Like Integer, `Long` caches -128 to 127. Two boxed 100s are the same object; two boxed 200s are not.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "true\nfalse"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l10-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "double d = Math.floor(-2.5)\n    + Math.round(-2.5);\nSystem.out.println(d);",
+          "options": [
+            "-5.0",
+            "-6.0",
+            "-5",
+            "-4.0"
+          ],
+          "answer": 0,
+          "explanation": "`floor(-2.5)` is -3.0. `round(-2.5)` rounds up to -2. -3.0 + -2 is -5.0, a double.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "-5.0"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l10-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int i = 2;\nint j = i++ * 3 + --i;\nSystem.out.println(i + \",\" + j);",
+          "options": [
+            "2,8",
+            "3,9",
+            "2,9",
+            "3,8"
+          ],
+          "answer": 0,
+          "explanation": "`i++` gives 2 and i becomes 3. 2 * 3 = 6. `--i` makes i 2 and gives 2. So j = 8 and i = 2.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "2,8"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l10-e07",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "String t = \"\"\"\n    A\\tB\n      C\"\"\";\nSystem.out.println(t.length());",
+          "options": [
+            "7",
+            "8",
+            "9",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "The content is `A`, tab, `B`, newline, two spaces, `C`. The 4-space indentation is removed and there is no trailing newline, so the length is 7.",
+          "objective": "1.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "7"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l10-e08",
+          "kind": "multiChoice",
+          "prompt": "Given `String s = \"abc\";`, which two expressions are `true`? Choose two.",
+          "options": [
+            "s.substring(1, 2).equals(\"bc\")",
+            "s.indexOf(\"c\") == 2",
+            "s.charAt(3) == 'c'",
+            "\"ABC\".equalsIgnoreCase(s)",
+            "s.replace('a', 'A') == \"Abc\""
+          ],
+          "answers": [
+            1,
+            3
+          ],
+          "explanation": "`substring(1, 2)` is just `\"b\"`. `charAt(3)` is out of range and throws. `replace` builds a new String at runtime, so `==` against a literal is false.",
+          "objective": "1.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "false\ntrue\ntrue\nfalse\n",
+            "source": "String s = \"abc\";\nSystem.out.println(s.substring(1, 2).equals(\"bc\"));\nSystem.out.println(s.indexOf(\"c\") == 2);\nSystem.out.println(\"ABC\".equalsIgnoreCase(s));\nSystem.out.println(s.replace('a', 'A') == \"Abc\");"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l10-e09",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "short s = 10;\ns = s * 2;\ns *= 2;\nSystem.out.println(s);",
+          "options": [
+            "40",
+            "20",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 2,
+          "explanation": "`s * 2` is an int, so line 2 needs a cast. Line 3 is fine because `*=` includes the cast.",
+          "objective": "1.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 2
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l10-e10",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var sb = new StringBuilder(\"12345\");\nsb.replace(1, 3, \"ab\").reverse();\nSystem.out.println(sb.charAt(1));",
+          "options": [
+            "4",
+            "a",
+            "b",
+            "2"
+          ],
+          "answer": 0,
+          "explanation": "`replace(1, 3, \"ab\")` swaps `23` for `ab`, giving `1ab45`. Reversed, that is `54ba1`, and index 1 is `4`.",
+          "objective": "1.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "4"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u01-l10-e11",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "char a = 'a';\nString s = 1 + a + \"b\" + 2 + 3;\nSystem.out.println(s);",
+          "options": [
+            "1ab23",
+            "98b23",
+            "98b5",
+            "1ab5"
+          ],
+          "answer": 1,
+          "explanation": "Left to right: `1 + 'a'` is int math, 1 + 97 = 98. Then a String joins in, so `2` and `3` are added as text: `98b23`.",
+          "objective": "1.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "98b23"
+          }
+        }
+      ]
+    }
+  ]
+}

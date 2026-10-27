@@ -1,0 +1,2875 @@
+{
+  "unitId": "u06",
+  "lessons": [
+    {
+      "id": "u06-l01",
+      "title": "Arrays",
+      "summary": "Declare, create, index and compare arrays.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Declaring an array",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "An array is a fixed-size block of values of **one type**. The brackets can go after the type or after the name:"
+            },
+            {
+              "type": "code",
+              "code": "int[] a;     // preferred style\nint b[];     // also legal\nString[] names;"
+            },
+            {
+              "type": "paragraph",
+              "text": "The size is **never** part of the declaration. `int[5] a;` does not compile. The size is chosen when you create the array with `new`."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Mixed declarations",
+              "text": "Brackets after the **type** apply to every variable on the line. Brackets after a **name** apply only to that name.\n`int[] a, b[];` makes `a` an `int[]` and `b` an `int[][]`.\n`int a[], b;` makes `a` an `int[]` and `b` a plain `int`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l01-e01",
+          "kind": "singleChoice",
+          "prompt": "Given `int[] x, y[];`, what is the type of `y`?",
+          "code": "int[] x, y[];",
+          "options": [
+            "int",
+            "int[]",
+            "int[][]",
+            "Compilation fails"
+          ],
+          "answer": 2,
+          "explanation": "The `[]` after `int` applies to both variables, and `y` adds its own `[]`. So `x` is `int[]` and `y` is `int[][]`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "int[][]",
+            "source": "int[] x, y[];\ny = new int[1][1];\nSystem.out.println(y.getClass().getSimpleName());"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Creating arrays",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`new int[3]` creates three slots filled with **default values**. Every array knows its size through the `length` **field** (no parentheses)."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Element type",
+                "Default"
+              ],
+              "rows": [
+                [
+                  "int, long, short, byte",
+                  "0"
+                ],
+                [
+                  "double, float",
+                  "0.0"
+                ],
+                [
+                  "boolean",
+                  "false"
+                ],
+                [
+                  "char",
+                  "'\\u0000'"
+                ],
+                [
+                  "any object type",
+                  "null"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "You can also list the values directly. The braces-only form works **only in a declaration**; elsewhere use an anonymous array `new int[]{...}`."
+            },
+            {
+              "type": "code",
+              "code": "int[] a = new int[3];      // [0, 0, 0]\nint[] b = {1, 2, 3};       // declaration\nint[] c;\nc = new int[]{4, 5};       // anonymous\nSystem.out.println(a.length + b.length);",
+              "caption": "Prints 6",
+              "verify": {
+                "expect": "stdout",
+                "value": "6"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Size or values, not both",
+              "text": "`new int[2]{1, 2}` does not compile: give a size **or** an initializer, never both. `c = {4, 5};` does not compile either, because braces alone only work in a declaration."
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Trailing comma is fine",
+              "text": "An initializer may end with a comma: `int[] d = {1, 2, 3,};` compiles and has length 3. Handy when each value sits on its own line."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l01-e02",
+          "kind": "multiChoice",
+          "prompt": "Which two lines compile? Choose two.",
+          "options": [
+            "int[] p = new int[3];",
+            "int q[] = {1, 2};",
+            "int[] r = new int[2]{1, 2};",
+            "int[3] s;",
+            "int[] t; t = {1, 2};"
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "Both bracket positions are legal, and `{1, 2}` is fine in a declaration. A size and an initializer together is illegal, the size never goes in the type, and a bare `{...}` cannot be assigned after the declaration (use `new int[]{1, 2}`).",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "ok",
+            "source": "int[] p = new int[3];\nint q[] = {1, 2};\nSystem.out.println(\"ok\");"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Multi-dimensional and jagged arrays",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A 2D array is an **array of arrays**. Each row is a separate array, so rows can have different lengths (a **jagged** array)."
+            },
+            {
+              "type": "code",
+              "code": "int[][] g = new int[2][]; // no rows yet\ng[0] = new int[3];\ng[1] = new int[1];\nint[][] h = {{1, 2}, {3}};\nSystem.out.println(g[0].length + \" \"\n    + h[1][0]);",
+              "caption": "Prints 3 3",
+              "verify": {
+                "expect": "stdout",
+                "value": "3 3"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Only the **first** dimension is required: `new int[2][]` is fine, `new int[][2]` does not compile.",
+                "Valid indexes are `0` to `length - 1`.",
+                "A bad index compiles fine but throws `ArrayIndexOutOfBoundsException` at runtime."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python lists grow with `append` and accept negative indexes like `a[-1]`. Java arrays have a fixed size, and `a[-1]` throws `ArrayIndexOutOfBoundsException`."
+            },
+            {
+              "type": "paragraph",
+              "text": "Arrays are objects, and array types follow their element types: a `String[]` **is an** `Object[]`. A primitive array is different: an `int[]` is only an `Object`. It is never an `Object[]` or a `long[]`."
+            },
+            {
+              "type": "code",
+              "code": "Object[] objs = new String[2]; // OK: String[] is an Object[]\nObject any = new int[2];       // OK: int[] is an Object\n// Object[] bad = new int[2];  // does not compile\nobjs[0] = \"hi\";\nobjs[1] = 42;                  // compiles, fails at runtime",
+              "caption": "Throws ArrayStoreException: the real array only holds Strings",
+              "verify": {
+                "expect": "exception",
+                "value": "ArrayStoreException"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Arrays check late, generics check early",
+              "text": "Arrays are **covariant**, so a bad store compiles and fails at runtime with `ArrayStoreException`. Generics are **invariant**: `List<Object> l = new ArrayList<String>();` does not compile at all. Use a wildcard like `List<? extends Object>` if you need that flexibility."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l01-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int[][] g = {{1, 2, 3}, {4}, {}};\nSystem.out.println(g.length + \" \"\n    + g[1].length + \" \" + g[2].length);",
+          "options": [
+            "3 1 0",
+            "3 1 1",
+            "2 1 0",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "The outer array has 3 rows. Row 1 is `{4}` with length 1, and row 2 is the empty array `{}` with length 0. An empty row is perfectly legal.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "3 1 0"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l01-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "int[] a = new int[3];\nfor (int i = 0; i <= a.length; i++)\n    a[i] = i;\nSystem.out.println(a[2]);",
+          "options": [
+            "2",
+            "3",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 3,
+          "explanation": "The loop runs while `i <= a.length`, so it tries `a[3]` on an array whose last index is 2. That compiles but throws `ArrayIndexOutOfBoundsException`, so nothing is printed.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "exception",
+            "value": "ArrayIndexOutOfBoundsException",
+            "stdout": ""
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Comparing and printing arrays",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Arrays do **not** override `equals` or `toString`. So `==` and `equals` both compare **references**, and printing an array shows a type code and hash like `[I@1b6d3586`."
+            },
+            {
+              "type": "code",
+              "code": "int[] a = {1, 2};\nint[] b = {1, 2};\nSystem.out.println(a.equals(b));\nSystem.out.println(Arrays.equals(a, b));\nSystem.out.println(Arrays.toString(a));",
+              "caption": "Prints false, true, [1, 2]",
+              "verify": {
+                "expect": "stdout",
+                "value": "false\ntrue\n[1, 2]"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`Arrays.equals(a, b)`: same length and equal elements.",
+                "`Arrays.toString(a)`: readable text like `[1, 2]`.",
+                "`Arrays.deepToString(grid)`: readable text for 2D arrays."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "In Python, `[1, 2] == [1, 2]` is `True` and `print` shows the contents. In Java you need `Arrays.equals` and `Arrays.toString` to get that behaviour."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l01-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int[] a = {1, 2};\nint[] b = {1, 2};\nSystem.out.print(a == b);\nSystem.out.print(\" \" + a.equals(b));\nSystem.out.print(\" \" + Arrays.equals(a, b));",
+          "options": [
+            "false false true",
+            "true true true",
+            "false true true",
+            "false false false"
+          ],
+          "answer": 0,
+          "explanation": "`a` and `b` are two different array objects, so `==` is false. Arrays inherit `equals` from `Object`, which also compares references: false. Only `Arrays.equals` compares the contents: true.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "false false true"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l01-e06",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "int[] a = new int[2];\nint[][] b = new int[2][];\nint c[] = {1, 2, 3};\nint[][] d = new int[][2];\nint len = c.length;",
+          "answer": 4,
+          "explanation": "The first dimension of a multi-dimensional array must always be given. `new int[2][]` is fine, `new int[][2]` is not. Note that `length` on line 5 is a field, so no parentheses are needed.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "compileError"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u06-l02",
+      "title": "The Arrays class",
+      "summary": "sort, binarySearch, compare, mismatch, fill and asList.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Sorting and printing",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`java.util.Arrays` is a toolbox of static methods for arrays. `Arrays.sort(a)` sorts **in place** in ascending order."
+            },
+            {
+              "type": "paragraph",
+              "text": "Strings sort by Unicode value, not alphabetically as a human would: **digits** first, then **uppercase**, then **lowercase**. Comparison goes character by character, so `\"10\"` comes before `\"9\"`."
+            },
+            {
+              "type": "code",
+              "code": "int[] n = {3, 1, 2};\nArrays.sort(n);\nSystem.out.println(Arrays.toString(n));",
+              "caption": "Prints [1, 2, 3]",
+              "verify": {
+                "expect": "stdout",
+                "value": "[1, 2, 3]"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Sort order",
+              "text": "Order to memorise: numbers < UPPERCASE < lowercase."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l02-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "String[] s = {\"b\", \"A\", \"a\", \"10\", \"9\"};\nArrays.sort(s);\nSystem.out.println(Arrays.toString(s));",
+          "options": [
+            "[10, 9, A, a, b]",
+            "[9, 10, A, a, b]",
+            "[A, a, b, 9, 10]",
+            "[10, 9, a, A, b]"
+          ],
+          "answer": 0,
+          "explanation": "Strings compare character by character. `'1'` is less than `'9'`, so `\"10\"` comes first. Digits come before uppercase letters, and uppercase before lowercase.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "[10, 9, A, a, b]"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "binarySearch",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`Arrays.binarySearch(a, key)` finds a value in a **sorted** array quickly."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Found: returns the index.",
+                "Not found: returns `-(insertion point) - 1`, where the insertion point is the index where the key would go.",
+                "Array not sorted: the result is **undefined**. Don't try to predict it."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "int[] a = {10, 20, 30};\nint found = Arrays.binarySearch(a, 20);\nint missing = Arrays.binarySearch(a, 25);\nSystem.out.println(found + \" \" + missing);",
+              "caption": "25 would go at index 2, so -2 - 1 = -3. Prints 1 -3",
+              "verify": {
+                "expect": "stdout",
+                "value": "1 -3"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Don't forget the - 1",
+              "text": "The \"- 1\" is there so that a missing key never returns 0. A key smaller than everything has insertion point 0 and returns **-1**, not 0."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l02-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int[] a = {2, 4, 6, 8};\nSystem.out.print(Arrays.binarySearch(a, 6));\nSystem.out.print(\" \");\nSystem.out.print(Arrays.binarySearch(a, 5));",
+          "options": [
+            "2 -3",
+            "2 -2",
+            "2 -1",
+            "3 -3"
+          ],
+          "answer": 0,
+          "explanation": "6 is at index 2. 5 is missing; it would be inserted at index 2 (before 6), so the result is `-(2) - 1 = -3`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "2 -3"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "compare and mismatch",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Call",
+                "Returns"
+              ],
+              "rows": [
+                [
+                  "Arrays.equals(a, b)",
+                  "true if same length and elements"
+                ],
+                [
+                  "Arrays.compare(a, b)",
+                  "negative, 0 or positive (like compareTo)"
+                ],
+                [
+                  "Arrays.mismatch(a, b)",
+                  "first index that differs, or -1 if equal"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "`compare` goes element by element. If one array is a **prefix** of the other, the shorter one is smaller. `mismatch` returns the length of the shorter array in that prefix case."
+            },
+            {
+              "type": "code",
+              "code": "int[] x = {1, 2};\nint[] y = {1, 3};\nint c = Arrays.compare(x, y);\nSystem.out.println(c < 0);\nSystem.out.println(Arrays.mismatch(x, y));",
+              "caption": "Prints true, then 1",
+              "verify": {
+                "expect": "stdout",
+                "value": "true\n1"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "Remember: `mismatch` returns **-1** when the arrays are equal, and `compare` returns **0**. Mixing those up is a classic wrong option."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l02-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int[] a = {1, 2, 3};\nint[] b = {1, 2};\nint[] c = {1, 2, 3};\nSystem.out.print(Arrays.mismatch(a, b));\nSystem.out.print(\" \"\n    + Arrays.mismatch(a, c));\nSystem.out.print(\" \"\n    + (Arrays.compare(a, b) > 0));",
+          "options": [
+            "2 -1 true",
+            "2 0 true",
+            "-1 -1 false",
+            "2 -1 false"
+          ],
+          "answer": 0,
+          "explanation": "`b` is a prefix of `a`, so they first differ at index 2 (the length of `b`). `a` and `c` are equal, so `mismatch` returns -1. The longer array compares as greater, so `compare(a, b) > 0` is true.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "2 -1 true"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "fill and asList",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`Arrays.fill(a, v)` sets every slot to `v`. `Arrays.asList(...)` gives you a `List` view **backed by the array**."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "It is **fixed size**: `add` and `remove` throw `UnsupportedOperationException`.",
+                "`set` is allowed and **writes through** to the array, and changes to the array show up in the list.",
+                "Compare `List.of(...)`: no write-through and fully immutable (even `set` throws)."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "String[] arr = {\"a\", \"b\"};\nList<String> view = Arrays.asList(arr);\nview.set(0, \"z\");\nSystem.out.println(arr[0]);",
+              "caption": "Prints z",
+              "verify": {
+                "expect": "stdout",
+                "value": "z"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Fixed size, not read-only",
+              "text": "`Arrays.asList` compiles with any `List` method, so `add` is a **runtime** failure, not a compile error."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l02-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "String[] arr = {\"x\", \"y\", \"z\"};\nList<String> list = Arrays.asList(arr);\nlist.set(0, \"q\");\narr[2] = \"w\";\nSystem.out.println(list + \" \" + arr[0]);",
+          "options": [
+            "[q, y, w] q",
+            "[q, y, z] x",
+            "[x, y, w] q",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "The list and the array share storage. `list.set(0, \"q\")` changes `arr[0]` too, and `arr[2] = \"w\"` shows up in the list.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "[q, y, w] q"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l02-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "List<Integer> list = Arrays.asList(1, 2, 3);\nlist.set(1, 9);\nlist.add(4);\nSystem.out.println(list);",
+          "options": [
+            "[1, 9, 3, 4]",
+            "[1, 2, 3, 4]",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 3,
+          "explanation": "`set` is allowed on an `Arrays.asList` list, but `add` would change the size, so it throws `UnsupportedOperationException` before anything is printed.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "exception",
+            "value": "UnsupportedOperationException",
+            "stdout": ""
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l02-e06",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code so it prints `[-1, -1, -1]`.",
+          "code": "int[] a = new int[3];\nArrays.___(a, -1);\nSystem.out.println(Arrays.___(a));",
+          "bank": [
+            "fill",
+            "toString",
+            "setAll",
+            "asList",
+            "deepToString"
+          ],
+          "answers": [
+            "fill",
+            "toString"
+          ],
+          "explanation": "`Arrays.fill` puts one value in every slot. `Arrays.toString` formats a 1D array. `setAll` needs a function, not a value, and `deepToString` only accepts an `Object[]`, so it can't take an `int[]`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "[-1, -1, -1]"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u06-l03",
+      "title": "Generics basics",
+      "summary": "Type parameters, wildcards and type erasure.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Why generics?",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Generics let a collection say what it holds: `List<String>` holds only strings. The compiler checks every `add`, and `get` returns a `String` without a cast."
+            },
+            {
+              "type": "code",
+              "code": "List<String> names = new ArrayList<>();\nnames.add(\"Ana\");\nString first = names.get(0);  // no cast\nSystem.out.println(first);",
+              "caption": "Prints Ana",
+              "verify": {
+                "expect": "stdout",
+                "value": "Ana"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`<>` (the **diamond**) lets the compiler infer the type on the right side.",
+                "Type arguments must be **reference types**: `List<int>` doesn't compile; use `List<Integer>`.",
+                "`var list = new ArrayList<>();` compiles, but infers `ArrayList<Object>`."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Raw types",
+              "text": "A **raw type** such as `List list = new ArrayList();` still compiles (with a warning), but `get` returns `Object`. Assigning that to a `String` without a cast does not compile."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l03-e01",
+          "kind": "multiChoice",
+          "prompt": "Which two lines compile? Choose two.",
+          "options": [
+            "List<String> a = new ArrayList<>();",
+            "List<int> b = new ArrayList<>();",
+            "List<> c = new ArrayList<String>();",
+            "var d = new ArrayList<>();",
+            "ArrayList<String> e = new List<>();"
+          ],
+          "answers": [
+            0,
+            3
+          ],
+          "explanation": "The diamond goes on the **right** side only. Primitives can't be type arguments. `List` is an interface, so `new List<>()` fails. `var` with a diamond compiles and gives `ArrayList<Object>`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "ok",
+            "source": "List<String> a = new ArrayList<>();\nvar d = new ArrayList<>();\nSystem.out.println(\"ok\");"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l03-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "List list = new ArrayList();\nlist.add(\"hi\");\nlist.add(7);\nString s = list.get(0);\nSystem.out.println(s);",
+          "options": [
+            "hi",
+            "Compilation fails",
+            "An exception is thrown at runtime",
+            "hi7"
+          ],
+          "answer": 1,
+          "explanation": "`list` is a raw type, so `get` returns `Object`. Assigning an `Object` to a `String` needs a cast, so line 4 does not compile. Lines 2 and 3 only produce warnings.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "compileError",
+            "line": 4
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Generic classes and methods",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "You can write your own generic types. The type parameter (often `T`) is a placeholder that the caller fills in."
+            },
+            {
+              "type": "code",
+              "code": "class Box<T> {\n    private T value;\n    Box(T value) { this.value = value; }\n    T get() { return value; }\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "A **generic method** declares its own type parameter **just before the return type**:"
+            },
+            {
+              "type": "code",
+              "code": "static <T> T first(List<T> list) {\n    return list.get(0);\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "A **bound** restricts what `T` may be. `<T extends Number>` accepts `Integer`, `Double`, etc., and lets you call `Number` methods on `T`. Bounds always use `extends`, even for interfaces."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Static members can't use T",
+              "text": "A class's `T` belongs to each **instance**, so a static field or static method can't mention it. A static method that needs a type gives itself its own parameter, like `<E>` below."
+            },
+            {
+              "type": "code",
+              "code": "class Holder<T> {\n    static T last;   // does not compile\n    T value;\n    static <E> Holder<E> empty() { return new Holder<>(); }\n}",
+              "caption": "Line 2 does not compile; the static method with its own <E> is fine",
+              "verify": {
+                "expect": "compileError",
+                "line": 2
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l03-e03",
+          "kind": "fillBlanks",
+          "prompt": "Complete the bounded type parameter so the program prints `42.0`.",
+          "code": "public class Main {\n    static <T ___ Number> double dbl(T n) {\n        return n.doubleValue() * 2;\n    }\n    public static void main(String[] a) {\n        System.out.println(dbl(21));\n    }\n}",
+          "bank": [
+            "extends",
+            "implements",
+            "super",
+            "instanceof"
+          ],
+          "answers": [
+            "extends"
+          ],
+          "explanation": "Type parameter bounds always use `extends`, for classes and interfaces alike. `implements` is never allowed here, and `super` only appears in wildcards (`? super T`), not in a type parameter declaration.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "42.0"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l03-e04",
+          "kind": "singleChoice",
+          "prompt": "Which generic method declaration compiles?",
+          "options": [
+            "static <T> T id(T t) { return t; }",
+            "static T <T> id(T t) { return t; }",
+            "<T> static T id(T t) { return t; }",
+            "static <T> id(T t) { return t; }"
+          ],
+          "answer": 0,
+          "explanation": "The type parameter list goes after the modifiers and **immediately before the return type**. A generic method still needs a return type: here it is `T`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "x",
+            "optionCheck": false,
+            "source": "public class Main {\n    static <T> T id(T t) { return t; }\n    public static void main(String[] a) {\n        System.out.println(id(\"x\"));\n    }\n}"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Wildcards",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Surprise: a `List<Integer>` is **not** a `List<Number>`. If it were, you could add a `Double` to a list of integers. Wildcards give you flexible, safe parameter types."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Type",
+                "Can read as",
+                "Can add"
+              ],
+              "rows": [
+                [
+                  "List<?>",
+                  "Object",
+                  "nothing (only null)"
+                ],
+                [
+                  "List<? extends Number>",
+                  "Number",
+                  "nothing (only null)"
+                ],
+                [
+                  "List<? super Integer>",
+                  "Object",
+                  "Integer"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "PECS",
+              "text": "**Producer extends, consumer super** (PECS). Read from `? extends`, write into `? super`."
+            },
+            {
+              "type": "code",
+              "code": "double sum(List<? extends Number> l) {\n    double s = 0;\n    for (Number n : l) s += n.doubleValue();\n    return s;\n}"
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l03-e05",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "List<Integer> ints = new ArrayList<>();\nList<? extends Number> r = ints;\nList<? super Integer> w = ints;\nw.add(1);\nNumber n = r.get(0);\nr.add(2);",
+          "answer": 6,
+          "explanation": "`? extends Number` could be a list of `Double`, so the compiler refuses to add an `Integer` to it. Adding to `? super Integer` is fine, and reading a `Number` from `? extends Number` is fine.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l03-e06",
+          "kind": "multiChoice",
+          "prompt": "Given `List<? super Integer> list = new ArrayList<Number>();`, which two lines compile? Choose two.",
+          "options": [
+            "list.add(5);",
+            "list.add(5.0);",
+            "Object o = list.get(0);",
+            "Integer i = list.get(0);",
+            "Number n = list.get(0);"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "The list holds some supertype of `Integer`, so adding an `Integer` is always safe. A `Double` is not an `Integer`. When reading, the compiler only knows the element is some supertype of `Integer`, which could be `Object`, so only `Object` is guaranteed.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "5",
+            "source": "List<? super Integer> list = new ArrayList<Number>();\nlist.add(5);\nObject o = list.get(0);\nSystem.out.println(o);"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Type erasure",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Generics exist only at **compile time**. The compiler checks the types, then **erases** them: at runtime a `List<String>` and a `List<Integer>` are both just `List`."
+            },
+            {
+              "type": "code",
+              "code": "var a = new ArrayList<String>();\nvar b = new ArrayList<Integer>();\nboolean same = a.getClass() == b.getClass();\nSystem.out.println(same);",
+              "caption": "Prints true",
+              "verify": {
+                "expect": "stdout",
+                "value": "true"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "You can't create `new T()` or `new T[3]`: the type isn't known at runtime.",
+                "Two overloads that differ only in the type argument (`List<String>` vs `List<Integer>`) erase to the **same signature** and don't compile."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python type hints like `list[str]` aren't checked at runtime either. The difference is that Java's compiler **does** enforce them before the program runs."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Type arguments can't be checked",
+              "text": "Because of erasure, `obj instanceof List<String>` does not compile when `obj` is an `Object`; test `List<?>` instead. A cast `(List<String>) obj` compiles with an unchecked warning but only checks `List`, so a wrong element type fails later, where an element is read."
+            },
+            {
+              "type": "paragraph",
+              "text": "When code needs the type at runtime, pass a `Class<T>` object (a **type token**) along with the data:"
+            },
+            {
+              "type": "code",
+              "code": "public class Main {\n    static <T> T firstOf(List<?> items, Class<T> type) {\n        for (Object o : items)\n            if (type.isInstance(o)) return type.cast(o);\n        return null;\n    }\n    public static void main(String[] args) {\n        List<Object> mixed = List.of(1, \"two\", 3.0);\n        String s = firstOf(mixed, String.class);\n        System.out.println(s);\n    }\n}",
+              "caption": "Prints two",
+              "verify": {
+                "expect": "stdout",
+                "value": "two\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l03-e07",
+          "kind": "singleChoice",
+          "prompt": "What is the result of compiling this class?",
+          "code": "class Printer {\n    void show(List<String> l) {\n        System.out.println(\"S\");\n    }\n    void show(List<Integer> l) {\n        System.out.println(\"I\");\n    }\n}",
+          "options": [
+            "It compiles; the overloads are fine",
+            "Compilation fails: both methods have the same erasure",
+            "It compiles, but calling show() throws an exception",
+            "It compiles with only a warning"
+          ],
+          "answer": 1,
+          "explanation": "After erasure both methods are `void show(List l)`. Two methods with the same erased signature clash, so the class does not compile.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "compileError"
+          },
+          "examStyle": true
+        }
+      ]
+    },
+    {
+      "id": "u06-l04",
+      "title": "List",
+      "summary": "ArrayList methods, immutable lists and safe removal.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "ArrayList basics",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A `List` is an **ordered** collection that allows duplicates and is indexed from 0. `ArrayList` is the usual implementation. Declare the variable as the interface: `List<String> l = new ArrayList<>();`."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Method",
+                "What it does"
+              ],
+              "rows": [
+                [
+                  "add(e) / add(i, e)",
+                  "append / insert at index i"
+                ],
+                [
+                  "get(i)",
+                  "element at index i"
+                ],
+                [
+                  "set(i, e)",
+                  "replace, returns the old element"
+                ],
+                [
+                  "remove(i) / remove(o)",
+                  "by index / by value"
+                ],
+                [
+                  "indexOf(o)",
+                  "first index, or -1"
+                ],
+                [
+                  "contains(o), size()",
+                  "membership, element count"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "`set(i, e)` is Java's `l[i] = e`, but it can't grow the list: `set` on index `size()` throws `IndexOutOfBoundsException`. Use `add` to grow."
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Vector and Stack are legacy",
+              "text": "`Vector` and `Stack` are old `List` implementations whose methods are all `synchronized`, which makes them slower. Prefer `ArrayList` for a list and `ArrayDeque` for a stack, or a `java.util.concurrent` collection when threads share it."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l04-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "List<String> l = new ArrayList<>();\nl.add(\"a\");\nl.add(\"c\");\nl.add(1, \"b\");\nString old = l.set(2, \"d\");\nSystem.out.println(l + \" \" + old);",
+          "options": [
+            "[a, b, d] c",
+            "[a, d, c] b",
+            "[a, b, d] null",
+            "[a, c, d] c"
+          ],
+          "answer": 0,
+          "explanation": "After the adds the list is `[a, b, c]` (`add(1, \"b\")` inserts and shifts `c` right). `set(2, \"d\")` replaces `c` and **returns the old value** `c`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "[a, b, d] c"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "remove(int) vs remove(Object)",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`List` has two `remove` methods. With a `List<Integer>` this is a famous trap:"
+            },
+            {
+              "type": "code",
+              "code": "List<Integer> n = new ArrayList<>(\n    List.of(5, 6, 7));\nn.remove(1);                  // index 1\nn.remove(Integer.valueOf(5)); // value 5\nSystem.out.println(n);",
+              "caption": "Prints [7]",
+              "verify": {
+                "expect": "stdout",
+                "value": "[7]"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`remove(1)` with an `int` argument picks `remove(int index)`: no boxing is needed, so it wins.",
+                "To remove by value, pass an `Integer` object: `remove(Integer.valueOf(1))` or `remove((Integer) 1)`.",
+                "`remove(Object)` returns `boolean` (false if not found). `remove(int)` returns the removed element."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l04-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "List<Integer> n = new ArrayList<>();\nn.add(10); n.add(1); n.add(20); n.add(1);\nn.remove(1);\nn.remove(Integer.valueOf(1));\nSystem.out.println(n);",
+          "options": [
+            "[10, 20]",
+            "[20, 1]",
+            "[10, 20, 1]",
+            "[10, 1]"
+          ],
+          "answer": 0,
+          "explanation": "The list starts as `[10, 1, 20, 1]`. `remove(1)` removes **index** 1, leaving `[10, 20, 1]`. `remove(Integer.valueOf(1))` removes the first element **equal to** 1, leaving `[10, 20]`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "[10, 20]"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Immutable lists",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Created with",
+                "set",
+                "add/remove",
+                "null elements"
+              ],
+              "rows": [
+                [
+                  "new ArrayList<>(...)",
+                  "yes",
+                  "yes",
+                  "allowed"
+                ],
+                [
+                  "Arrays.asList(...)",
+                  "yes",
+                  "throws UOE",
+                  "allowed"
+                ],
+                [
+                  "List.of(...)",
+                  "throws UOE",
+                  "throws UOE",
+                  "NPE"
+                ],
+                [
+                  "List.copyOf(c)",
+                  "throws UOE",
+                  "throws UOE",
+                  "NPE"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "UOE = `UnsupportedOperationException`, NPE = `NullPointerException`. `List.copyOf` makes an independent immutable copy: later changes to the source are **not** visible in it."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "No nulls at all",
+              "text": "`List.of` rejects `null` everywhere, even in `contains(null)`, which throws `NullPointerException` instead of returning false."
+            },
+            {
+              "type": "paragraph",
+              "text": "`Collections.unmodifiableList(src)` is different again: it is a read-only **view** of `src`. You can't change it through the view (UOE), but changes made to `src` show through."
+            },
+            {
+              "type": "code",
+              "code": "List<String> src = new ArrayList<>(List.of(\"a\"));\nList<String> view = Collections.unmodifiableList(src);\nList<String> copy = List.copyOf(src);\nsrc.add(\"b\");\nSystem.out.println(view + \" \" + copy);",
+              "caption": "Prints [a, b] [a]: the view follows src, the copy doesn't",
+              "verify": {
+                "expect": "stdout",
+                "value": "[a, b] [a]\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l04-e03",
+          "kind": "multiChoice",
+          "prompt": "Which two statements throw an exception at runtime? Choose two.",
+          "options": [
+            "List.of(1, 2).set(0, 5);",
+            "Arrays.asList(1, 2).set(0, 5);",
+            "List.of(\"a\", null);",
+            "new ArrayList<>(List.of(1)).add(2);",
+            "List.copyOf(List.of(1, 2)).size();"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "`List.of` lists are immutable (`set` throws `UnsupportedOperationException`) and reject nulls (`NullPointerException`). `Arrays.asList` allows `set`, copying into a new `ArrayList` gives a mutable list, and `size()` is fine on any list.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "UOE\nNPE\nok",
+            "source": "try { List.of(1, 2).set(0, 5); }\ncatch (UnsupportedOperationException e) {\n    System.out.println(\"UOE\"); }\ntry { List.of(\"a\", null); }\ncatch (NullPointerException e) {\n    System.out.println(\"NPE\"); }\nArrays.asList(1, 2).set(0, 5);\nnew ArrayList<>(List.of(1)).add(2);\nList.copyOf(List.of(1, 2)).size();\nSystem.out.println(\"ok\");"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Changing a list while looping",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Removing from a list inside a for-each loop over that same list usually throws `ConcurrentModificationException`. Use one of these instead:"
+            },
+            {
+              "type": "code",
+              "code": "List<Integer> l = new ArrayList<>(\n    List.of(1, 2, 3, 4));\nl.removeIf(x -> x > 2);       // [1, 2]\nl.replaceAll(x -> x * 10);    // [10, 20]\nSystem.out.println(l);",
+              "caption": "Prints [10, 20]",
+              "verify": {
+                "expect": "stdout",
+                "value": "[10, 20]"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`removeIf(predicate)` removes every matching element.",
+                "`replaceAll(operator)` replaces each element with the result.",
+                "`Iterator.remove()` is also safe.",
+                "`subList(from, to)` is a **view** of indexes `from` up to, but **not including**, `to`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l04-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "List<String> l = new ArrayList<>(\n    List.of(\"a\", \"b\", \"c\"));\nfor (String s : l)\n    if (s.equals(\"a\")) l.remove(s);\nSystem.out.println(l);",
+          "options": [
+            "[b, c]",
+            "[a, b, c]",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 3,
+          "explanation": "Removing an element during a for-each loop changes the list behind the iterator's back. On the next `next()` call the iterator detects it and throws `ConcurrentModificationException`. (Odd case: removing the **second-to-last** element ends the loop early with no exception. Don't rely on it; the exam expects you to know the general rule.)",
+          "objective": "5.1",
+          "verify": {
+            "expect": "exception",
+            "value": "ConcurrentModificationException",
+            "stdout": ""
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l04-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "List<Integer> l = new ArrayList<>(\n    List.of(1, 2, 3, 4, 5));\nl.removeIf(x -> x % 2 == 0);\nl.replaceAll(x -> x * 10);\nSystem.out.println(l + \" \" + l.indexOf(30));",
+          "options": [
+            "[10, 30, 50] 1",
+            "[10, 30, 50] 2",
+            "[20, 40] -1",
+            "[10, 30, 50] -1"
+          ],
+          "answer": 0,
+          "explanation": "`removeIf` drops the even numbers, leaving `[1, 3, 5]`. `replaceAll` multiplies each by 10: `[10, 30, 50]`. `30` is at index 1.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "[10, 30, 50] 1"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l04-e06",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code so it prints `[1, 2, 3]`.",
+          "code": "List<Integer> l = new ArrayList<>(\n    List.of(0, 1, 2, 3, 4));\nList<Integer> mid = l.___(1, ___);\nSystem.out.println(mid);",
+          "bank": [
+            "subList",
+            "sublist",
+            "slice",
+            "3",
+            "4"
+          ],
+          "answers": [
+            "subList",
+            "4"
+          ],
+          "explanation": "The method is `subList` (capital L). The end index is **exclusive**, so to include index 3 you pass 4. Java lists have no `slice` method.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "[1, 2, 3]"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u06-l05",
+      "title": "Set",
+      "summary": "HashSet, LinkedHashSet, TreeSet and equality.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Three kinds of Set",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A `Set` holds **no duplicates**. `add` returns `true` if the element was added and `false` if it was already there."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Class",
+                "Iteration order",
+                "null"
+              ],
+              "rows": [
+                [
+                  "HashSet",
+                  "no guaranteed order",
+                  "one null allowed"
+                ],
+                [
+                  "LinkedHashSet",
+                  "insertion order",
+                  "one null allowed"
+                ],
+                [
+                  "TreeSet",
+                  "sorted (natural or comparator)",
+                  "NPE"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "When an exam question prints a `HashSet`, the order is not guaranteed. Look for an answer about size or contents, or a `LinkedHashSet`/`TreeSet` if the order matters."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l05-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Set<String> s = new LinkedHashSet<>();\nSystem.out.print(s.add(\"b\"));\nSystem.out.print(s.add(\"a\"));\nSystem.out.print(s.add(\"b\"));\nSystem.out.println(\" \" + s);",
+          "options": [
+            "truetruefalse [b, a]",
+            "truetruetrue [b, a, b]",
+            "truetruefalse [a, b]",
+            "truefalsefalse [b]"
+          ],
+          "answer": 0,
+          "explanation": "The first two `add` calls succeed. Adding `b` again returns `false` and changes nothing. A `LinkedHashSet` keeps insertion order, so it prints `[b, a]`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "truetruefalse [b, a]"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l05-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Set<String> s = new TreeSet<>(List.of(\n    \"pear\", \"Apple\", \"fig\", \"apple\"));\nSystem.out.println(s);",
+          "options": [
+            "[Apple, apple, fig, pear]",
+            "[apple, Apple, fig, pear]",
+            "[Apple, fig, pear]",
+            "[pear, Apple, fig, apple]"
+          ],
+          "answer": 0,
+          "explanation": "A `TreeSet` sorts strings by their natural (Unicode) order, where uppercase comes before lowercase. `\"Apple\"` and `\"apple\"` are different strings, so both stay.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "[Apple, apple, fig, pear]"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "equals and hashCode",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A `HashSet` first uses `hashCode()` to find a bucket, then `equals()` to check for a duplicate. Your class must override **both** for duplicates to be detected."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Override neither: two objects with the same fields count as different.",
+                "Override `hashCode` only: the objects land in the same bucket, but `equals` still compares references, so both are kept.",
+                "**Records** generate both methods from their components."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "record Pt(int x, int y) {}\nSet<Pt> s = new HashSet<>();\ns.add(new Pt(1, 2));\ns.add(new Pt(1, 2));\nSystem.out.println(s.size());",
+              "caption": "Prints 1: records have value equality",
+              "verify": {
+                "expect": "stdout",
+                "value": "1"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "The contract",
+              "text": "Contract: if `a.equals(b)` is true, then `a.hashCode() == b.hashCode()` must also be true. The reverse is not required: unequal objects may share a hash code."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l05-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class P {\n    int x;\n    P(int x) { this.x = x; }\n    public int hashCode() { return x; }\n}\npublic class Main {\n    public static void main(String[] a) {\n        Set<P> s = new HashSet<>();\n        s.add(new P(1));\n        s.add(new P(1));\n        System.out.println(s.size());\n    }\n}",
+          "options": [
+            "1",
+            "2",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 1,
+          "explanation": "Both objects have hash code 1, but `P` doesn't override `equals`, so the inherited `Object.equals` compares references. Two different objects are never equal, so the set keeps both.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "2"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l05-e04",
+          "kind": "trueFalse",
+          "prompt": "If `a.hashCode() == b.hashCode()`, then `a.equals(b)` must be true.",
+          "answer": false,
+          "explanation": "The contract only works one way: equal objects must have equal hash codes. Different objects are allowed to share a hash code (a collision); `equals` then decides.",
+          "objective": "5.1"
+        },
+        {
+          "type": "page",
+          "title": "TreeSet navigation",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`TreeSet` implements `NavigableSet`, which can find neighbours of a value:"
+            },
+            {
+              "type": "table",
+              "header": [
+                "Method",
+                "Returns"
+              ],
+              "rows": [
+                [
+                  "ceiling(e)",
+                  "smallest element >= e"
+                ],
+                [
+                  "floor(e)",
+                  "largest element <= e"
+                ],
+                [
+                  "higher(e)",
+                  "smallest element > e"
+                ],
+                [
+                  "lower(e)",
+                  "largest element < e"
+                ],
+                [
+                  "headSet(e)",
+                  "elements < e (exclusive)"
+                ],
+                [
+                  "tailSet(e)",
+                  "elements >= e (inclusive)"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "The four single-element methods return `null` when there is no match. `first()` and `last()` throw `NoSuchElementException` on an empty set."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Set.of is strict",
+              "text": "`Set.of(...)` throws `IllegalArgumentException` if you pass a **duplicate** element, and `NullPointerException` for `null`. `new HashSet<>()` simply ignores duplicates."
+            },
+            {
+              "type": "paragraph",
+              "text": "`headSet(e, true)` and `tailSet(e, false)` let you choose whether `e` itself is included. `subSet(from, to)` includes `from` and excludes `to`. All of these are **live views**: changes to the set show up in them."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l05-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "TreeSet<Integer> t = new TreeSet<>(\n    List.of(10, 20, 30, 40));\nSystem.out.print(t.ceiling(20) + \" \");\nSystem.out.print(t.higher(20) + \" \");\nSystem.out.print(t.floor(5) + \" \");\nSystem.out.println(t.headSet(30));",
+          "options": [
+            "20 30 null [10, 20]",
+            "30 30 null [10, 20, 30]",
+            "20 30 10 [10, 20]",
+            "20 20 null [10]"
+          ],
+          "answer": 0,
+          "explanation": "`ceiling(20)` is >= 20, which is 20 itself. `higher(20)` is strictly greater: 30. Nothing is <= 5, so `floor(5)` is `null`. `headSet(30)` excludes 30.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "20 30 null [10, 20]"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l05-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "Set<String> s = Set.of(\"a\", \"b\", \"a\");\nSystem.out.println(s.size());",
+          "options": [
+            "2",
+            "3",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 3,
+          "explanation": "`Set.of` refuses duplicate elements and throws `IllegalArgumentException` when the set is created. It compiles because the duplicate is only detected at runtime.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "exception",
+            "value": "IllegalArgumentException",
+            "stdout": ""
+          },
+          "examStyle": true,
+          "codeOptions": true
+        }
+      ]
+    },
+    {
+      "id": "u06-l06",
+      "title": "Map",
+      "summary": "Key-value maps, merge, compute and TreeMap.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Map basics",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A `Map` stores **key-value** pairs with unique keys. It is **not** a `Collection`. The same three flavours exist: `HashMap` (no order), `LinkedHashMap` (insertion order) and `TreeMap` (sorted keys)."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Method",
+                "Returns"
+              ],
+              "rows": [
+                [
+                  "put(k, v)",
+                  "the previous value, or null"
+                ],
+                [
+                  "get(k)",
+                  "the value, or null if missing"
+                ],
+                [
+                  "getOrDefault(k, d)",
+                  "the value, or d if missing"
+                ],
+                [
+                  "containsKey(k)",
+                  "boolean"
+                ],
+                [
+                  "remove(k)",
+                  "the removed value, or null"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python's `d[\"x\"]` raises `KeyError` for a missing key. Java's `map.get(\"x\")` just returns `null`. `getOrDefault` is Java's `d.get(\"x\", default)`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l06-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Map<String, Integer> m =\n    new LinkedHashMap<>();\nSystem.out.print(m.put(\"a\", 1) + \" \");\nSystem.out.print(m.put(\"a\", 2) + \" \");\nSystem.out.print(m.get(\"b\") + \" \");\nSystem.out.println(m.getOrDefault(\"b\", 0));",
+          "options": [
+            "null 1 null 0",
+            "1 2 null 0",
+            "null 1 0 0",
+            "null null null 0"
+          ],
+          "answer": 0,
+          "explanation": "The first `put` has no previous value: `null`. The second `put` replaces 1 and returns it. `b` is missing, so `get` returns `null` and `getOrDefault` returns the default 0.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "null 1 null 0"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "putIfAbsent, merge and compute",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Method",
+                "Key missing (or null)",
+                "Key present"
+              ],
+              "rows": [
+                [
+                  "putIfAbsent(k, v)",
+                  "puts v",
+                  "does nothing"
+                ],
+                [
+                  "merge(k, v, f)",
+                  "puts v",
+                  "puts f(old, v)"
+                ],
+                [
+                  "computeIfAbsent(k, f)",
+                  "puts f(k)",
+                  "does nothing"
+                ],
+                [
+                  "computeIfPresent(k, f)",
+                  "does nothing",
+                  "puts f(k, old)"
+                ],
+                [
+                  "compute(k, f)",
+                  "puts f(k, null)",
+                  "puts f(k, old)"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "A null result removes",
+              "text": "If the function of `merge` or any `compute` method returns **null**, the key is **removed** (or simply not added). No `null` value is stored."
+            },
+            {
+              "type": "code",
+              "code": "Map<String, Integer> cnt = new TreeMap<>();\nfor (String w : List.of(\"a\", \"b\", \"a\"))\n    cnt.merge(w, 1, Integer::sum);\nSystem.out.println(cnt);",
+              "caption": "A word counter: prints {a=2, b=1}",
+              "verify": {
+                "expect": "stdout",
+                "value": "{a=2, b=1}"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l06-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Map<String, Integer> m = new TreeMap<>();\nm.put(\"x\", 1);\nm.merge(\"x\", 5, Integer::sum);\nm.merge(\"y\", 5, Integer::sum);\nm.merge(\"x\", 0, (a, b) -> null);\nSystem.out.println(m);",
+          "options": [
+            "{y=5}",
+            "{x=6, y=5}",
+            "{x=null, y=5}",
+            "{x=0, y=5}"
+          ],
+          "answer": 0,
+          "explanation": "`x` becomes 1 + 5 = 6. `y` is missing, so it is put as 5. The last `merge` finds `x` and calls the function, which returns `null`, so `x` is **removed**.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "{y=5}"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l06-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Map<String, Integer> m = new TreeMap<>();\nm.put(\"a\", 1);\nm.computeIfAbsent(\"a\", k -> 10);\nm.computeIfAbsent(\"b\", k -> 20);\nm.computeIfPresent(\"c\", (k, v) -> 30);\nm.computeIfPresent(\"a\", (k, v) -> v + 1);\nSystem.out.println(m);",
+          "options": [
+            "{a=2, b=20}",
+            "{a=11, b=20, c=30}",
+            "{a=2, b=20, c=30}",
+            "{a=10, b=20}"
+          ],
+          "answer": 0,
+          "explanation": "`a` exists, so `computeIfAbsent(\"a\", ...)` does nothing. `b` is missing, so it becomes 20. `c` is missing, so `computeIfPresent` does nothing. `a` is present, so it becomes 1 + 1 = 2.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "{a=2, b=20}"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Map.of and iterating",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`Map.of(k1, v1, k2, v2, ...)` takes up to 10 pairs. `Map.ofEntries(Map.entry(k, v), ...)` takes any number. Both are **immutable**, throw `IllegalArgumentException` on duplicate keys and `NullPointerException` on nulls."
+            },
+            {
+              "type": "paragraph",
+              "text": "A `Map` is not `Iterable`. Loop over one of its views instead:"
+            },
+            {
+              "type": "code",
+              "code": "var m = new TreeMap<String, Integer>();\nm.put(\"b\", 2);\nm.put(\"a\", 1);\nfor (String k : m.keySet())\n    System.out.print(k);\nfor (Integer v : m.values())\n    System.out.print(v);\nfor (var e : m.entrySet())\n    System.out.print(e.getKey()\n        + e.getValue());",
+              "caption": "Prints ab12a1b2",
+              "verify": {
+                "expect": "stdout",
+                "value": "ab12a1b2"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l06-e04",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "Map<String, Integer> m = new TreeMap<>();\nm.put(\"b\", 2);\nm.put(\"a\", 1);\nfor (var e : m.entrySet())\n    System.out.print(e.getKey());\nfor (String k : m)\n    System.out.print(k);",
+          "answer": 6,
+          "explanation": "`Map` does not implement `Iterable`, so it can't be the target of a for-each loop. Use `m.keySet()`, `m.values()` or `m.entrySet()`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "page",
+          "title": "TreeMap navigation",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`TreeMap` keeps keys sorted and offers the same navigation as `TreeSet`, with `Key` and `Entry` versions:"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`firstKey()`, `lastKey()`, `firstEntry()`, `lastEntry()`",
+                "`ceilingKey(k)`, `floorKey(k)`, `higherKey(k)`, `lowerKey(k)` (null if none)",
+                "`headMap(k)`: keys < k (exclusive). `tailMap(k)`: keys >= k (inclusive)."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "No null keys",
+              "text": "Under natural ordering, `TreeMap` throws `NullPointerException` for a `null` key (even the first one), since it can't compare it. Only a `Comparator` that handles null, like `Comparator.nullsFirst(...)`, allows one. `HashMap` allows one `null` key."
+            },
+            {
+              "type": "paragraph",
+              "text": "Range views work the same way on keys: `headMap(k, inclusive)`, `tailMap(k, inclusive)`, `subMap(from, to)` (from included, to excluded) and `descendingMap()`. They are **live views** of the original map, not copies."
+            },
+            {
+              "type": "code",
+              "code": "var m = new TreeMap<Integer, String>();\nfor (int k = 10; k <= 40; k += 10) m.put(k, \"v\" + k);\nSystem.out.println(m.headMap(20, true).keySet());\nSystem.out.println(m.subMap(20, 40).keySet());\nvar desc = m.descendingMap();\nm.put(50, \"v50\");\nSystem.out.println(desc.firstKey());",
+              "caption": "Prints [10, 20], then [20, 30], then 50",
+              "verify": {
+                "expect": "stdout",
+                "value": "[10, 20]\n[20, 30]\n50\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l06-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var t = new TreeMap<Integer, String>();\nt.put(1, \"a\"); t.put(5, \"e\"); t.put(9, \"i\");\nSystem.out.print(t.floorKey(4) + \" \");\nSystem.out.print(t.ceilingKey(6) + \" \");\nSystem.out.println(t.tailMap(5));",
+          "options": [
+            "1 9 {5=e, 9=i}",
+            "5 9 {9=i}",
+            "1 5 {5=e, 9=i}",
+            "null 9 {5=e, 9=i}"
+          ],
+          "answer": 0,
+          "explanation": "The largest key <= 4 is 1. The smallest key >= 6 is 9. `tailMap(5)` is **inclusive**, so it contains 5 and 9.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "1 9 {5=e, 9=i}"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        }
+      ]
+    },
+    {
+      "id": "u06-l07",
+      "title": "Queue & Deque",
+      "summary": "FIFO queues, stacks with ArrayDeque, PriorityQueue.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Queue methods come in pairs",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A `Queue` is first-in, first-out (FIFO): add at the tail, take from the head. Each operation has two versions that differ in how they fail:"
+            },
+            {
+              "type": "table",
+              "header": [
+                "Operation",
+                "Throws on failure",
+                "Returns special value"
+              ],
+              "rows": [
+                [
+                  "insert at tail",
+                  "add(e)",
+                  "offer(e) → false"
+                ],
+                [
+                  "remove head",
+                  "remove()",
+                  "poll() → null"
+                ],
+                [
+                  "look at head",
+                  "element()",
+                  "peek() → null"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "On an **empty** queue, `remove()` and `element()` throw `NoSuchElementException`, while `poll()` and `peek()` return `null`."
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Remember",
+              "text": "The friendly ones are offer, poll, peek: they never throw for an empty queue."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l07-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Queue<String> q = new ArrayDeque<>();\nq.offer(\"a\");\nq.offer(\"b\");\nSystem.out.print(q.poll() + q.peek());\nSystem.out.println(\" \" + q.size());",
+          "options": [
+            "ab 1",
+            "aa 2",
+            "ab 0",
+            "ba 1"
+          ],
+          "answer": 0,
+          "explanation": "`poll` removes and returns the head `a`. `peek` then looks at the new head `b` without removing it. One element is left.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "ab 1"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l07-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "Queue<Integer> q = new ArrayDeque<>();\nSystem.out.print(q.poll() + \" \");\nSystem.out.print(q.peek() + \" \");\nSystem.out.print(q.element());",
+          "options": [
+            "null null null",
+            "0 0 0",
+            "Compilation fails",
+            "null null and then an exception is thrown"
+          ],
+          "answer": 3,
+          "explanation": "`poll` and `peek` return `null` on an empty queue, so `null null ` is printed. `element()` is the throwing version and throws `NoSuchElementException`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "exception",
+            "value": "NoSuchElementException",
+            "stdout": "null null"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Deque: both ends, and stacks",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A `Deque` (\"deck\") is a double-ended queue. `ArrayDeque` is the go-to class for both queues and stacks."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Front: `offerFirst`, `pollFirst`, `peekFirst` (plus `addFirst`, `removeFirst`, `getFirst`).",
+                "Back: `offerLast`, `pollLast`, `peekLast` (plus `addLast`, `removeLast`, `getLast`).",
+                "Stack (LIFO): `push(e)` = `addFirst`, `pop()` = `removeFirst`, `peek()` = `peekFirst`.",
+                "Queue methods `offer`/`add` go to the **back**; `poll`/`peek` use the **front**."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "Deque<String> st = new ArrayDeque<>();\nst.push(\"a\");\nst.push(\"b\");\nSystem.out.println(st.pop() + st);",
+              "caption": "Prints b[a]",
+              "verify": {
+                "expect": "stdout",
+                "value": "b[a]"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "No nulls in ArrayDeque",
+              "text": "`ArrayDeque` does not allow `null` elements: `push(null)` or `offer(null)` throws `NullPointerException`. `LinkedList` (which is also a `Deque` and a `List`) allows nulls."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l07-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Deque<Integer> d = new ArrayDeque<>();\nd.push(1);\nd.push(2);\nd.offer(3);\nSystem.out.print(d.pop());\nSystem.out.print(d.peek());\nSystem.out.println(d);",
+          "options": [
+            "21[1, 3]",
+            "31[1, 2]",
+            "21[3, 1]",
+            "12[2, 3]"
+          ],
+          "answer": 0,
+          "explanation": "`push` adds to the front: `[2, 1]`. `offer` adds to the **back**: `[2, 1, 3]`. `pop` removes the front `2`, leaving `[1, 3]`, and `peek` shows the front `1`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "21[1, 3]"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l07-e04",
+          "kind": "trueFalse",
+          "prompt": "`new ArrayDeque<String>().offer(null)` returns `false` because the element was not added.",
+          "answer": false,
+          "explanation": "`offer` returns `false` only when a capacity-limited queue is full. `ArrayDeque` rejects `null` elements by throwing `NullPointerException`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "exception",
+            "value": "NullPointerException",
+            "source": "new ArrayDeque<String>().offer(null);"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l07-e05",
+          "kind": "orderLines",
+          "prompt": "Arrange the lines so the program prints `cba`.",
+          "lines": [
+            "Deque<String> st = new ArrayDeque<>();",
+            "st.push(\"a\");",
+            "st.push(\"b\");",
+            "st.push(\"c\");",
+            "while (!st.isEmpty())",
+            "    System.out.print(st.pop());"
+          ],
+          "distractors": [
+            "st.add(\"c\");"
+          ],
+          "explanation": "A stack is last-in, first-out: the last element pushed (`c`) is popped first. So push `a`, `b`, `c` in that order, then pop until empty. `add` would put `c` at the back instead of on top.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "cba"
+          }
+        },
+        {
+          "type": "page",
+          "title": "PriorityQueue",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A `PriorityQueue` always hands out the **smallest** element first (natural order), or the first one according to a `Comparator` you pass in."
+            },
+            {
+              "type": "code",
+              "code": "var pq = new PriorityQueue<Integer>(\n    Comparator.reverseOrder());\npq.add(1); pq.add(3); pq.add(2);\nSystem.out.println(pq.poll());",
+              "caption": "Largest first: prints 3",
+              "verify": {
+                "expect": "stdout",
+                "value": "3"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "toString isn't sorted",
+              "text": "Only `poll`, `remove` and `peek` respect priority. Printing the queue or looping over it shows its internal heap order, which is **not** sorted."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l07-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "PriorityQueue<Integer> pq =\n    new PriorityQueue<>(List.of(5, 1, 4));\npq.offer(2);\nSystem.out.print(pq.poll());\nSystem.out.print(pq.poll());\nSystem.out.println(pq.peek());",
+          "options": [
+            "124",
+            "512",
+            "125",
+            "142"
+          ],
+          "answer": 0,
+          "explanation": "The queue holds 5, 1, 4 and then 2. `poll` returns the smallest each time: 1, then 2. `peek` shows the next smallest, 4, without removing it.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "124"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        }
+      ]
+    },
+    {
+      "id": "u06-l08",
+      "title": "Sorting: Comparable & Comparator",
+      "summary": "Natural order, comparators and how sorted sets use them.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Comparable: natural order",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A class sorts \"naturally\" when it implements `Comparable<T>` with one method, `int compareTo(T o)`:"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "negative: `this` comes **before** `o`",
+                "zero: same position",
+                "positive: `this` comes **after** `o`"
+              ]
+            },
+            {
+              "type": "code",
+              "code": "record Pet(String name, int age)\n        implements Comparable<Pet> {\n    public int compareTo(Pet o) {\n        return age - o.age;   // young first\n    }\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "`String`, the wrapper classes and the date classes are all `Comparable`. `Collections.sort(list)` and `TreeSet` use natural order by default."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Compile time vs runtime",
+              "text": "`Collections.sort(list)` on a class that isn't `Comparable` **doesn't compile**. A `TreeSet` of such a class compiles, but `add` throws `ClassCastException` at runtime."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l08-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "record Pet(String name, int age)\n        implements Comparable<Pet> {\n    public int compareTo(Pet o) {\n        return o.age - age;\n    }\n}\npublic class Main {\n    public static void main(String[] x) {\n        var l = new ArrayList<>(List.of(\n            new Pet(\"a\", 3),\n            new Pet(\"b\", 5),\n            new Pet(\"c\", 1)));\n        Collections.sort(l);\n        for (Pet p : l)\n            System.out.print(p.name());\n    }\n}",
+          "options": [
+            "bac",
+            "cab",
+            "abc",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`compareTo` returns `o.age - age`, the reverse of the usual order, so pets are sorted by age from **oldest** to youngest: b (5), a (3), c (1).",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "bac"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l08-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "class Box { int v; }\npublic class Main {\n    public static void main(String[] a) {\n        Set<Box> s = new TreeSet<>();\n        s.add(new Box());\n        System.out.println(s.size());\n    }\n}",
+          "options": [
+            "1",
+            "0",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 3,
+          "explanation": "`TreeSet<Box>` compiles because `TreeSet` doesn't require `Comparable` at compile time. The first `add` tries to compare the element as a `Comparable` and throws `ClassCastException`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "exception",
+            "value": "ClassCastException",
+            "stdout": ""
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Comparator: order from outside",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A `Comparator<T>` is a separate object with `int compare(T a, T b)`. Use it for an order other than the natural one, or for classes you can't change. The factory methods make this easy:"
+            },
+            {
+              "type": "table",
+              "header": [
+                "Method",
+                "Meaning"
+              ],
+              "rows": [
+                [
+                  "Comparator.comparing(f)",
+                  "by the key f extracts"
+                ],
+                [
+                  "comparingInt(f)",
+                  "same, for an int key"
+                ],
+                [
+                  ".thenComparing(f)",
+                  "tie-breaker"
+                ],
+                [
+                  ".reversed()",
+                  "flip the whole order"
+                ],
+                [
+                  "naturalOrder() / reverseOrder()",
+                  "natural order / its reverse"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "var l = new ArrayList<>(List.of(\"bb\", \"a\"));\nl.sort(Comparator.comparing(\n    String::length));\nSystem.out.println(l);",
+              "caption": "Prints [a, bb]",
+              "verify": {
+                "expect": "stdout",
+                "value": "[a, bb]"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "Pass the comparator to `list.sort(cmp)` or `Collections.sort(list, cmp)`. `list.sort(null)` uses natural order."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Lambdas in chains",
+              "text": "`Comparator.comparing(s -> s.length()).reversed()` does **not** compile: when the chain continues, the compiler can't infer `s` as `String` and treats it as `Object`. A method reference (`String::length`) or a typed lambda `(String s) -> s.length()` fixes it."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l08-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var l = new ArrayList<>(List.of(\n    \"pear\", \"fig\", \"kiwi\", \"apple\"));\nl.sort(Comparator\n    .comparing(String::length)\n    .thenComparing(\n        Comparator.reverseOrder()));\nSystem.out.println(l);",
+          "options": [
+            "[fig, pear, kiwi, apple]",
+            "[fig, kiwi, pear, apple]",
+            "[apple, pear, kiwi, fig]",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "First sort by length: fig (3), then pear and kiwi (4), then apple (5). The tie between pear and kiwi is broken by **reverse** alphabetical order, so pear comes before kiwi.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "[fig, pear, kiwi, apple]"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l08-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "List<String> l = new ArrayList<>(\n    List.of(\"bb\", \"a\", \"ccc\"));\nl.sort(Comparator.comparing(\n    s -> s.length()).reversed());\nSystem.out.println(l);",
+          "options": [
+            "[ccc, bb, a]",
+            "[a, bb, ccc]",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 2,
+          "explanation": "Because `.reversed()` is chained on, the lambda's parameter `s` is inferred as `Object`, and `Object` has no `length()` method. Line 4 does not compile. With `String::length` it would print `[ccc, bb, a]`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "compileError",
+            "line": 4
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l08-e05",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code to sort by age, then by name. It prints `CyAlBo`.",
+          "code": "record P(String name, int age) {}\nvar l = new ArrayList<>(List.of(\n    new P(\"Bo\", 30), new P(\"Al\", 30),\n    new P(\"Cy\", 20)));\nl.sort(Comparator.___(P::age)\n    .___(P::name));\nl.forEach(p -> System.out.print(p.name()));",
+          "bank": [
+            "comparing",
+            "thenComparing",
+            "reversed",
+            "compareTo",
+            "sort"
+          ],
+          "answers": [
+            "comparing",
+            "thenComparing"
+          ],
+          "explanation": "`Comparator.comparing` is a **static** factory that builds the first comparator. `thenComparing` is an **instance** method that adds a tie-breaker. Cy (20) comes first; Al and Bo are both 30, so the name decides.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "CyAlBo"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Nulls and consistency with equals",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Natural order can't handle `null`: sorting a list containing `null` throws `NullPointerException`. Wrap the comparator: `Comparator.nullsFirst(Comparator.naturalOrder())` or `nullsLast(...)`."
+            },
+            {
+              "type": "paragraph",
+              "text": "Sorted collections (`TreeSet`, `TreeMap`) decide duplicates with `compare`, **not** `equals`. If the comparator says two elements are equal (returns 0), the second one is treated as a duplicate and dropped."
+            },
+            {
+              "type": "code",
+              "code": "var s = new TreeSet<String>(\n    String.CASE_INSENSITIVE_ORDER);\ns.add(\"Hi\");\ns.add(\"hi\");\nSystem.out.println(s);",
+              "caption": "Prints [Hi]: \"hi\" compares as equal",
+              "verify": {
+                "expect": "stdout",
+                "value": "[Hi]"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "A comparator is **consistent with equals** when `compare(a, b) == 0` exactly when `a.equals(b)`. When it isn't, a `TreeSet` can silently lose elements."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l08-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Set<String> s = new TreeSet<>(\n    Comparator.comparing(String::length));\ns.add(\"one\");\ns.add(\"two\");\ns.add(\"three\");\nSystem.out.println(s);",
+          "options": [
+            "[one, three]",
+            "[one, two, three]",
+            "[one, two]",
+            "[three, one, two]"
+          ],
+          "answer": 0,
+          "explanation": "The set orders by length only. `\"two\"` has the same length as `\"one\"`, so the comparator returns 0 and the `TreeSet` treats it as a duplicate. `\"three\"` is longer and is kept.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "[one, three]"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l08-e07",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var l = new ArrayList<>(\n    Arrays.asList(\"b\", null, \"a\"));\nl.sort(Comparator.nullsFirst(\n    Comparator.naturalOrder()));\nSystem.out.println(l);",
+          "options": [
+            "[null, a, b]",
+            "[a, b, null]",
+            "[b, a, null]",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`nullsFirst` puts `null` before everything else and uses the wrapped comparator (natural order) for the rest. Without it, sorting would throw `NullPointerException`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "[null, a, b]"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        }
+      ]
+    },
+    {
+      "id": "u06-l09",
+      "title": "Sequenced collections",
+      "summary": "Java 21's getFirst, getLast, reversed and friends.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "A shared idea of first and last",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Java 21 added three interfaces for collections with a defined **encounter order**:"
+            },
+            {
+              "type": "table",
+              "header": [
+                "Interface",
+                "Implemented by"
+              ],
+              "rows": [
+                [
+                  "SequencedCollection",
+                  "List, Deque (ArrayList, LinkedList, ArrayDeque)"
+                ],
+                [
+                  "SequencedSet",
+                  "LinkedHashSet, TreeSet"
+                ],
+                [
+                  "SequencedMap",
+                  "LinkedHashMap, TreeMap"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "`HashSet`, `HashMap` and `PriorityQueue` have no defined order, so they do **not** implement them."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`addFirst(e)`, `addLast(e)`",
+                "`getFirst()`, `getLast()`: throw `NoSuchElementException` if empty",
+                "`removeFirst()`, `removeLast()`",
+                "`reversed()`: a reverse-ordered **view**, not a copy"
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python's `l[0]`, `l[-1]` and `l[::-1]`. But Java's `reversed()` is a live view: changes through it affect the original list."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l09-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "List<Integer> l = new ArrayList<>(\n    List.of(1, 2, 3));\nl.addFirst(0);\nl.addLast(4);\nl.removeFirst();\nSystem.out.println(l.getFirst() + \" \"\n    + l.getLast() + \" \" + l.reversed());",
+          "options": [
+            "1 4 [4, 3, 2, 1]",
+            "0 4 [4, 3, 2, 1, 0]",
+            "1 4 [1, 2, 3, 4]",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "After `addFirst(0)` and `addLast(4)` the list is `[0, 1, 2, 3, 4]`. `removeFirst()` drops the 0. The first element is now 1 and the last 4; `reversed()` shows the list back to front.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "1 4 [4, 3, 2, 1]"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l09-e02",
+          "kind": "multiChoice",
+          "prompt": "Which two classes implement `SequencedCollection`? Choose two.",
+          "options": [
+            "ArrayDeque",
+            "HashSet",
+            "LinkedHashSet",
+            "PriorityQueue",
+            "HashMap"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "`ArrayDeque` is a `Deque` and `LinkedHashSet` is a `SequencedSet`, so both have a defined first and last element. `HashSet` and `PriorityQueue` have no defined iteration order, and `HashMap` isn't a `Collection` at all.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "ok",
+            "source": "SequencedCollection<Integer> a = new ArrayDeque<>();\nSequencedCollection<Integer> b = new LinkedHashSet<>();\nSystem.out.println(\"ok\");"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l09-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "List<String> l = new ArrayList<>(\n    List.of(\"a\", \"b\", \"c\"));\nList<String> r = l.reversed();\nr.addFirst(\"z\");\nSystem.out.println(l);",
+          "options": [
+            "[a, b, c, z]",
+            "[z, a, b, c]",
+            "[a, b, c]",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`r` is a reversed **view** of `l`. Adding to the front of the reversed view adds to the **end** of the original list.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "[a, b, c, z]"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "SequencedSet: LinkedHashSet and TreeSet",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "`LinkedHashSet.addFirst(e)` puts `e` at the front. If `e` is already in the set, it is **moved** there.",
+                "`TreeSet` order is decided by sorting, so `addFirst` and `addLast` throw `UnsupportedOperationException`. `getFirst`, `getLast` and `reversed` work fine.",
+                "Immutable collections such as `List.of(...)` support `getFirst` and `reversed()`, but every modifying method throws `UnsupportedOperationException`, on the view too."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "var t = new TreeSet<>(List.of(2, 9, 5));\nSystem.out.println(t.getFirst() + \" \"\n    + t.reversed());",
+              "caption": "Prints 2 [9, 5, 2]",
+              "verify": {
+                "expect": "stdout",
+                "value": "2 [9, 5, 2]"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l09-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var s = new LinkedHashSet<>(\n    List.of(\"a\", \"b\", \"c\"));\ns.addFirst(\"c\");\ns.addLast(\"a\");\nSystem.out.println(s);",
+          "options": [
+            "[c, b, a]",
+            "[c, a, b, c, a]",
+            "[a, b, c]",
+            "[c, a, b]"
+          ],
+          "answer": 0,
+          "explanation": "`c` is already in the set, so `addFirst(\"c\")` moves it to the front: `[c, a, b]`. `addLast(\"a\")` moves `a` to the end: `[c, b, a]`. A set never holds duplicates.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "[c, b, a]"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l09-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "var t = new TreeSet<>(List.of(3, 1, 2));\nSystem.out.print(t.getFirst());\nt.addFirst(0);\nSystem.out.println(t);",
+          "options": [
+            "1[0, 1, 2, 3]",
+            "0[0, 1, 2, 3]",
+            "Compilation fails",
+            "1 and then an exception is thrown"
+          ],
+          "answer": 3,
+          "explanation": "`getFirst()` returns the smallest element, 1, which is printed. A `TreeSet` decides positions by sorting, so `addFirst` throws `UnsupportedOperationException`. It compiles because `TreeSet` inherits `addFirst` from `SequencedCollection`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "exception",
+            "value": "UnsupportedOperationException",
+            "stdout": "1"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "SequencedMap",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`LinkedHashMap` and `TreeMap` implement `SequencedMap`:"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`firstEntry()`, `lastEntry()`: look, don't remove (null if empty)",
+                "`pollFirstEntry()`, `pollLastEntry()`: remove and return",
+                "`putFirst(k, v)`, `putLast(k, v)`: `LinkedHashMap` only; `TreeMap` throws `UnsupportedOperationException`",
+                "`reversed()`, `sequencedKeySet()`, `sequencedValues()`, `sequencedEntrySet()`"
+              ]
+            },
+            {
+              "type": "code",
+              "code": "var m = new TreeMap<Integer, String>();\nm.put(2, \"b\");\nm.put(1, \"a\");\nSystem.out.println(m.lastEntry() + \" \"\n    + m.reversed());",
+              "caption": "Prints 2=b {2=b, 1=a}",
+              "verify": {
+                "expect": "stdout",
+                "value": "2=b {2=b, 1=a}"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "`reversed()` on a `LinkedHashMap` is a live view. A plain `put` of a **new** key through it still adds the key at the end of the underlying map, so it shows up **first** in the reversed view. Use `putFirst` or `putLast` to choose the position."
+            },
+            {
+              "type": "code",
+              "code": "var m = new LinkedHashMap<String, Integer>();\nm.put(\"a\", 1);\nm.put(\"b\", 2);\nvar r = m.reversed();\nr.put(\"c\", 3);\nm.putFirst(\"z\", 0);\nSystem.out.println(m);\nSystem.out.println(r);",
+              "caption": "Prints {z=0, a=1, b=2, c=3}, then {c=3, b=2, a=1, z=0}",
+              "verify": {
+                "expect": "stdout",
+                "value": "{z=0, a=1, b=2, c=3}\n{c=3, b=2, a=1, z=0}\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l09-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "SequencedMap<String, Integer> m =\n    new LinkedHashMap<>();\nm.put(\"a\", 1);\nm.put(\"b\", 2);\nm.putFirst(\"c\", 3);\nvar e = m.pollFirstEntry();\nSystem.out.println(e + \" \" + m.reversed());",
+          "options": [
+            "c=3 {b=2, a=1}",
+            "a=1 {c=3, b=2}",
+            "c=3 {a=1, b=2}",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`putFirst` puts `c` at the front: `{c=3, a=1, b=2}`. `pollFirstEntry` removes and returns `c=3`, leaving `{a=1, b=2}`, which `reversed()` shows as `{b=2, a=1}`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "c=3 {b=2, a=1}"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l09-e07",
+          "kind": "trueFalse",
+          "prompt": "`List.of(1, 2, 3).reversed()` returns a list that you can add elements to.",
+          "answer": false,
+          "explanation": "`reversed()` returns a view of the same immutable list, so `addFirst`, `add` and the other modifying methods throw `UnsupportedOperationException`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "exception",
+            "value": "UnsupportedOperationException",
+            "source": "List.of(1, 2, 3).reversed().addFirst(0);"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u06-l10",
+      "title": "Unit 6 checkpoint",
+      "summary": "Twelve exam-style questions on arrays and collections.",
+      "minutes": 12,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Checkpoint",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Twelve exam-style questions covering the whole unit. Trace each snippet line by line and watch for the classic traps:"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "index vs value in `remove`",
+                "fixed-size and immutable lists",
+                "exclusive end indexes and inclusive tail views",
+                "methods that return `null` vs methods that throw",
+                "comparators that make elements look equal"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l10-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int[][] a = new int[3][];\nSystem.out.println(a.length + \" \" + a[0]);",
+          "options": [
+            "3 null",
+            "3 0",
+            "3 []",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`new int[3][]` creates the outer array of 3 rows, but the rows themselves aren't created yet. Each row is an array reference, and the default for a reference is `null`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "3 null"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l10-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "List<String> l = Arrays.asList(\"a\", \"b\");\nCollections.reverse(l);\nSystem.out.print(l);\nl.remove(\"a\");",
+          "options": [
+            "[b, a]",
+            "[a, b]",
+            "[b, a] and then an exception is thrown",
+            "Compilation fails"
+          ],
+          "answer": 2,
+          "explanation": "`Collections.reverse` only swaps elements with `set`, which a fixed-size `Arrays.asList` list allows, so `[b, a]` is printed. `remove` would change the size and throws `UnsupportedOperationException`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "exception",
+            "value": "UnsupportedOperationException",
+            "stdout": "[b, a]"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l10-e03",
+          "kind": "multiChoice",
+          "prompt": "Given `List<? extends Number> nums = List.of(1, 2.5);`, which two lines compile? Choose two.",
+          "options": [
+            "Number n = nums.get(0);",
+            "nums.add(3);",
+            "Object o = nums.get(1);",
+            "Integer i = nums.get(0);",
+            "List<Number> l = nums;"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "Elements of a `? extends Number` list can be read as `Number` (or `Object`). Nothing except `null` can be added, since the actual list type is unknown. Reading as `Integer` needs a cast, and `List<? extends Number>` is not assignable to `List<Number>`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "1 2.5",
+            "source": "List<? extends Number> nums = List.of(1, 2.5);\nNumber n = nums.get(0);\nObject o = nums.get(1);\nSystem.out.println(n + \" \" + o);"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l10-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "List<Integer> l = new ArrayList<>(\n    List.of(3, 2, 1));\nl.remove(1);\nl.add(0, l.remove(0));\nSystem.out.println(l);",
+          "options": [
+            "[3, 1]",
+            "[1, 3]",
+            "[3, 2]",
+            "[2, 1]"
+          ],
+          "answer": 0,
+          "explanation": "`remove(1)` removes **index** 1 (the value 2): `[3, 1]`. Then `l.remove(0)` removes and returns 3, leaving `[1]`, and `add(0, 3)` puts it back at the front: `[3, 1]`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "[3, 1]"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l10-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var m = new TreeMap<String, Integer>();\nfor (String w : \"b a c a b a\".split(\" \"))\n    m.merge(w, 1, Integer::sum);\nSystem.out.println(m.firstEntry() + \" \"\n    + m.lastKey());",
+          "options": [
+            "a=3 c",
+            "a=1 c",
+            "b=2 c",
+            "a=3 b"
+          ],
+          "answer": 0,
+          "explanation": "`merge` with `Integer::sum` counts the words: a=3, b=2, c=1. A `TreeMap` sorts keys, so the first entry is `a=3` and the last key is `c`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "a=3 c"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l10-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Deque<String> d = new ArrayDeque<>();\nd.offerFirst(\"x\");\nd.offerLast(\"y\");\nd.push(\"z\");\nSystem.out.println(d.pollLast() + d.peek());",
+          "options": [
+            "yz",
+            "yx",
+            "xz",
+            "zy"
+          ],
+          "answer": 0,
+          "explanation": "`offerFirst(\"x\")`: `[x]`. `offerLast(\"y\")`: `[x, y]`. `push(\"z\")` adds to the front: `[z, x, y]`. `pollLast` removes `y`, and `peek` looks at the front, `z`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "yz"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l10-e07",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "record Pt(int x, int y) {}\nSet<Pt> s = new HashSet<>();\ns.add(new Pt(1, 2));\ns.add(new Pt(1, 2));\nSystem.out.println(s.size() + \" \"\n    + s.contains(new Pt(1, 2)));",
+          "options": [
+            "1 true",
+            "2 true",
+            "2 false",
+            "1 false"
+          ],
+          "answer": 0,
+          "explanation": "Records generate `equals` and `hashCode` from their components, so the two `Pt(1, 2)` objects are equal: the set keeps one, and `contains` with a third equal object returns true.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "1 true"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l10-e08",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "record E(String n, int s) {}\nvar l = new ArrayList<>(List.of(\n    new E(\"a\", 2), new E(\"b\", 1),\n    new E(\"c\", 2)));\nl.sort(Comparator.comparingInt(E::s)\n    .reversed().thenComparing(E::n));\nl.forEach(e -> System.out.print(e.n()));",
+          "options": [
+            "acb",
+            "cab",
+            "bac",
+            "bca"
+          ],
+          "answer": 0,
+          "explanation": "`comparingInt(E::s).reversed()` sorts by `s` from high to low, so the two 2s come before the 1. `thenComparing(E::n)` is added **after** `reversed()`, so the tie-break is normal alphabetical order: a, c. Then b.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "acb"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l10-e09",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var m = new TreeMap<Integer, String>();\nm.put(2, \"b\"); m.put(1, \"a\"); m.put(3, \"c\");\nvar r = m.reversed();\nSystem.out.println(r.firstEntry() + \" \"\n    + m.pollFirstEntry() + \" \" + r);",
+          "options": [
+            "3=c 1=a {3=c, 2=b}",
+            "3=c 1=a {3=c, 2=b, 1=a}",
+            "1=a 1=a {3=c, 2=b}",
+            "3=c 3=c {2=b, 1=a}"
+          ],
+          "answer": 0,
+          "explanation": "`r` is a reversed **view** of the map, so its first entry is `3=c`. `pollFirstEntry` on the original removes the smallest key, `1=a`. The view reflects that removal: `{3=c, 2=b}`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "3=c 1=a {3=c, 2=b}"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l10-e10",
+          "kind": "multiChoice",
+          "prompt": "Which two statements throw an exception at runtime? Choose two.",
+          "options": [
+            "new TreeSet<String>().add(null);",
+            "new HashSet<String>().add(null);",
+            "new ArrayList<String>().add(null);",
+            "new ArrayDeque<String>().push(null);",
+            "new LinkedList<String>().push(null);"
+          ],
+          "answers": [
+            0,
+            3
+          ],
+          "explanation": "`TreeSet` must compare elements, so `null` throws `NullPointerException`, and `ArrayDeque` rejects `null` outright. `HashSet`, `ArrayList` and `LinkedList` all accept `null`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "NPE\nNPE\nok",
+            "source": "try { new TreeSet<String>().add(null); }\ncatch (NullPointerException e) {\n    System.out.println(\"NPE\"); }\ntry { new ArrayDeque<String>().push(null); }\ncatch (NullPointerException e) {\n    System.out.println(\"NPE\"); }\nnew HashSet<String>().add(null);\nnew ArrayList<String>().add(null);\nnew LinkedList<String>().push(null);\nSystem.out.println(\"ok\");"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l10-e11",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "String[] s = {\"c\", \"a\", \"d\", \"b\"};\nArrays.sort(s);\nint i = Arrays.binarySearch(s, \"bb\");\nSystem.out.println(i + \" \" + s[1]);",
+          "options": [
+            "-3 b",
+            "-2 b",
+            "2 b",
+            "-3 a"
+          ],
+          "answer": 0,
+          "explanation": "After sorting, the array is `[a, b, c, d]`. `\"bb\"` would go between `b` and `c`, at insertion point 2, so `binarySearch` returns `-(2) - 1 = -3`. `s[1]` is `b`.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "-3 b"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u06-l10-e12",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Map<Character, List<String>> m =\n    new TreeMap<>();\nfor (var w : List.of(\"ant\", \"bee\", \"ape\"))\n    m.computeIfAbsent(w.charAt(0),\n        k -> new ArrayList<>()).add(w);\nSystem.out.println(m);",
+          "options": [
+            "{a=[ant, ape], b=[bee]}",
+            "{a=[ape], b=[bee]}",
+            "{a=[ant], b=[bee]}",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`computeIfAbsent` creates a new list only the first time a letter is seen and **returns the list in the map** either way, so `add(w)` appends to it. `ape` joins the existing `a` list.",
+          "objective": "5.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "{a=[ant, ape], b=[bee]}"
+          },
+          "examStyle": true,
+          "codeOptions": true
+        }
+      ]
+    }
+  ]
+}

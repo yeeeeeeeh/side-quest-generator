@@ -1,0 +1,2714 @@
+{
+  "unitId": "u08",
+  "lessons": [
+    {
+      "id": "u08-l01",
+      "title": "Threads",
+      "summary": "Thread vs Runnable, start() vs run(), join, sleep and thread states.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "A second line of execution",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A **thread** is an independent path of execution. Every program starts with one: the **main** thread. You can start more threads so work runs at the same time."
+            },
+            {
+              "type": "paragraph",
+              "text": "The work itself is a `Runnable`: a functional interface with one method, `void run()`. You hand it to a `Thread`, or you subclass `Thread` and override `run()`."
+            },
+            {
+              "type": "code",
+              "code": "// 1. Pass a Runnable (preferred)\nRunnable task = () -> System.out.println(\"hi\");\nThread t1 = new Thread(task);\n\n// 2. Subclass Thread\nclass Worker extends Thread {\n    @Override public void run() {\n        System.out.println(\"hi\");\n    }\n}\nThread t2 = new Worker();"
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Prefer Runnable",
+              "text": "Passing a `Runnable` keeps the task separate from the thread machinery, and your class can still extend something else. Executors (lesson 3) also take Runnables."
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "It's like `threading.Thread(target=f)`, but there's no GIL: Java threads really run in parallel on several cores, so data races show up quickly."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "start() vs run()",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`start()` creates a **new** thread, and that new thread calls `run()`. Calling `run()` yourself is just an ordinary method call: the code runs in the **current** thread."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Call",
+                "New thread?",
+                "Who runs the code"
+              ],
+              "rows": [
+                [
+                  "`t.start()`",
+                  "Yes",
+                  "the new thread"
+                ],
+                [
+                  "`t.run()`",
+                  "No",
+                  "the caller (e.g. main)"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "The classic trap",
+              "text": "Exam code often calls `run()` instead of `start()`. The output is then completely predictable, because nothing runs in parallel. Check every `run()` call: it never starts a thread."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l01-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Thread t = new Thread(() ->\n    System.out.println(\"in \" +\n        Thread.currentThread().getName()));\nt.setName(\"worker\");\nt.run();",
+          "options": [
+            "in worker",
+            "in main",
+            "in Thread-0",
+            "No output"
+          ],
+          "answer": 1,
+          "explanation": "`t.run()` is a plain method call, so the lambda runs in the **main** thread and `getName()` returns `main`. The name `worker` belongs to a thread that is never started.",
+          "objective": "8.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "in main"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l01-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Job extends Thread {\n    public void run() {\n        System.out.print(\"R\");\n    }\n}\nJob j = new Job();\nj.start();\nj.join();\nj.run();",
+          "options": [
+            "R",
+            "RR",
+            "An exception is thrown at runtime",
+            "Compilation fails"
+          ],
+          "answer": 1,
+          "explanation": "`start()` runs `run()` once in the new thread and prints `R`. `join()` waits for it. Then `j.run()` is an ordinary call in main and prints `R` again. Calling `run()` on a finished thread is allowed; only a second `start()` is illegal.",
+          "objective": "8.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "RR"
+          }
+        },
+        {
+          "type": "page",
+          "title": "join() and sleep()",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`t.join()` makes the **current** thread wait until `t` has finished. That is how you make output predictable: wait first, then print."
+            },
+            {
+              "type": "code",
+              "code": "Thread t = new Thread(() ->\n    System.out.println(\"work\"));\nt.start();\nt.join();   // wait for t to finish\nSystem.out.println(\"done\");",
+              "caption": "Always prints work, then done",
+              "verify": {
+                "expect": "stdout",
+                "value": "work\ndone\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`Thread.sleep(ms)` is **static**: it pauses the thread that calls it.",
+                "`join()` and `sleep()` both throw the checked `InterruptedException`.",
+                "`join(ms)` waits at most that long."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Checked exception",
+              "text": "A method that calls `Thread.sleep()` or `join()` must catch `InterruptedException` or declare `throws InterruptedException`. Otherwise the code does not compile. Inside a `Runnable` lambda you must catch it, because `run()` declares no exceptions."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "sleep keeps the lock, wait releases it",
+              "text": "`Thread.sleep()` inside a `synchronized` block keeps the monitor the whole time, so other threads that want it stay `BLOCKED`. `obj.wait()` is different: it **releases** the monitor while waiting and takes it back before returning."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l01-e03",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code so a new thread prints A, and main prints B only after that thread has finished.",
+          "code": "Thread t = new Thread(() ->\n    System.out.println(\"A\"));\nt.___();\nt.___();\nSystem.out.println(\"B\");",
+          "answers": [
+            "start",
+            "join"
+          ],
+          "bank": [
+            "start",
+            "join",
+            "wait",
+            "sleep",
+            "notify",
+            "interrupt"
+          ],
+          "explanation": "`start()` launches the new thread; `join()` blocks main until it ends, so `A` is always printed before `B`. `wait()` without holding the monitor throws `IllegalMonitorStateException`, and `sleep()` is static and only pauses main.",
+          "objective": "8.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "A\nB"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l01-e04",
+          "kind": "tapLine",
+          "prompt": "Tap the line that causes a compilation error.",
+          "code": "public class Nap {\n    static void rest() {\n        System.out.println(\"zzz\");\n        Thread.sleep(10);\n    }\n    public static void main(String[] a) {\n        rest();\n    }\n}",
+          "answer": 4,
+          "explanation": "`Thread.sleep()` throws the checked `InterruptedException`. `rest()` neither catches it nor declares `throws InterruptedException`, so line 4 does not compile.",
+          "objective": "8.1",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Thread states",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`t.getState()` returns a `Thread.State` enum value. A thread moves through these states:"
+            },
+            {
+              "type": "table",
+              "header": [
+                "State",
+                "Meaning"
+              ],
+              "rows": [
+                [
+                  "`NEW`",
+                  "created, `start()` not called yet"
+                ],
+                [
+                  "`RUNNABLE`",
+                  "running or ready to run"
+                ],
+                [
+                  "`BLOCKED`",
+                  "waiting to enter a `synchronized` block"
+                ],
+                [
+                  "`WAITING`",
+                  "waiting with no time limit: `join()`, `wait()`"
+                ],
+                [
+                  "`TIMED_WAITING`",
+                  "`sleep(ms)`, `join(ms)`, `wait(ms)`"
+                ],
+                [
+                  "`TERMINATED`",
+                  "`run()` has finished"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "Thread t = new Thread(() -> {});\nSystem.out.println(t.getState());\nt.start();\nt.join();\nSystem.out.println(t.getState());",
+              "verify": {
+                "expect": "stdout",
+                "value": "NEW\nTERMINATED\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "One start per thread",
+              "text": "A thread can be started only **once**. Calling `start()` again, even after it has terminated, throws `IllegalThreadStateException`."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "interrupt() only sets a flag",
+              "text": "`t.interrupt()` doesn't stop `t`. It sets `t`'s **interrupt flag**. If `t` is in `sleep`, `join` or `wait` (or enters one), it wakes with `InterruptedException` and the flag is **cleared**. A `BLOCKED` thread waiting for a monitor is not woken: it keeps waiting."
+            },
+            {
+              "type": "code",
+              "code": "Thread t = new Thread(() -> {\n    try {\n        Thread.sleep(10_000);\n    } catch (InterruptedException e) {\n        System.out.println(\"woken, flag = \"\n            + Thread.currentThread().isInterrupted());\n    }\n});\nt.start();\nt.interrupt();\nt.join();",
+              "caption": "The exception clears the flag",
+              "verify": {
+                "expect": "stdout",
+                "value": "woken, flag = false\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l01-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "Thread t = new Thread(() -> {});\nt.start();\nt.join();\nt.start();\nSystem.out.println(\"again\");",
+          "options": [
+            "again",
+            "Compilation fails",
+            "An exception is thrown at runtime",
+            "No output; the second start() is ignored"
+          ],
+          "answer": 2,
+          "explanation": "The first `start()` runs the empty task, and `join()` waits until it is `TERMINATED`. A thread can never be restarted: the second `start()` throws `IllegalThreadStateException`, so `again` is never printed.",
+          "objective": "8.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "exception",
+            "value": "IllegalThreadStateException"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l01-e06",
+          "kind": "multiChoice",
+          "prompt": "Which two statements are true? Choose two.",
+          "options": [
+            "A thread inside Thread.sleep(500) is in TIMED_WAITING.",
+            "A thread waiting to enter a synchronized block is in WAITING.",
+            "A TERMINATED thread can be run again with start().",
+            "A thread calling t.join() with no timeout is in WAITING.",
+            "A newly constructed Thread is RUNNABLE."
+          ],
+          "answers": [
+            0,
+            3
+          ],
+          "explanation": "`sleep(500)` has a time limit, so the state is `TIMED_WAITING`; `join()` without a timeout is `WAITING`. A thread waiting for a monitor lock is `BLOCKED`, not `WAITING`. A new thread is `NEW` until `start()`, and a terminated thread can never be restarted.",
+          "objective": "8.1",
+          "examStyle": true
+        },
+        {
+          "type": "page",
+          "title": "Daemon threads",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A **daemon** thread is a background helper. The JVM exits as soon as only daemon threads are left; it does not wait for them."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`t.setDaemon(true)` must be called **before** `start()`, otherwise `IllegalThreadStateException`.",
+                "The main thread is not a daemon. New threads copy the daemon status of the thread that creates them.",
+                "Non-daemon (user) threads keep the JVM alive, even after `main` returns."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "If `main` ends while a daemon thread is still sleeping, that thread's later output may never appear. If it is a normal thread, the JVM waits for it."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l01-e07",
+          "kind": "trueFalse",
+          "prompt": "The JVM waits for all running daemon threads to finish before it exits.",
+          "answer": false,
+          "explanation": "False. The JVM exits when only daemon threads remain; they are stopped abruptly. It waits only for non-daemon (user) threads.",
+          "objective": "8.1"
+        }
+      ]
+    },
+    {
+      "id": "u08-l02",
+      "title": "Virtual threads",
+      "summary": "Java 21's lightweight threads: how to create them and when to use them.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Platform vs virtual threads",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A classic **platform thread** wraps an operating-system thread. OS threads are expensive (a large stack, slow to create), so you can only have a few thousand."
+            },
+            {
+              "type": "paragraph",
+              "text": "A **virtual thread** (final in Java 21) is managed by the JVM. When it blocks, for example waiting on the network, the JVM unmounts it and reuses the underlying **carrier** platform thread for other work. You can have millions."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Feature",
+                "Platform",
+                "Virtual"
+              ],
+              "rows": [
+                [
+                  "Backed by",
+                  "one OS thread",
+                  "borrows a carrier thread"
+                ],
+                [
+                  "Cost",
+                  "high",
+                  "very low"
+                ],
+                [
+                  "Daemon?",
+                  "your choice",
+                  "always"
+                ],
+                [
+                  "Best for",
+                  "CPU-heavy work",
+                  "many blocking tasks (I/O)"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Not faster, just cheaper",
+              "text": "Virtual threads don't make code run faster. They let you run many more tasks that spend most of their time waiting."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Creating virtual threads",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "There is no public constructor for virtual threads: `new Thread(...)` always makes a **platform** thread. Use the builders or the static factory:"
+            },
+            {
+              "type": "code",
+              "code": "Thread a = Thread.ofVirtual().start(task);\nThread b = Thread.startVirtualThread(task);\nThread c = Thread.ofVirtual()\n    .name(\"worker\").unstarted(task);\nThread d = Thread.ofPlatform().start(task);"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`start(task)` creates and starts; `unstarted(task)` only creates (state `NEW`).",
+                "`t.isVirtual()` tells you which kind you have.",
+                "Virtual threads are always daemon threads."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "Runnable task = () -> {};\nThread v = Thread.ofVirtual().start(task);\nv.join();\nSystem.out.println(v.isVirtual()\n    + \" \" + v.isDaemon());",
+              "verify": {
+                "expect": "stdout",
+                "value": "true true\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l02-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Thread a = new Thread(() -> {});\nThread b = Thread.ofVirtual()\n    .unstarted(() -> {});\nSystem.out.println(a.isVirtual()\n    + \" \" + b.isVirtual()\n    + \" \" + b.getState());",
+          "options": [
+            "false true NEW",
+            "false true RUNNABLE",
+            "true true NEW",
+            "false false NEW"
+          ],
+          "answer": 0,
+          "explanation": "`new Thread` makes a platform thread, so `a.isVirtual()` is false. `ofVirtual().unstarted(...)` creates a virtual thread without starting it, so its state is `NEW`.",
+          "objective": "8.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "false true NEW"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l02-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "Thread v = Thread.ofVirtual()\n    .unstarted(() -> {});\nv.setDaemon(false);\nv.start();\nSystem.out.println(\"ok\");",
+          "options": [
+            "ok",
+            "Compilation fails",
+            "An exception is thrown at runtime",
+            "No output"
+          ],
+          "answer": 2,
+          "explanation": "Virtual threads are **always** daemon threads. `setDaemon(false)` on a virtual thread throws `IllegalArgumentException`, so `ok` is never printed.",
+          "objective": "8.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "exception",
+            "value": "IllegalArgumentException"
+          }
+        },
+        {
+          "type": "page",
+          "title": "One virtual thread per task",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "With virtual threads you don't keep a pool. You create a fresh thread for every task and let it die. The executor for that is:"
+            },
+            {
+              "type": "code",
+              "code": "try (var ex = Executors\n        .newVirtualThreadPerTaskExecutor()) {\n    ex.submit(() -> download(url1));\n    ex.submit(() -> download(url2));\n} // close() waits for both tasks"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Don't pool virtual threads",
+              "text": "Pools exist because platform threads are expensive. Virtual threads are cheap, so pooling them buys nothing. To limit how many tasks hit a resource at once, use a `Semaphore`, not a smaller pool."
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Imports",
+              "text": "From here on, code samples assume `import java.util.concurrent.*;` (plus `.atomic.*` and `.locks.*` where needed). Exam questions say the same: assume the needed imports are present."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l02-e03",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code so each task runs in its own new virtual thread and prints true.",
+          "code": "try (ExecutorService ex = Executors\n        .___()) {\n    ex.submit(() ->\n        System.out.println(Thread\n            .currentThread()\n            .___()));\n}",
+          "answers": [
+            "newVirtualThreadPerTaskExecutor",
+            "isVirtual"
+          ],
+          "bank": [
+            "newVirtualThreadPerTaskExecutor",
+            "newVirtualExecutor",
+            "ofVirtual",
+            "isVirtual",
+            "virtual",
+            "getVirtual"
+          ],
+          "explanation": "`Executors.newVirtualThreadPerTaskExecutor()` starts a new virtual thread per submitted task. `Thread.currentThread().isVirtual()` is then true. There is no `newVirtualExecutor()`, and `ofVirtual()` is a method of `Thread`, not `Executors`.",
+          "objective": "8.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "true",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { try (ExecutorService ex = Executors\n        .newVirtualThreadPerTaskExecutor()) {\n    ex.submit(() ->\n        System.out.println(Thread\n            .currentThread()\n            .isVirtual()));\n}\n} }"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Pinning",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A virtual thread normally unmounts from its carrier when it blocks. In Java 21 there is an exception: if it blocks **inside a `synchronized` block or method**, it is **pinned**. The carrier thread is stuck too and can't run other virtual threads."
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam (Java 21)",
+              "text": "Know the word **pinning** and the fix: for long blocking work inside a critical section, use a `ReentrantLock` (lesson 6) instead of `synchronized`. Short `synchronized` sections are fine."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l02-e04",
+          "kind": "singleChoice",
+          "prompt": "In Java 21, a virtual thread waits for a slow network call inside a synchronized block. What happens?",
+          "options": [
+            "It is pinned: its carrier platform thread stays blocked too.",
+            "It throws IllegalMonitorStateException.",
+            "The JVM turns it into a platform thread.",
+            "Compilation fails."
+          ],
+          "answer": 0,
+          "explanation": "This is **pinning**: the virtual thread can't unmount while it holds a monitor, so its carrier platform thread is blocked as well. Nothing throws, and the thread does not change kind. Using `ReentrantLock` avoids it.",
+          "objective": "8.1",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l02-e05",
+          "kind": "multiChoice",
+          "prompt": "Which two statements about virtual threads in Java 21 are true? Choose two.",
+          "options": [
+            "They are always daemon threads.",
+            "new Thread(runnable) creates a virtual thread.",
+            "They should be pooled because they are expensive to create.",
+            "They suit many tasks that spend time blocked on I/O.",
+            "They make CPU-bound calculations run faster."
+          ],
+          "answers": [
+            0,
+            3
+          ],
+          "explanation": "Virtual threads are always daemon threads and shine when many tasks block on I/O. `new Thread(r)` always creates a platform thread. They are cheap, so you should **not** pool them. CPU-bound work gets no faster: the number of cores is the limit.",
+          "objective": "8.1",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l02-e06",
+          "kind": "trueFalse",
+          "prompt": "`Thread.startVirtualThread(task)` creates a virtual thread and starts it in one call.",
+          "answer": true,
+          "explanation": "True. It is a shortcut for `Thread.ofVirtual().start(task)` and returns the started `Thread`.",
+          "objective": "8.1"
+        }
+      ]
+    },
+    {
+      "id": "u08-l03",
+      "title": "ExecutorService",
+      "summary": "Thread pools, submit vs execute, Future, Callable, shutdown and scheduling.",
+      "minutes": 9,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Let a pool run your tasks",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Creating threads by hand gets messy. An `ExecutorService` owns a set of threads; you just **submit tasks** and it decides which thread runs them."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Factory (Executors.)",
+                "Threads"
+              ],
+              "rows": [
+                [
+                  "`newSingleThreadExecutor()`",
+                  "1, tasks run in order"
+                ],
+                [
+                  "`newFixedThreadPool(n)`",
+                  "exactly n, reused"
+                ],
+                [
+                  "`newCachedThreadPool()`",
+                  "grows as needed, reuses idle ones"
+                ],
+                [
+                  "`newScheduledThreadPool(n)`",
+                  "n, can run tasks later or repeatedly"
+                ],
+                [
+                  "`newVirtualThreadPerTaskExecutor()`",
+                  "a new virtual thread per task"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Single thread = ordered",
+              "text": "A single-thread executor runs tasks one after another in submission order. That makes it handy for predictable output."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Runnable vs Callable",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Feature",
+                "Runnable",
+                "Callable<V>"
+              ],
+              "rows": [
+                [
+                  "Method",
+                  "`void run()`",
+                  "`V call() throws Exception`"
+                ],
+                [
+                  "Returns a value",
+                  "no",
+                  "yes"
+                ],
+                [
+                  "Checked exceptions",
+                  "must catch",
+                  "may throw"
+                ]
+              ]
+            },
+            {
+              "type": "table",
+              "header": [
+                "Executor method",
+                "Accepts",
+                "Returns"
+              ],
+              "rows": [
+                [
+                  "`execute(r)`",
+                  "Runnable only",
+                  "`void`"
+                ],
+                [
+                  "`submit(r)`",
+                  "Runnable",
+                  "`Future<?>`, `get()` gives null"
+                ],
+                [
+                  "`submit(c)`",
+                  "Callable",
+                  "`Future<V>`"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "ExecutorService ex =\n    Executors.newSingleThreadExecutor();\nFuture<Integer> f = ex.submit(() -> 6 * 7);\nSystem.out.println(f.get());  // waits\nex.shutdown();",
+              "caption": "A lambda that returns a value is a Callable",
+              "verify": {
+                "expect": "stdout",
+                "value": "42\n",
+                "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { ExecutorService ex =\n    Executors.newSingleThreadExecutor();\nFuture<Integer> f = ex.submit(() -> 6 * 7);\nSystem.out.println(f.get());  // waits\nex.shutdown();\n} }"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "execute() is void",
+              "text": "`execute()` returns nothing and only takes a `Runnable`. Code that assigns its result to a `Future` doesn't compile."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l03-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "ExecutorService ex =\n    Executors.newSingleThreadExecutor();\nFuture<Integer> f = ex.execute(() -> 42);\nSystem.out.println(f.get());\nex.shutdown();",
+          "options": [
+            "42",
+            "null",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 2,
+          "explanation": "`execute()` returns `void` and accepts only a `Runnable`, so assigning its result to `Future<Integer>` fails at line 3. Use `submit()` to get a `Future`.",
+          "objective": "8.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 3,
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { ExecutorService ex =\n    Executors.newSingleThreadExecutor();\nFuture<Integer> f = ex.execute(() -> 42);\nSystem.out.println(f.get());\nex.shutdown();\n} }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l03-e02",
+          "kind": "multiChoice",
+          "prompt": "Which two statements are true? Choose two.",
+          "options": [
+            "Callable.call() may throw checked exceptions.",
+            "Runnable.run() returns its result through Future.get().",
+            "Future.get() on a submitted Runnable returns null when it completes.",
+            "execute() accepts a Callable.",
+            "Callable is in the java.lang package."
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "`Callable.call()` declares `throws Exception`, so it may throw checked exceptions. `submit(Runnable)` returns a `Future` whose `get()` returns `null` once the task completes. `execute()` takes only a `Runnable`, and `Callable` lives in `java.util.concurrent`, not `java.lang`.",
+          "objective": "8.1",
+          "examStyle": true
+        },
+        {
+          "type": "page",
+          "title": "Future",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A `Future` is a handle to a result that may not exist yet."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`get()` **blocks** until the task finishes, then returns its value.",
+                "`get(1, TimeUnit.SECONDS)` gives up with `TimeoutException`.",
+                "`isDone()` is true once the task finished, failed or was cancelled.",
+                "`cancel(true)` tries to stop it (interrupting if running); `isCancelled()` reports it.",
+                "If the task threw, `get()` throws `ExecutionException` wrapping the cause."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "var ex = Executors.newSingleThreadExecutor();\nFuture<?> f = ex.submit(() -> {\n    throw new IllegalStateException(\"x\");\n});\ntry {\n    f.get();\n} catch (ExecutionException e) {\n    System.out.println(e.getCause());\n}\nex.shutdown();",
+              "verify": {
+                "expect": "stdout",
+                "value": "java.lang.IllegalStateException: x\n",
+                "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { var ex = Executors.newSingleThreadExecutor();\nFuture<?> f = ex.submit(() -> {\n    throw new IllegalStateException(\"x\");\n});\ntry {\n    f.get();\n} catch (ExecutionException e) {\n    System.out.println(e.getCause());\n}\nex.shutdown();\n} }"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "**CompletableFuture** is beyond the core objectives, but worth knowing: a `Future` you can chain instead of blocking on."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`supplyAsync(supplier)` / `runAsync(runnable)` run on `ForkJoinPool.commonPool()` unless you pass an executor as a second argument.",
+                "`thenApply(fn)` transforms the result; `thenCompose(fn)` is for an `fn` that itself returns a `CompletableFuture` (like `flatMap`); `thenCombine(other, (a, b) -> ...)` merges two results.",
+                "`exceptionally(ex -> fallback)` recovers from a failure; `handle((value, ex) -> ...)` sees success and failure."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "int n = CompletableFuture.supplyAsync(() -> 20)\n    .thenApply(x -> x + 1)\n    .thenCombine(\n        CompletableFuture.supplyAsync(() -> 2),\n        (a, b) -> a * b)\n    .join();\nint safe = CompletableFuture\n    .supplyAsync(() -> 1 / 0)\n    .exceptionally(ex -> -1)\n    .join();\nSystem.out.println(n + \" \" + safe);",
+              "verify": {
+                "expect": "stdout",
+                "value": "42 -1\n",
+                "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { int n = CompletableFuture.supplyAsync(() -> 20)\n    .thenApply(x -> x + 1)\n    .thenCombine(\n        CompletableFuture.supplyAsync(() -> 2),\n        (a, b) -> a * b)\n    .join();\nint safe = CompletableFuture\n    .supplyAsync(() -> 1 / 0)\n    .exceptionally(ex -> -1)\n    .join();\nSystem.out.println(n + \" \" + safe);\n} }"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "join vs get",
+              "text": "`join()` wraps a failure in the **unchecked** `CompletionException`; `get()` throws the checked `ExecutionException` (and `InterruptedException`). A `thenApplyAsync(fn, exec)` stage is handed to `exec` only when the previous stage completes, so if `exec` was shut down by then you get a `RejectedExecutionException`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l03-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var ex = Executors.newSingleThreadExecutor();\nFuture<String> f = ex.submit(() -> \"hi\");\nString s = f.get();\nSystem.out.println(s + \" \" + f.isDone());\nex.shutdown();",
+          "options": [
+            "hi true",
+            "hi false",
+            "null true",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`f.get()` waits until the task has returned `\"hi\"`. Once `get()` has returned normally, the task is complete, so `isDone()` is `true`.",
+          "objective": "8.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "hi true",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { var ex = Executors.newSingleThreadExecutor();\nFuture<String> f = ex.submit(() -> \"hi\");\nString s = f.get();\nSystem.out.println(s + \" \" + f.isDone());\nex.shutdown();\n} }"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Shutting down",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Method",
+                "What it does"
+              ],
+              "rows": [
+                [
+                  "`shutdown()`",
+                  "no new tasks; queued and running tasks still finish"
+                ],
+                [
+                  "`shutdownNow()`",
+                  "interrupts running tasks; returns `List<Runnable>` never started"
+                ],
+                [
+                  "`awaitTermination(t, unit)`",
+                  "blocks until all done or timeout; returns `boolean`"
+                ],
+                [
+                  "`isShutdown()` / `isTerminated()`",
+                  "shutdown called / all tasks finished too"
+                ],
+                [
+                  "`close()` (Java 19+)",
+                  "shutdown + wait for everything"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Since Java 19, `ExecutorService` is `AutoCloseable`, so try-with-resources shuts it down and waits:"
+            },
+            {
+              "type": "code",
+              "code": "try (var ex = Executors.newFixedThreadPool(2)) {\n    ex.submit(() -> work());\n} // close(): shutdown + wait"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Two classic traps",
+              "text": "1) Submitting after `shutdown()` throws `RejectedExecutionException`. 2) Forgetting to shut down a pool of normal threads keeps the JVM running after `main` ends."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l03-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "var ex = Executors.newSingleThreadExecutor();\nex.shutdown();\nex.submit(() -> System.out.println(\"late\"));\nSystem.out.println(\"end\");",
+          "options": [
+            "late\nend",
+            "end",
+            "end\nlate",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 3,
+          "explanation": "After `shutdown()` the executor rejects new tasks: `submit()` throws `RejectedExecutionException`. Neither `late` nor `end` is printed.",
+          "objective": "8.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "exception",
+            "value": "RejectedExecutionException",
+            "source": "import java.util.concurrent.*;\npublic class Main {\n    public static void main(String[] args) {\n        var ex = Executors.newSingleThreadExecutor();\n        ex.shutdown();\n        ex.submit(() -> System.out.println(\"late\"));\n        System.out.println(\"end\");\n    }\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l03-e05",
+          "kind": "orderLines",
+          "prompt": "Arrange the lines: create a pool, submit a task, stop accepting tasks, wait for the pool to finish, then print the result.",
+          "lines": [
+            "var ex = Executors.newFixedThreadPool(2);",
+            "Future<Integer> f = ex.submit(() -> 5);",
+            "ex.shutdown();",
+            "ex.awaitTermination(1, TimeUnit.SECONDS);",
+            "System.out.println(f.get());"
+          ],
+          "distractors": [
+            "ex.start();"
+          ],
+          "explanation": "`shutdown()` must come after `submit()` (otherwise the task is rejected) and before `awaitTermination()` (otherwise it just waits for the timeout). `f.get()` then returns at once. Executors have no `start()` method.",
+          "objective": "8.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "5",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { var ex = Executors.newFixedThreadPool(2);\nFuture<Integer> f = ex.submit(() -> 5);\nex.shutdown();\nex.awaitTermination(1, TimeUnit.SECONDS);\nSystem.out.println(f.get());\n} }"
+          }
+        },
+        {
+          "type": "page",
+          "title": "invokeAll and invokeAny",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "`invokeAll(tasks)` runs a collection of `Callable`s, waits for **all**, and returns a `List<Future<T>>` in the same order.",
+                "`invokeAny(tasks)` waits for **one** to succeed, returns its value (not a Future) and cancels the rest."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "List<Callable<Integer>> jobs =\n    List.of(() -> 1, () -> 2, () -> 3);\ntry (var ex = Executors.newFixedThreadPool(3)) {\n    int sum = 0;\n    for (Future<Integer> f : ex.invokeAll(jobs))\n        sum += f.get();\n    System.out.println(sum);\n}",
+              "verify": {
+                "expect": "stdout",
+                "value": "6\n",
+                "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { List<Callable<Integer>> jobs =\n    List.of(() -> 1, () -> 2, () -> 3);\ntry (var ex = Executors.newFixedThreadPool(3)) {\n    int sum = 0;\n    for (Future<Integer> f : ex.invokeAll(jobs))\n        sum += f.get();\n    System.out.println(sum);\n}\n} }"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l03-e06",
+          "kind": "trueFalse",
+          "prompt": "`invokeAny()` returns a List of Futures, one per task.",
+          "answer": false,
+          "explanation": "False. That describes `invokeAll()`. `invokeAny()` returns a single plain result `T` from one task that completed successfully.",
+          "objective": "8.1"
+        },
+        {
+          "type": "page",
+          "title": "Scheduled executors",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "ScheduledExecutorService ses =\n    Executors.newScheduledThreadPool(1);\nses.schedule(task, 2, SECONDS);\nses.scheduleAtFixedRate(task, 0, 5, SECONDS);\nses.scheduleWithFixedDelay(task, 0, 5, SECONDS);",
+              "caption": "SECONDS = TimeUnit.SECONDS (static import)"
+            },
+            {
+              "type": "table",
+              "header": [
+                "Method",
+                "Next run starts"
+              ],
+              "rows": [
+                [
+                  "`schedule(task, delay, unit)`",
+                  "once, after delay (Runnable or Callable)"
+                ],
+                [
+                  "`scheduleAtFixedRate(r, init, period, unit)`",
+                  "every period, counted from each **start**"
+                ],
+                [
+                  "`scheduleWithFixedDelay(r, init, delay, unit)`",
+                  "delay after the previous run **ends**"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Runnable only for repeats",
+              "text": "The two repeating methods take a `Runnable`, because a repeated task has no single result. Only `schedule()` also accepts a `Callable`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l03-e07",
+          "kind": "multiChoice",
+          "prompt": "`ses` is a ScheduledExecutorService and `TimeUnit.SECONDS` is statically imported. Which two lines compile? Choose two.",
+          "options": [
+            "ses.schedule(() -> \"x\", 1, SECONDS);",
+            "ses.scheduleAtFixedRate(() -> \"x\", 0, 1, SECONDS);",
+            "ses.scheduleWithFixedDelay(() -> {}, 0, 1, SECONDS);",
+            "ses.scheduleAtFixedRate(() -> {}, 1, SECONDS);",
+            "ses.schedule(() -> {}, SECONDS);"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "`schedule()` accepts a `Callable`, so `() -> \"x\"` is fine. `scheduleWithFixedDelay` with an empty Runnable and four arguments is fine. `scheduleAtFixedRate` needs a `Runnable` (`\"x\"` is not a statement) and four arguments; `schedule()` needs a delay before the unit.",
+          "objective": "8.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "",
+            "source": "import static java.util.concurrent.TimeUnit.SECONDS; import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { var ses = Executors.newScheduledThreadPool(1);\nses.schedule(() -> \"x\", 1, SECONDS);\nses.scheduleWithFixedDelay(() -> {}, 0, 1, SECONDS);\nses.shutdownNow();\n} }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l03-e08",
+          "kind": "singleChoice",
+          "prompt": "A task always takes 3 seconds. It is scheduled with `scheduleWithFixedDelay(task, 0, 2, SECONDS)`. How long is it from the start of one run to the start of the next?",
+          "options": [
+            "2 seconds",
+            "3 seconds",
+            "5 seconds",
+            "1 second"
+          ],
+          "answer": 2,
+          "explanation": "With a fixed **delay**, the 2-second wait starts when a run **ends**: 3 s of work + 2 s delay = 5 s between starts. With `scheduleAtFixedRate` and period 2, the next run would start as soon as the 3-second run finishes (runs never overlap).",
+          "objective": "8.1",
+          "examStyle": true
+        }
+      ]
+    },
+    {
+      "id": "u08-l04",
+      "title": "Thread-safety problems",
+      "summary": "Race conditions, lost updates, visibility, deadlock, livelock and starvation.",
+      "minutes": 6,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Race conditions",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "When two threads read and write the **same mutable data** without coordination, the result depends on timing. That's a **race condition**."
+            },
+            {
+              "type": "paragraph",
+              "text": "`count++` looks like one step but is three: **read** count, **add** 1, **write** it back. Two threads can both read 5, both write 6: one increment is lost."
+            },
+            {
+              "type": "code",
+              "code": "// Thread A        Thread B\n// read 5\n//                  read 5\n// write 6\n//                  write 6   <- lost update"
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "In CPython the GIL hides many races. Java threads run truly in parallel on several cores, so lost updates appear quickly and often."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l04-e01",
+          "kind": "multiChoice",
+          "prompt": "Which two outputs are possible? Choose two.",
+          "code": "int[] count = {0};\nRunnable r = () -> {\n    for (int i = 0; i < 1000; i++)\n        count[0]++;\n};\nThread a = new Thread(r);\nThread b = new Thread(r);\na.start(); b.start();\na.join(); b.join();\nSystem.out.println(count[0]);",
+          "options": [
+            "2000",
+            "1500",
+            "2500",
+            "0",
+            "Compilation fails"
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "`count[0]++` is not atomic, so the two threads can lose updates. `2000` happens when no update is lost; `1500` is a typical lost-update result. More than 2000 is impossible, and so is 0: every write stores a value of at least 1. The code compiles: `count` itself is effectively final, only the array element changes.",
+          "objective": "8.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "true",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { int[] count = {0};\nRunnable r = () -> {\n    for (int i = 0; i < 1000; i++)\n        count[0]++;\n};\nThread a = new Thread(r);\nThread b = new Thread(r);\na.start(); b.start();\na.join(); b.join();\nSystem.out.println(count[0] <= 2000);\n} }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l04-e02",
+          "kind": "trueFalse",
+          "prompt": "`count++` on a shared `int` field is a single atomic operation.",
+          "answer": false,
+          "explanation": "False. It is read, add, write: three steps that another thread can interleave with. Use `synchronized`, a lock or an `AtomicInteger`.",
+          "objective": "8.2"
+        },
+        {
+          "type": "page",
+          "title": "Visibility",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A second problem: without synchronization, a thread may **never see** another thread's write. Each core can keep values in its cache, and the compiler may reorder code."
+            },
+            {
+              "type": "code",
+              "code": "static boolean stop = false;\n\n// worker thread\nwhile (!stop) { }   // may loop forever\n\n// main thread, later\nstop = true;"
+            },
+            {
+              "type": "paragraph",
+              "text": "The fix for a simple flag is `volatile` (next lesson). `synchronized`, locks, atomics and `join()` also guarantee that writes become visible."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l04-e03",
+          "kind": "singleChoice",
+          "prompt": "Which change guarantees that the code in the race-condition question always prints 2000?",
+          "options": [
+            "Replace the array with an AtomicInteger and call incrementAndGet().",
+            "Declare the array as volatile.",
+            "Call Thread.yield() inside the loop.",
+            "Call b.start() before a.start()."
+          ],
+          "answer": 0,
+          "explanation": "An `AtomicInteger` with `incrementAndGet()` performs read-add-write as one atomic step. `volatile` on an array reference says nothing about its elements, and it wouldn't make `++` atomic anyway. `yield()` and start order only change timing.",
+          "objective": "8.2",
+          "examStyle": true
+        },
+        {
+          "type": "page",
+          "title": "Deadlock, livelock, starvation",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Problem",
+                "What happens"
+              ],
+              "rows": [
+                [
+                  "**Deadlock**",
+                  "threads wait forever for locks held by each other; all stuck, `BLOCKED`"
+                ],
+                [
+                  "**Livelock**",
+                  "threads keep reacting to each other (back off, retry) and stay busy but make no progress"
+                ],
+                [
+                  "**Starvation**",
+                  "one thread rarely or never gets a resource because others keep taking it"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "// Thread 1          // Thread 2\nsynchronized (a) {   synchronized (b) {\n  synchronized (b)     synchronized (a)\n    { ... }              { ... }\n}                    }",
+              "caption": "Opposite lock order: possible deadlock"
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Prevent deadlock",
+              "text": "Make every thread acquire locks in the **same order** (always `a` then `b`), or use `tryLock` with a timeout and back off."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l04-e04",
+          "kind": "singleChoice",
+          "prompt": "Two threads each notice the other one wants the same resource, politely release it and retry. They repeat this forever: both are busy, neither finishes. What is this called?",
+          "options": [
+            "Deadlock",
+            "Livelock",
+            "Starvation",
+            "Race condition"
+          ],
+          "answer": 1,
+          "explanation": "Threads that stay **active** but make no progress because they keep responding to each other are in a **livelock**. In a deadlock they would be stuck, not busy.",
+          "objective": "8.2",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l04-e05",
+          "kind": "singleChoice",
+          "prompt": "A low-priority thread almost never gets a lock because other threads keep grabbing it first. Nothing is stuck and the others make progress. What is this called?",
+          "options": [
+            "Deadlock",
+            "Livelock",
+            "Starvation",
+            "Race condition"
+          ],
+          "answer": 2,
+          "explanation": "One thread being unable to get a resource for a long time while others proceed is **starvation**. Fair locks (`new ReentrantLock(true)`) reduce it.",
+          "objective": "8.2",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l04-e06",
+          "kind": "trueFalse",
+          "prompt": "If every thread acquires locks in the same order, two threads can't deadlock over those locks.",
+          "answer": true,
+          "explanation": "True. A deadlock needs a cycle: thread 1 holds A and wants B while thread 2 holds B and wants A. A fixed global lock order makes that cycle impossible.",
+          "objective": "8.2"
+        }
+      ]
+    },
+    {
+      "id": "u08-l05",
+      "title": "synchronized, volatile, atomics",
+      "summary": "Monitors, which lock a method uses, volatile visibility and AtomicInteger.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "synchronized",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Every object has a built-in lock called its **monitor**. Only one thread at a time can hold it. `synchronized` takes the monitor on entry and releases it on exit, even when an exception is thrown."
+            },
+            {
+              "type": "code",
+              "code": "private final Object lock = new Object();\nvoid add() {\n    synchronized (lock) {   // block\n        count++;\n    }\n}\nsynchronized void inc() { count++; }  // method"
+            },
+            {
+              "type": "table",
+              "header": [
+                "You write",
+                "Monitor used"
+              ],
+              "rows": [
+                [
+                  "`synchronized (x) { }`",
+                  "the object `x`"
+                ],
+                [
+                  "`synchronized void m()`",
+                  "`this`"
+                ],
+                [
+                  "`static synchronized void m()`",
+                  "`Shop.class` (the Class object)"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Same lock or not?",
+              "text": "Exclusion only happens between threads using the **same** monitor. A `static synchronized` method and an instance `synchronized` method use different locks, so they can run at the same time."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l05-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Counter {\n    private int n;\n    synchronized void inc() { n++; }\n    synchronized int get() { return n; }\n}\nvar c = new Counter();\nRunnable r = () -> {\n    for (int i = 0; i < 1000; i++) c.inc();\n};\nThread a = new Thread(r);\nThread b = new Thread(r);\na.start(); b.start();\na.join(); b.join();\nSystem.out.println(c.get());",
+          "options": [
+            "2000",
+            "Any value from 2 to 2000",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`inc()` is `synchronized` on the same `Counter`, so no increment is lost. `join()` waits for both threads and makes their writes visible to main: the result is always **2000**.",
+          "objective": "8.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "2000"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l05-e02",
+          "kind": "multiChoice",
+          "prompt": "In class Shop, which two use the same lock as `synchronized void m()`? Choose two.",
+          "options": [
+            "void a() { synchronized (this) { } }",
+            "static synchronized void b() { }",
+            "void c() { synchronized (Shop.class) { } }",
+            "synchronized void d() { }",
+            "void e() { synchronized (new Object()) { } }"
+          ],
+          "answers": [
+            0,
+            3
+          ],
+          "explanation": "An instance `synchronized` method locks `this`. A `synchronized (this)` block and any other instance `synchronized` method of the same object use that monitor too. `static synchronized` and `synchronized (Shop.class)` lock the Class object; a `new Object()` is a fresh lock every time.",
+          "objective": "8.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; class Shop {\n    synchronized void m() { }\n    void a() { synchronized (this) { } }\n    synchronized void d() { }\n}\npublic class Main { public static void main(String[] x) { new Shop().a(); } }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l05-e03",
+          "kind": "tapLine",
+          "prompt": "Tap the line that causes a compilation error.",
+          "code": "int count = 0;\nObject lock = new Object();\nsynchronized (lock) {\n    count++;\n}\nsynchronized (count) {\n    count++;\n}",
+          "answer": 6,
+          "explanation": "`synchronized` needs an object reference to use as the monitor. `count` is a primitive `int`, so line 6 doesn't compile. (It is not autoboxed.)",
+          "objective": "8.2",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "page",
+          "title": "volatile",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A `volatile` field is always read from and written to main memory, so every thread sees the **latest** value. It also stops the compiler from reordering code around it."
+            },
+            {
+              "type": "code",
+              "code": "private volatile boolean running = true;\n\nvoid stop() { running = false; }  // thread A\nvoid loop() {                       // thread B\n    while (running) { work(); }\n}"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Visibility, not atomicity",
+              "text": "`volatile int count; count++;` is **still** a race: two threads can read the same value. `volatile` is right for flags that one thread writes; use atomics or locks for read-modify-write. `volatile` is only allowed on fields, not local variables."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l05-e04",
+          "kind": "trueFalse",
+          "prompt": "Declaring a field `volatile int count` makes `count++` safe to call from many threads at once.",
+          "answer": false,
+          "explanation": "False. `volatile` guarantees each read sees the latest write, but `count++` is still read, add, write. Two threads can read the same value and one update is lost.",
+          "objective": "8.2"
+        },
+        {
+          "type": "page",
+          "title": "Atomic classes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`java.util.concurrent.atomic` has `AtomicInteger`, `AtomicLong`, `AtomicBoolean` and `AtomicReference`. Their methods are atomic without any lock."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Method",
+                "Like",
+                "Returns"
+              ],
+              "rows": [
+                [
+                  "`incrementAndGet()`",
+                  "`++x`",
+                  "new value"
+                ],
+                [
+                  "`getAndIncrement()`",
+                  "`x++`",
+                  "old value"
+                ],
+                [
+                  "`addAndGet(5)`",
+                  "`x += 5`",
+                  "new value"
+                ],
+                [
+                  "`getAndAdd(5)`",
+                  "",
+                  "old value"
+                ],
+                [
+                  "`compareAndSet(e, n)`",
+                  "",
+                  "`true` if it was `e` and is now `n`"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "var n = new AtomicInteger(5);\nSystem.out.println(n.getAndIncrement());\nSystem.out.println(n.incrementAndGet());",
+              "verify": {
+                "expect": "stdout",
+                "value": "5\n7\n",
+                "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { var n = new AtomicInteger(5);\nSystem.out.println(n.getAndIncrement());\nSystem.out.println(n.incrementAndGet());\n} }"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Read the name left to right",
+              "text": "**get**AndIncrement: get first, then increment (old value). increment**AndGet**: increment first, then get (new value)."
+            },
+            {
+              "type": "paragraph",
+              "text": "Sometimes you avoid sharing altogether. A `ThreadLocal` gives **each thread its own copy** of a value. `ThreadLocal.withInitial(supplier)` sets the starting value per thread."
+            },
+            {
+              "type": "code",
+              "code": "ThreadLocal<Integer> id =\n    ThreadLocal.withInitial(() -> 0);\nid.set(7);\nThread t = new Thread(() ->\n    System.out.println(\"worker \" + id.get()));\nt.start();\nt.join();\nSystem.out.println(\"main \" + id.get());\nid.remove();\nSystem.out.println(\"main \" + id.get());",
+              "caption": "Each thread sees its own value",
+              "verify": {
+                "expect": "stdout",
+                "value": "worker 0\nmain 7\nmain 0\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "remove() on pooled threads",
+              "text": "Pool threads are reused. A value set by one task is still there for the next task on that thread. Call `remove()` in a `finally` when the task is done."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l05-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var a = new AtomicInteger(10);\nint x = a.getAndIncrement();\nint y = a.incrementAndGet();\nint z = a.getAndAdd(5);\nSystem.out.println(x + \" \" + y + \" \"\n    + z + \" \" + a.get());",
+          "options": [
+            "10 12 12 17",
+            "11 12 17 17",
+            "10 11 12 17",
+            "10 12 17 17"
+          ],
+          "answer": 0,
+          "explanation": "`getAndIncrement()` returns 10, value 11. `incrementAndGet()` makes it 12 and returns 12. `getAndAdd(5)` returns the old 12, value 17.",
+          "objective": "8.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "10 12 12 17",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { var a = new AtomicInteger(10);\nint x = a.getAndIncrement();\nint y = a.incrementAndGet();\nint z = a.getAndAdd(5);\nSystem.out.println(x + \" \" + y + \" \"\n    + z + \" \" + a.get());\n} }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l05-e06",
+          "kind": "fillBlanks",
+          "prompt": "Complete the thread-safe counter. hit() must return the count including this hit.",
+          "code": "class Hits {\n    private final AtomicInteger n =\n        new ___(0);\n    int hit() {\n        return n.___();\n    }\n}",
+          "answers": [
+            "AtomicInteger",
+            "incrementAndGet"
+          ],
+          "bank": [
+            "AtomicInteger",
+            "Integer",
+            "VolatileInteger",
+            "incrementAndGet",
+            "getAndIncrement",
+            "increment"
+          ],
+          "explanation": "`AtomicInteger` gives atomic updates. `incrementAndGet()` returns the **new** value; `getAndIncrement()` would return the old one (0 on the first hit). There is no `VolatileInteger` class, and `Integer` is immutable with no such methods.",
+          "objective": "8.2",
+          "verify": {
+            "expect": "stdout",
+            "value": "1\n2",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; class Hits {\n    private final AtomicInteger n =\n        new AtomicInteger(0);\n    int hit() {\n        return n.incrementAndGet();\n    }\n}\npublic class Main { public static void main(String[] a) { var h = new Hits(); System.out.println(h.hit()); System.out.println(h.hit()); } }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l05-e07",
+          "kind": "multiChoice",
+          "prompt": "Which two statements are true? Choose two.",
+          "options": [
+            "volatile guarantees other threads see the latest written value.",
+            "AtomicInteger.incrementAndGet() is atomic.",
+            "A static synchronized method locks on this.",
+            "volatile can be applied to local variables.",
+            "A constructor can be declared synchronized."
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "`volatile` gives visibility of the latest write, and `incrementAndGet()` is atomic. A `static synchronized` method locks the Class object, not `this` (there is no `this` in a static method). `volatile` is not allowed on local variables, and constructors can't be `synchronized`: both fail to compile.",
+          "objective": "8.2",
+          "examStyle": true
+        }
+      ]
+    },
+    {
+      "id": "u08-l06",
+      "title": "The Lock API",
+      "summary": "ReentrantLock, tryLock, reentrancy, read/write locks and fairness.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "ReentrantLock",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`java.util.concurrent.locks.Lock` is an explicit lock. `ReentrantLock` is the standard implementation. You lock and unlock it yourself, so **always unlock in `finally`**."
+            },
+            {
+              "type": "code",
+              "code": "Lock lock = new ReentrantLock();\n\nlock.lock();\ntry {\n    balance += amount;\n} finally {\n    lock.unlock();\n}"
+            },
+            {
+              "type": "table",
+              "header": [
+                "Feature",
+                "synchronized",
+                "ReentrantLock"
+              ],
+              "rows": [
+                [
+                  "Released",
+                  "automatically",
+                  "by you, in `finally`"
+                ],
+                [
+                  "Try without waiting",
+                  "no",
+                  "`tryLock()`"
+                ],
+                [
+                  "Timeout",
+                  "no",
+                  "`tryLock(time, unit)`"
+                ],
+                [
+                  "Fairness option",
+                  "no",
+                  "`new ReentrantLock(true)`"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Not released automatically",
+              "text": "Nothing unlocks a `Lock` for you. If `unlock()` is not in `finally`, an exception leaves it locked forever, and other threads block forever."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l06-e01",
+          "kind": "orderLines",
+          "prompt": "Arrange the lines to update `balance` safely. Take the lock before entering the try block.",
+          "lines": [
+            "lock.lock();",
+            "try {",
+            "    balance += amount;",
+            "} finally {",
+            "    lock.unlock();",
+            "}"
+          ],
+          "distractors": [
+            "lock.release();"
+          ],
+          "explanation": "The idiom is `lock()`, then `try`, then release in `finally`. If `lock()` were inside `try` and threw, `finally` would call `unlock()` on a lock it never acquired. `Lock` has no `release()` method.",
+          "objective": "8.2",
+          "verify": {
+            "expect": "stdout",
+            "value": "15",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { Lock lock = new ReentrantLock(); int balance = 10; int amount = 5;\nlock.lock();\ntry {\n    balance += amount;\n} finally {\n    lock.unlock();\n}\nSystem.out.println(balance);\n} }"
+          }
+        },
+        {
+          "type": "page",
+          "title": "tryLock",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "`tryLock()` returns `true` and takes the lock if it is free, otherwise returns `false` **immediately**.",
+                "`tryLock(100, TimeUnit.MILLISECONDS)` waits up to the timeout; it throws `InterruptedException`.",
+                "Only call `unlock()` if you actually got the lock."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "if (lock.tryLock(100, MILLISECONDS)) {\n    try {\n        doWork();\n    } finally {\n        lock.unlock();\n    }\n} else {\n    System.out.println(\"busy, skip\");\n}"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Unlocking a lock you don't hold",
+              "text": "`unlock()` by a thread that does not hold the lock throws `IllegalMonitorStateException`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l06-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "Lock lock = new ReentrantLock();\ntry {\n    System.out.print(\"A\");\n} finally {\n    lock.unlock();\n}\nSystem.out.print(\"B\");",
+          "options": [
+            "AB",
+            "A",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 3,
+          "explanation": "`A` is printed, then `finally` calls `unlock()` on a lock that was never acquired. That throws `IllegalMonitorStateException`, so `B` is never printed.",
+          "objective": "8.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "exception",
+            "value": "IllegalMonitorStateException",
+            "stdout": "A",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { Lock lock = new ReentrantLock();\ntry {\n    System.out.print(\"A\");\n} finally {\n    lock.unlock();\n}\nSystem.out.print(\"B\");\n} }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l06-e03",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code: take the lock only if it is free right now, and always release it.",
+          "code": "Lock lock = new ReentrantLock();\nif (lock.___()) {\n    try {\n        System.out.println(\"got it\");\n    } ___ {\n        lock.___();\n    }\n}",
+          "answers": [
+            "tryLock",
+            "finally",
+            "unlock"
+          ],
+          "bank": [
+            "tryLock",
+            "lock",
+            "finally",
+            "catch",
+            "unlock",
+            "release"
+          ],
+          "explanation": "`tryLock()` returns a boolean, so it fits in `if`. `lock()` returns `void` and wouldn't compile there. The release belongs in `finally` so it also runs if the body throws. `Lock` has no `release()` method.",
+          "objective": "8.2",
+          "verify": {
+            "expect": "stdout",
+            "value": "got it",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { Lock lock = new ReentrantLock();\nif (lock.tryLock()) {\n    try {\n        System.out.println(\"got it\");\n    } finally {\n        lock.unlock();\n    }\n}\n} }"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Reentrant = can lock again",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "**Reentrant** means the thread that holds the lock can lock it again without blocking itself. The lock counts how often: the **hold count**. It is free only after the same number of `unlock()` calls."
+            },
+            {
+              "type": "code",
+              "code": "var lock = new ReentrantLock();\nlock.lock();\nlock.lock();\nSystem.out.println(lock.getHoldCount());\nlock.unlock();\nSystem.out.println(lock.isLocked());\nlock.unlock();\nSystem.out.println(lock.isLocked());",
+              "verify": {
+                "expect": "stdout",
+                "value": "2\ntrue\nfalse\n",
+                "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { var lock = new ReentrantLock();\nlock.lock();\nlock.lock();\nSystem.out.println(lock.getHoldCount());\nlock.unlock();\nSystem.out.println(lock.isLocked());\nlock.unlock();\nSystem.out.println(lock.isLocked());\n} }"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "synchronized is reentrant too",
+              "text": "A `synchronized` method can call another `synchronized` method on the same object without deadlocking itself."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l06-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var lock = new ReentrantLock();\nlock.lock();\nlock.tryLock();\nlock.unlock();\nSystem.out.println(lock.getHoldCount());",
+          "options": [
+            "0",
+            "1",
+            "2",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 1,
+          "explanation": "`lock()` makes the hold count 1. `tryLock()` by the **same** thread succeeds because the lock is reentrant: count 2. One `unlock()` leaves 1.",
+          "objective": "8.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "1",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { var lock = new ReentrantLock();\nlock.lock();\nlock.tryLock();\nlock.unlock();\nSystem.out.println(lock.getHoldCount());\n} }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l06-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var lock = new ReentrantLock();\nlock.lock();\nThread t = new Thread(() ->\n    System.out.println(lock.tryLock()));\nt.start();\nt.join();\nlock.unlock();",
+          "options": [
+            "true",
+            "false",
+            "An exception is thrown at runtime",
+            "Compilation fails"
+          ],
+          "answer": 1,
+          "explanation": "Main holds the lock while `t` runs. `t` is a different thread, so `tryLock()` can't take it and returns `false` immediately; it doesn't wait. `join()` makes sure `t` has printed before main unlocks.",
+          "objective": "8.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "false",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { var lock = new ReentrantLock();\nlock.lock();\nThread t = new Thread(() ->\n    System.out.println(lock.tryLock()));\nt.start();\nt.join();\nlock.unlock();\n} }"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Read/write locks and fairness",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`ReentrantReadWriteLock` has two linked locks. Many threads may hold the **read** lock together; the **write** lock is exclusive (no readers, no other writer)."
+            },
+            {
+              "type": "code",
+              "code": "ReadWriteLock rw =\n    new ReentrantReadWriteLock();\nrw.readLock().lock();\ntry {\n    return cache.get(key);\n} finally {\n    rw.readLock().unlock();\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "`new ReentrantLock(true)` creates a **fair** lock: the longest-waiting thread gets it next. That prevents starvation but is slower. The default (`false`) lets threads barge in."
+            },
+            {
+              "type": "paragraph",
+              "text": "You can **downgrade**: take the read lock while holding the write lock, then release the write lock. You can't **upgrade**: the write lock is unavailable while any read lock is held, even your own, so `tryLock()` returns `false` and `lock()` waits forever."
+            },
+            {
+              "type": "code",
+              "code": "var rw = new ReentrantReadWriteLock();\nrw.writeLock().lock();\nrw.readLock().lock();     // downgrade: OK\nrw.writeLock().unlock();\nSystem.out.println(rw.getReadLockCount());\n// upgrade attempt: refused\nSystem.out.println(rw.writeLock().tryLock());\nrw.readLock().unlock();",
+              "verify": {
+                "expect": "stdout",
+                "value": "1\nfalse\n",
+                "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { var rw = new ReentrantReadWriteLock();\nrw.writeLock().lock();\nrw.readLock().lock();     // downgrade: OK\nrw.writeLock().unlock();\nSystem.out.println(rw.getReadLockCount());\n// upgrade attempt: refused\nSystem.out.println(rw.writeLock().tryLock());\nrw.readLock().unlock();\n} }"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "StampedLock (beyond the core)",
+              "text": "`StampedLock` adds an **optimistic read**: `long s = sl.tryOptimisticRead();` read the fields, then `if (!sl.validate(s))` a writer got in, so fall back to `sl.readLock()`. It is **not reentrant**."
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "Expect questions on: unlock in `finally`, `tryLock()` returning immediately, `IllegalMonitorStateException`, hold counts, and \"many readers or one writer\"."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l06-e06",
+          "kind": "multiChoice",
+          "prompt": "Which two statements are true? Choose two.",
+          "options": [
+            "Several threads can hold a ReentrantReadWriteLock's read lock at once.",
+            "new ReentrantLock(true) creates a fair lock.",
+            "A ReentrantLock is released automatically when the try block ends.",
+            "tryLock() with no arguments waits until the lock is free.",
+            "Calling unlock() more times than lock() is silently ignored."
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "Read locks are shared among readers, and the `true` constructor argument makes a lock fair. A `Lock` is never released automatically, `tryLock()` without arguments returns at once, and extra `unlock()` calls throw `IllegalMonitorStateException`.",
+          "objective": "8.2",
+          "examStyle": true
+        }
+      ]
+    },
+    {
+      "id": "u08-l07",
+      "title": "Concurrent collections",
+      "summary": "ConcurrentHashMap, CopyOnWriteArrayList, BlockingQueue, latches and barriers.",
+      "minutes": 9,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Collections and threads",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`ArrayList`, `HashMap` and friends are **not** thread-safe. Two threads adding at once can corrupt them. Even a single thread that changes a list while iterating it gets a `ConcurrentModificationException` (CME)."
+            },
+            {
+              "type": "code",
+              "code": "List<String> list =\n    new ArrayList<>(List.of(\"a\", \"b\"));\nfor (String s : list) {\n    list.add(s);   // ConcurrentModificationException\n}",
+              "verify": {
+                "expect": "exception",
+                "value": "ConcurrentModificationException"
+              }
+            },
+            {
+              "type": "table",
+              "header": [
+                "Need",
+                "Concurrent class"
+              ],
+              "rows": [
+                [
+                  "Map",
+                  "`ConcurrentHashMap`"
+                ],
+                [
+                  "Sorted map / set",
+                  "`ConcurrentSkipListMap` / `Set`"
+                ],
+                [
+                  "List, mostly reads",
+                  "`CopyOnWriteArrayList`"
+                ],
+                [
+                  "Producer/consumer queue",
+                  "`LinkedBlockingQueue`, `ArrayBlockingQueue`"
+                ],
+                [
+                  "Non-blocking queue",
+                  "`ConcurrentLinkedQueue`"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Wrappers",
+              "text": "`Collections.synchronizedList(list)` (and `synchronizedMap`, ...) locks every single method call. But iterating is several calls, so you must still wrap the loop in `synchronized (list) { }` yourself."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "ConcurrentHashMap",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "Thread-safe without locking the whole map; reads don't block.",
+                "`merge`, `compute`, `computeIfAbsent`, `putIfAbsent` are **atomic**.",
+                "Iterators never throw CME; they may or may not show concurrent changes.",
+                "**No null** keys or values: `put(null, ...)` throws `NullPointerException`."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "var m = new ConcurrentHashMap<String, Integer>();\nm.merge(\"a\", 1, Integer::sum);\nm.merge(\"a\", 1, Integer::sum);\nm.putIfAbsent(\"b\", 5);\nm.putIfAbsent(\"b\", 9);\nSystem.out.println(m.get(\"a\") + \" \" + m.get(\"b\"));",
+              "verify": {
+                "expect": "stdout",
+                "value": "2 5\n",
+                "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { var m = new ConcurrentHashMap<String, Integer>();\nm.merge(\"a\", 1, Integer::sum);\nm.merge(\"a\", 1, Integer::sum);\nm.putIfAbsent(\"b\", 5);\nm.putIfAbsent(\"b\", 9);\nSystem.out.println(m.get(\"a\") + \" \" + m.get(\"b\"));\n} }"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "HashMap vs ConcurrentHashMap",
+              "text": "`HashMap` allows one `null` key and `null` values. `ConcurrentHashMap` (and `Hashtable`) allow neither."
+            },
+            {
+              "type": "paragraph",
+              "text": "The 3-argument constructor `new ConcurrentHashMap<>(initialCapacity, loadFactor, concurrencyLevel)` only gives sizing hints; the map behaves the same."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l07-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "Map<String, Integer> m =\n    new ConcurrentHashMap<>();\nm.put(\"x\", 1);\nm.put(null, 2);\nSystem.out.println(m.size());",
+          "options": [
+            "1",
+            "2",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 3,
+          "explanation": "`ConcurrentHashMap` rejects `null` keys and values. `put(null, 2)` throws `NullPointerException`. With a `HashMap` the output would be `2`.",
+          "objective": "8.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "exception",
+            "value": "NullPointerException",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { Map<String, Integer> m =\n    new ConcurrentHashMap<>();\nm.put(\"x\", 1);\nm.put(null, 2);\nSystem.out.println(m.size());\n} }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l07-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var m = new ConcurrentHashMap<String, Integer>();\nRunnable r = () -> {\n    for (int i = 0; i < 500; i++)\n        m.merge(\"k\", 1, Integer::sum);\n};\nThread a = new Thread(r);\nThread b = new Thread(r);\na.start(); b.start();\na.join(); b.join();\nSystem.out.println(m.get(\"k\"));",
+          "options": [
+            "1000",
+            "Any value from 1 to 1000",
+            "500",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`merge()` on a `ConcurrentHashMap` is atomic, so no update is lost. After both `join()` calls, the value is exactly 2 x 500 = **1000**.",
+          "objective": "8.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "1000",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { var m = new ConcurrentHashMap<String, Integer>();\nRunnable r = () -> {\n    for (int i = 0; i < 500; i++)\n        m.merge(\"k\", 1, Integer::sum);\n};\nThread a = new Thread(r);\nThread b = new Thread(r);\na.start(); b.start();\na.join(); b.join();\nSystem.out.println(m.get(\"k\"));\n} }"
+          }
+        },
+        {
+          "type": "page",
+          "title": "CopyOnWriteArrayList",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Every write (`add`, `remove`, `set`) copies the whole internal array. An iterator keeps working on the **snapshot** from when it was created: it never throws CME and never sees later changes."
+            },
+            {
+              "type": "code",
+              "code": "List<Integer> list =\n    new CopyOnWriteArrayList<>(List.of(1, 2));\nfor (int n : list) {\n    list.add(n * 10);\n}\nSystem.out.println(list);",
+              "caption": "The loop only sees 1 and 2",
+              "verify": {
+                "expect": "stdout",
+                "value": "[1, 2, 10, 20]\n",
+                "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { List<Integer> list =\n    new CopyOnWriteArrayList<>(List.of(1, 2));\nfor (int n : list) {\n    list.add(n * 10);\n}\nSystem.out.println(list);\n} }"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "When to use it",
+              "text": "Good when reads vastly outnumber writes (lists of listeners, configuration). Bad for frequent writes: each one copies the array."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l07-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var list = new CopyOnWriteArrayList<>(\n    List.of(\"a\", \"b\", \"c\"));\nfor (String s : list) {\n    list.remove(s);\n    System.out.print(s);\n}\nSystem.out.println(list.size());",
+          "options": [
+            "abc0",
+            "a2",
+            "An exception is thrown at runtime",
+            "abc3"
+          ],
+          "answer": 0,
+          "explanation": "The for-each loop iterates over a snapshot of `[a, b, c]`, so it visits all three and prints `abc` even though each is removed from the live list. No CME. Afterwards the list is empty: `0`.",
+          "objective": "8.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "abc0",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { var list = new CopyOnWriteArrayList<>(\n    List.of(\"a\", \"b\", \"c\"));\nfor (String s : list) {\n    list.remove(s);\n    System.out.print(s);\n}\nSystem.out.println(list.size());\n} }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l07-e04",
+          "kind": "trueFalse",
+          "prompt": "With `Collections.synchronizedList(...)`, iterating in a for-each loop is safe while other threads add elements, without any extra locking.",
+          "answer": false,
+          "explanation": "False. Each single method is synchronized, but iteration is many calls. You must hold the list's lock yourself: `synchronized (list) { for (...) ... }`. Otherwise a CME is possible.",
+          "objective": "8.3"
+        },
+        {
+          "type": "page",
+          "title": "BlockingQueue",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A `BlockingQueue` connects **producer** threads with **consumer** threads. Its methods come in four flavours:"
+            },
+            {
+              "type": "table",
+              "header": [
+                "Action",
+                "Throws",
+                "Special value",
+                "Blocks",
+                "Times out"
+              ],
+              "rows": [
+                [
+                  "Insert",
+                  "`add(e)`",
+                  "`offer(e)` → false",
+                  "`put(e)`",
+                  "`offer(e, t, unit)`"
+                ],
+                [
+                  "Remove",
+                  "`remove()`",
+                  "`poll()` → null",
+                  "`take()`",
+                  "`poll(t, unit)`"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "BlockingQueue<Integer> q =\n    new LinkedBlockingQueue<>();\nThread producer = new Thread(() -> {\n    for (int i = 1; i <= 3; i++) q.offer(i);\n});\nproducer.start();\nint sum = 0;\nfor (int i = 0; i < 3; i++)\n    sum += q.take();   // waits for each item\nSystem.out.println(sum);",
+              "verify": {
+                "expect": "stdout",
+                "value": "6\n",
+                "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { BlockingQueue<Integer> q =\n    new LinkedBlockingQueue<>();\nThread producer = new Thread(() -> {\n    for (int i = 1; i <= 3; i++) q.offer(i);\n});\nproducer.start();\nint sum = 0;\nfor (int i = 0; i < 3; i++)\n    sum += q.take();   // waits for each item\nSystem.out.println(sum);\n} }"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Bounded or not",
+              "text": "`ArrayBlockingQueue(n)` always has a capacity. `LinkedBlockingQueue` is unbounded unless you pass a capacity. `put()` and `take()` throw `InterruptedException`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l07-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var q = new ArrayBlockingQueue<String>(1);\nSystem.out.print(q.offer(\"a\"));\nSystem.out.print(q.offer(\"b\"));\nSystem.out.print(q.poll());\nSystem.out.println(q.poll());",
+          "options": [
+            "truefalseanull",
+            "truetrueab",
+            "truefalseab",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "Capacity is 1. `offer(\"a\")` succeeds: `true`. The queue is full, so `offer(\"b\")` returns `false` instead of blocking. `poll()` returns `a`, then the empty queue gives `null`.",
+          "objective": "8.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "truefalseanull",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { var q = new ArrayBlockingQueue<String>(1);\nSystem.out.print(q.offer(\"a\"));\nSystem.out.print(q.offer(\"b\"));\nSystem.out.print(q.poll());\nSystem.out.println(q.poll());\n} }"
+          }
+        },
+        {
+          "type": "page",
+          "title": "CountDownLatch and CyclicBarrier",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Feature",
+                "CountDownLatch",
+                "CyclicBarrier"
+              ],
+              "rows": [
+                [
+                  "Idea",
+                  "wait until N events happened",
+                  "N threads wait for each other"
+                ],
+                [
+                  "Key methods",
+                  "`countDown()`, `await()`",
+                  "`await()`"
+                ],
+                [
+                  "Reusable",
+                  "no, one-shot",
+                  "yes, resets after each trip"
+                ],
+                [
+                  "Extra",
+                  "",
+                  "optional action when all arrive"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "var latch = new CountDownLatch(3);\nvar done = new AtomicInteger();\nfor (int i = 0; i < 3; i++) {\n    new Thread(() -> {\n        done.incrementAndGet();\n        latch.countDown();\n    }).start();\n}\nlatch.await();   // until count is 0\nSystem.out.println(done.get());",
+              "verify": {
+                "expect": "stdout",
+                "value": "3\n",
+                "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { var latch = new CountDownLatch(3);\nvar done = new AtomicInteger();\nfor (int i = 0; i < 3; i++) {\n    new Thread(() -> {\n        done.incrementAndGet();\n        latch.countDown();\n    }).start();\n}\nlatch.await();   // until count is 0\nSystem.out.println(done.get());\n} }"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "A **`Semaphore`** holds a number of permits. `acquire()` takes one (waiting if none is left), `tryAcquire()` returns `false` instead of waiting, and `release()` gives one back. Use it to cap how many threads use a resource at once."
+            },
+            {
+              "type": "code",
+              "code": "var sem = new Semaphore(2);\nsem.acquire();\nSystem.out.println(sem.tryAcquire());\nSystem.out.println(sem.tryAcquire());\nsem.release();\nSystem.out.println(sem.availablePermits());",
+              "verify": {
+                "expect": "stdout",
+                "value": "true\nfalse\n1\n",
+                "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { var sem = new Semaphore(2);\nsem.acquire();\nSystem.out.println(sem.tryAcquire());\nSystem.out.println(sem.tryAcquire());\nsem.release();\nSystem.out.println(sem.availablePermits());\n} }"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Release in a `finally`, just like a lock.",
+                "Permits aren't owned: any thread may `release()`, even one that never acquired.",
+                "`new Semaphore(n, true)` is fair: waiting threads get permits in order."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Phaser",
+              "text": "A `Phaser` is a reusable barrier where the party count can change. `register()` adds a party, `arriveAndAwaitAdvance()` waits for all parties, `arriveAndDeregister()` arrives and leaves. Each time everyone arrives, `getPhase()` goes up by one, starting at 0."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l07-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var barrier = new CyclicBarrier(2,\n    () -> System.out.println(\"go\"));\nRunnable r = () -> {\n    try {\n        barrier.await();\n    } catch (Exception e) { }\n};\nThread a = new Thread(r);\nThread b = new Thread(r);\na.start(); b.start();\na.join(); b.join();\nSystem.out.println(\"end\");",
+          "options": [
+            "go\nend",
+            "end",
+            "go\ngo\nend",
+            "end\ngo"
+          ],
+          "answer": 0,
+          "explanation": "Both threads must reach `await()`. The last one to arrive runs the barrier action, printing `go`, before either thread continues. Main joins both, then prints `end`.",
+          "objective": "8.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "go\nend",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { var barrier = new CyclicBarrier(2,\n    () -> System.out.println(\"go\"));\nRunnable r = () -> {\n    try {\n        barrier.await();\n    } catch (Exception e) { }\n};\nThread a = new Thread(r);\nThread b = new Thread(r);\na.start(); b.start();\na.join(); b.join();\nSystem.out.println(\"end\");\n} }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l07-e07",
+          "kind": "multiChoice",
+          "prompt": "Which two statements are true? Choose two.",
+          "options": [
+            "A CountDownLatch can be reset and reused after reaching zero.",
+            "A CyclicBarrier can be reused after all parties have arrived.",
+            "BlockingQueue.take() waits until an element is available.",
+            "ConcurrentHashMap allows null values.",
+            "Iterating a ConcurrentHashMap while another thread changes it throws ConcurrentModificationException."
+          ],
+          "answers": [
+            1,
+            2
+          ],
+          "explanation": "A `CyclicBarrier` resets after each trip and can be reused; `take()` blocks until an element arrives. A `CountDownLatch` can't be reset. `ConcurrentHashMap` forbids null values, and its iterators never throw CME.",
+          "objective": "8.3",
+          "examStyle": true
+        }
+      ]
+    },
+    {
+      "id": "u08-l08",
+      "title": "Parallel streams",
+      "summary": "Splitting stream work across threads, ordering, and the side-effect trap.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Going parallel",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Call `.parallel()` on a stream, or `parallelStream()` on a collection. The work is split into chunks that run on threads of the shared **ForkJoinPool.commonPool()**, and the partial results are combined."
+            },
+            {
+              "type": "code",
+              "code": "int sum = IntStream.rangeClosed(1, 100)\n    .parallel()\n    .sum();\nSystem.out.println(sum);",
+              "verify": {
+                "expect": "stdout",
+                "value": "5050\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`isParallel()` tells you whether a stream is parallel; `.sequential()` switches back.",
+                "Built-in reductions (`sum`, `count`, `collect`, `toList`) give the same result as sequential.",
+                "What changes is **order of side effects** such as printing."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Under the hood is the **Fork/Join** framework. You extend `RecursiveTask<V>` (returns a value) or `RecursiveAction` (returns nothing) and override `compute()`: if the job is small, do it; otherwise split it, `fork()` one half, compute the other, then `join()`."
+            },
+            {
+              "type": "code",
+              "code": "class Sum extends RecursiveTask<Long> {\n    final int lo, hi;\n    Sum(int lo, int hi) { this.lo = lo; this.hi = hi; }\n    protected Long compute() {\n        if (hi - lo <= 10) {          // small: just do it\n            long s = 0;\n            for (int i = lo; i < hi; i++) s += i;\n            return s;\n        }\n        int mid = (lo + hi) / 2;\n        var left = new Sum(lo, mid);\n        left.fork();                  // run async\n        long right = new Sum(mid, hi).compute();\n        return right + left.join();   // wait for left\n    }\n}\n\n// in main\nvar pool = ForkJoinPool.commonPool();\nSystem.out.println(pool.invoke(new Sum(0, 100)));",
+              "caption": "Prints 4950",
+              "verify": {
+                "expect": "stdout",
+                "value": "4950\n",
+                "source": "import java.util.concurrent.*;\nclass Sum extends RecursiveTask<Long> {\n    final int lo, hi;\n    Sum(int lo, int hi) { this.lo = lo; this.hi = hi; }\n    protected Long compute() {\n        if (hi - lo <= 10) {          // small: just do it\n            long s = 0;\n            for (int i = lo; i < hi; i++) s += i;\n            return s;\n        }\n        int mid = (lo + hi) / 2;\n        var left = new Sum(lo, mid);\n        left.fork();                  // run async\n        long right = new Sum(mid, hi).compute();\n        return right + left.join();   // wait for left\n    }\n}\npublic class Main { public static void main(String[] args) { var pool = ForkJoinPool.commonPool();\nSystem.out.println(pool.invoke(new Sum(0, 100))); } }",
+                "mainClass": "Main"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Work stealing",
+              "text": "Each `ForkJoinPool` worker has its own queue of tasks. An idle worker **steals** tasks from a busy one's queue, so splitting work keeps all cores busy. Parallel streams use the same common pool."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l08-e01",
+          "kind": "multiChoice",
+          "prompt": "Which two outputs are possible? Choose two.",
+          "code": "List.of(1, 2, 3).parallelStream()\n    .forEach(System.out::print);",
+          "options": [
+            "123",
+            "321",
+            "12",
+            "1233",
+            "Compilation fails"
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "`forEach` on a parallel stream runs the action on several threads in no particular order, so any arrangement of 1, 2, 3 is possible, including `123` and `321`. Each element is printed exactly once, so `12` and `1233` are impossible. The code compiles.",
+          "objective": "8.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "123",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { List.of(1, 2, 3).parallelStream()\n    .sorted().forEachOrdered(System.out::print);\n} }"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Keeping order",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Operation",
+                "Parallel ordered stream"
+              ],
+              "rows": [
+                [
+                  "`forEach`",
+                  "any order"
+                ],
+                [
+                  "`forEachOrdered`",
+                  "encounter order (less parallel benefit)"
+                ],
+                [
+                  "`collect`, `toList()`",
+                  "encounter order kept"
+                ],
+                [
+                  "`findFirst()`",
+                  "always the first element"
+                ],
+                [
+                  "`findAny()`",
+                  "any element"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "List.of(1, 2, 3, 4).parallelStream()\n    .map(n -> n * 2)\n    .forEachOrdered(System.out::print);",
+              "verify": {
+                "expect": "stdout",
+                "value": "2468\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l08-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "List<Integer> r = Stream.of(3, 1, 2)\n    .parallel()\n    .map(n -> n * 10)\n    .collect(Collectors.toList());\nSystem.out.println(r);",
+          "options": [
+            "[30, 10, 20]",
+            "[10, 20, 30]",
+            "The order is unpredictable",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`Stream.of` is ordered, and `collect(Collectors.toList())` keeps encounter order even in parallel. Parallelism changes **which thread** maps each element, not where the result lands.",
+          "objective": "8.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "[30, 10, 20]"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l08-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int n = List.of(5, 6, 7).parallelStream()\n    .findFirst()\n    .get();\nSystem.out.println(n);",
+          "options": [
+            "5",
+            "6",
+            "7",
+            "Any of 5, 6 or 7"
+          ],
+          "answer": 0,
+          "explanation": "`findFirst()` respects encounter order, even on a parallel stream: always `5`. Only `findAny()` may return any element.",
+          "objective": "8.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "5"
+          }
+        },
+        {
+          "type": "page",
+          "title": "The side-effect trap",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Adding to a plain `ArrayList` from a parallel `forEach` is a race. Elements can go missing, `null`s can appear, or an `ArrayIndexOutOfBoundsException` is thrown."
+            },
+            {
+              "type": "code",
+              "code": "List<Integer> bad = new ArrayList<>();\nIntStream.range(0, 1000).parallel()\n    .forEach(bad::add);   // broken!\n\nList<Integer> good = IntStream.range(0, 1000)\n    .parallel().boxed().toList();"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Let the stream collect",
+              "text": "Prefer `collect(...)` / `toList()` over adding to an outside collection. If you must use side effects, the target has to be thread-safe, and even then its order is unpredictable."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Identity must be neutral",
+              "text": "`reduce(identity, op)` in parallel may apply the identity once **per chunk**. `reduce(0, Integer::sum)` is fine; `reduce(1, Integer::sum)` can give different results on different runs."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l08-e04",
+          "kind": "multiChoice",
+          "prompt": "A parallel stream calls `forEach(list::add)` for 1000 elements. Which two kinds of `list` always end up with size 1000? Choose two.",
+          "options": [
+            "ArrayList",
+            "CopyOnWriteArrayList",
+            "Collections.synchronizedList(new ArrayList<>())",
+            "LinkedList",
+            "List.of()"
+          ],
+          "answers": [
+            1,
+            2
+          ],
+          "explanation": "`CopyOnWriteArrayList` and a `Collections.synchronizedList` wrapper make each `add` thread-safe, so no element is lost (the order still varies). `ArrayList` and `LinkedList` are not thread-safe, and `List.of()` is immutable: `add` throws.",
+          "objective": "8.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "1000 1000",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { List<Integer> a = new CopyOnWriteArrayList<>();\nList<Integer> b = Collections.synchronizedList(new ArrayList<>());\nIntStream.range(0, 1000).parallel().forEach(a::add);\nIntStream.range(0, 1000).parallel().forEach(b::add);\nSystem.out.println(a.size() + \" \" + b.size());\n} }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l08-e05",
+          "kind": "singleChoice",
+          "prompt": "What is true about this code's output?",
+          "code": "int r = IntStream.rangeClosed(1, 4)\n    .parallel()\n    .reduce(1, (a, b) -> a + b);\nSystem.out.println(r);",
+          "options": [
+            "It is always 11.",
+            "It is always 10.",
+            "It can be more than 11, because the identity may be used once per chunk.",
+            "Compilation fails"
+          ],
+          "answer": 2,
+          "explanation": "The identity `1` is not neutral for addition. A parallel stream may start several chunks from the identity, adding 1 per chunk, so results larger than 11 (up to 14) are possible and can vary between runs. Sequentially it would always be 11.",
+          "objective": "8.3",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l08-e06",
+          "kind": "trueFalse",
+          "prompt": "Adding `.parallel()` to a stream always makes it run faster.",
+          "answer": false,
+          "explanation": "False. Splitting and combining costs time. For small data or cheap operations, a parallel stream is often slower. It pays off for large, CPU-heavy, independent work.",
+          "objective": "8.3"
+        }
+      ]
+    },
+    {
+      "id": "u08-l09",
+      "title": "Unit 8 checkpoint",
+      "summary": "12 exam-style questions on threads, executors, locking and concurrent collections.",
+      "minutes": 10,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Checkpoint",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "12 exam-style questions covering the whole unit. Assume all needed `java.util.concurrent` imports are present."
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "Exam habit",
+              "text": "For concurrency code, first ask: is anything really running in parallel (`start()` or just `run()`)? Is there a `join()`/`get()` before the print? Is the shared update atomic? Only then pick an output."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l09-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Thread t = new Thread(() ->\n    System.out.print(Thread\n        .currentThread().getName()));\nt.setName(\"T1\");\nt.start();\nt.join();\nt.run();",
+          "options": [
+            "T1main",
+            "T1T1",
+            "mainmain",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`start()` runs the lambda in the new thread named `T1`, and `join()` waits for it: `T1`. Then `t.run()` is a plain method call in main: `main`.",
+          "objective": "8.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "T1main"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l09-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "try (var ex =\n        Executors.newSingleThreadExecutor()) {\n    Future<?> f = ex.submit(() ->\n        System.out.print(\"run \"));\n    System.out.println(f.get());\n}",
+          "options": [
+            "run null",
+            "run ",
+            "null run ",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "The lambda `() -> System.out.print(...)` is void, so it is submitted as a `Runnable`. `get()` waits for it to finish and then returns `null`.",
+          "objective": "8.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "run null",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { try (var ex =\n        Executors.newSingleThreadExecutor()) {\n    Future<?> f = ex.submit(() ->\n        System.out.print(\"run \"));\n    System.out.println(f.get());\n}\n} }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l09-e03",
+          "kind": "multiChoice",
+          "prompt": "`ex` is an ExecutorService. Which two lines compile? Choose two.",
+          "options": [
+            "Future<Integer> f = ex.submit(() -> 1);",
+            "Future<Integer> f = ex.execute(() -> 1);",
+            "ex.execute(() -> System.out.print(1));",
+            "Callable<Integer> c = () -> { };",
+            "Runnable r = () -> 1;"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "`submit()` accepts a value-returning lambda as a `Callable<Integer>`. `execute()` with a void lambda is a valid `Runnable`. `execute()` returns `void`; a `Callable` must return a value; `() -> 1` is not a valid `Runnable` body.",
+          "objective": "8.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "11",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { ExecutorService ex = Executors.newSingleThreadExecutor();\nFuture<Integer> f = ex.submit(() -> 1);\nex.execute(() -> System.out.print(1));\nex.shutdown();\nex.awaitTermination(1, TimeUnit.SECONDS);\nSystem.out.println(f.get());\n} }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l09-e04",
+          "kind": "singleChoice",
+          "prompt": "What does `shutdownNow()` return?",
+          "options": [
+            "A List<Runnable> of tasks that never started",
+            "A boolean: whether all tasks finished",
+            "Nothing: it is void",
+            "A List<Future<?>> of all submitted tasks"
+          ],
+          "answer": 0,
+          "explanation": "`shutdownNow()` interrupts running tasks and returns the tasks that were still waiting in the queue, as a `List<Runnable>`. `awaitTermination()` is the one returning a boolean.",
+          "objective": "8.1",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l09-e05",
+          "kind": "multiChoice",
+          "prompt": "Which two outputs are possible? Choose two.",
+          "code": "public class Hi {\n    public static void main(String[] a) {\n        Thread.ofVirtual().start(() ->\n            System.out.println(\"hi\"));\n    }\n}",
+          "options": [
+            "hi",
+            "No output",
+            "hihi",
+            "An IllegalStateException is thrown",
+            "Compilation fails"
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "Virtual threads are daemon threads. `main` returns without `join()`, so the JVM may exit before or after the virtual thread prints. Both `hi` and no output are possible. The code compiles, and `hi` can be printed at most once.",
+          "objective": "8.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "hi",
+            "source": "public class Hi {\n    public static void main(String[] a) throws Exception {\n        Thread.ofVirtual().start(() ->\n            System.out.println(\"hi\")).join();\n    }\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l09-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var n = new AtomicInteger();\nIntStream.range(0, 100).parallel()\n    .forEach(i -> n.incrementAndGet());\nSystem.out.println(n.get());",
+          "options": [
+            "100",
+            "Any value from 1 to 100",
+            "0",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`incrementAndGet()` is atomic, so the parallel `forEach` loses no increments. `forEach` is a terminal operation that returns only when all elements are processed: always `100`.",
+          "objective": "8.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "100",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { var n = new AtomicInteger();\nIntStream.range(0, 100).parallel()\n    .forEach(i -> n.incrementAndGet());\nSystem.out.println(n.get());\n} }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l09-e07",
+          "kind": "singleChoice",
+          "prompt": "What is printed?",
+          "code": "public class Count {\n    static volatile int count;\n    public static void main(String[] a)\n            throws Exception {\n        Runnable r = () -> {\n            for (int i = 0; i < 1000; i++)\n                count++;\n        };\n        Thread t1 = new Thread(r);\n        Thread t2 = new Thread(r);\n        t1.start(); t2.start();\n        t1.join(); t2.join();\n        System.out.println(count);\n    }\n}",
+          "options": [
+            "Always 2000",
+            "2000 or a smaller number",
+            "Always 1000",
+            "Compilation fails"
+          ],
+          "answer": 1,
+          "explanation": "`volatile` makes the latest value visible, but `count++` is still read, add, write. Updates can be lost, so the result may be anything up to 2000, not just 2000.",
+          "objective": "8.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "true",
+            "source": "public class Count {\n    static volatile int count;\n    public static void main(String[] a)\n            throws Exception {\n        Runnable r = () -> {\n            for (int i = 0; i < 1000; i++)\n                count++;\n        };\n        Thread t1 = new Thread(r);\n        Thread t2 = new Thread(r);\n        t1.start(); t2.start();\n        t1.join(); t2.join();\n        System.out.println(count <= 2000);\n    }\n}",
+            "optionCheck": false
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l09-e08",
+          "kind": "singleChoice",
+          "prompt": "Thread 1 is inside `Box.a()`. Thread 2 calls `b()` on a Box object. What happens?",
+          "code": "class Box {\n    static synchronized void a() { }\n    synchronized void b() { }\n}",
+          "options": [
+            "Thread 2 runs b() at once; the two locks are different.",
+            "Thread 2 blocks until a() returns.",
+            "Compilation fails.",
+            "An IllegalMonitorStateException is thrown."
+          ],
+          "answer": 0,
+          "explanation": "`static synchronized` locks `Box.class`; instance `synchronized` locks the Box object. Different monitors, so the methods don't exclude each other and thread 2 runs `b()` right away.",
+          "objective": "8.2",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l09-e09",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var rw = new ReentrantReadWriteLock();\nrw.readLock().lock();\nThread t = new Thread(() ->\n    System.out.print(\n        rw.readLock().tryLock() + \" \"\n        + rw.writeLock().tryLock()));\nt.start();\nt.join();",
+          "options": [
+            "true false",
+            "true true",
+            "false false",
+            "false true"
+          ],
+          "answer": 0,
+          "explanation": "Main holds a read lock. Read locks are shared, so `t` gets one too: `true`. The write lock needs no readers at all, and two are active, so `tryLock()` returns `false` at once.",
+          "objective": "8.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "true false",
+            "source": "import java.util.*; import java.util.concurrent.*; import java.util.concurrent.atomic.*; import java.util.concurrent.locks.*; import java.util.stream.*; import java.util.function.*; public class Main { public static void main(String[] args) throws Exception { var rw = new ReentrantReadWriteLock();\nrw.readLock().lock();\nThread t = new Thread(() ->\n    System.out.print(\n        rw.readLock().tryLock() + \" \"\n        + rw.writeLock().tryLock()));\nt.start();\nt.join();\n} }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l09-e10",
+          "kind": "singleChoice",
+          "prompt": "A task takes 1 second. It is scheduled with `scheduleAtFixedRate(task, 0, 3, SECONDS)`. When does its third run start?",
+          "options": [
+            "After 6 seconds",
+            "After 8 seconds",
+            "After 9 seconds",
+            "After 2 seconds"
+          ],
+          "answer": 0,
+          "explanation": "At a fixed **rate**, runs start every 3 s from the first start: 0 s, 3 s, 6 s. With `scheduleWithFixedDelay` the gap would be 1 s of work + 3 s, giving 0, 4 and 8 s.",
+          "objective": "8.1",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l09-e11",
+          "kind": "multiChoice",
+          "prompt": "Which two statements are true? Choose two.",
+          "options": [
+            "CopyOnWriteArrayList iterators never throw ConcurrentModificationException.",
+            "ConcurrentHashMap.put(null, 1) throws NullPointerException.",
+            "Collections.synchronizedMap() lets reads skip the lock.",
+            "LinkedBlockingQueue.offer(e) blocks when the queue is full.",
+            "A CyclicBarrier can be used only once."
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "`CopyOnWriteArrayList` iterates a snapshot and never throws CME. `ConcurrentHashMap` rejects null keys with `NullPointerException`. A synchronized wrapper locks every call, including reads. `offer()` returns `false` instead of blocking, and a `CyclicBarrier` is reusable.",
+          "objective": "8.3",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u08-l09-e12",
+          "kind": "singleChoice",
+          "prompt": "`ex.shutdown()` was called and then `ex.awaitTermination(1, TimeUnit.SECONDS)` returns `false`. What does that mean?",
+          "options": [
+            "The timeout elapsed before all tasks finished.",
+            "Every task finished with an exception.",
+            "The executor was cancelled and its tasks discarded.",
+            "shutdown() failed and the executor accepts tasks again."
+          ],
+          "answer": 0,
+          "explanation": "`awaitTermination()` returns `true` if the executor terminated within the timeout and `false` if the time ran out first. Tasks are still running; nothing was cancelled.",
+          "objective": "8.1",
+          "examStyle": true
+        }
+      ]
+    }
+  ]
+}

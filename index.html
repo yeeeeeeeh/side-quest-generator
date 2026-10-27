@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=21" />
+  <link rel="stylesheet" href="style.css?v=22" />
 </head>
 <body>
   <!-- Header -->
@@ -414,6 +414,15 @@
     <button class="btn btn-primary" id="update-bar-btn" type="button">Update</button>
   </div>
 
+  <!-- Java SE 21 learner -->
+  <section class="webview-panel" id="java-panel" hidden aria-label="Java learner">
+    <div class="webview-toolbar">
+      <button type="button" class="j-backbtn" id="j-back" hidden>‹ Back</button>
+      <span class="webview-title">☕ Java SE 21</span>
+    </div>
+    <div class="gw-body j-body" id="j-body"></div>
+  </section>
+
   <!-- Bottom Tab Bar -->
   <nav class="tab-bar" aria-label="Tabs">
     <a href="#" class="tab-item active" data-tab="quests"><span class="tab-icon">🎲</span><span class="tab-label">Quests</span></a>
@@ -421,6 +430,7 @@
     <a href="#ikea" class="tab-item" data-tab="ikea"><span class="tab-icon">🛋️</span><span class="tab-label">IKEA NL/DE</span></a>
     <a href="#shop" class="tab-item" data-tab="shop"><span class="tab-icon">🛒</span><span class="tab-label">JP/NL shop</span></a>
     <a href="#retire" class="tab-item" data-tab="retire"><span class="tab-icon">💰</span><span class="tab-label">Retire</span></a>
+    <a href="#java" class="tab-item" data-tab="java"><span class="tab-icon">☕</span><span class="tab-label">Java</span></a>
   </nav>
 
   <script src="quests.js?v=2"></script>
@@ -429,6 +439,7 @@
   <script src="ikea.js?v=1"></script>
   <script src="shop.js?v=1"></script>
   <script src="retire.js?v=20"></script>
-  <script src="script.js?v=8"></script>
+  <script src="java.js?v=1"></script>
+  <script src="script.js?v=9"></script>
 </body>
 </html>

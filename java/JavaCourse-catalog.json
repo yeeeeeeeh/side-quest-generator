@@ -1,0 +1,42 @@
+{
+  "exam": { "code": "1Z0-830", "title": "Java SE 21 Developer Professional", "questions": 50, "minutes": 120, "passPercent": 68 },
+  "objectives": [
+    { "id": "1.1", "domain": 1, "title": "Primitives, wrappers, operators, casting and Math" },
+    { "id": "1.2", "domain": 1, "title": "String, StringBuilder and text blocks" },
+    { "id": "1.3", "domain": 1, "title": "Date-Time API" },
+    { "id": "2.1", "domain": 2, "title": "if/else, switch, loops, break and continue" },
+    { "id": "3.1", "domain": 3, "title": "Objects, references, nested class objects, life cycle and GC" },
+    { "id": "3.2", "domain": 3, "title": "Classes, records, fields, methods, constructors and initializers" },
+    { "id": "3.3", "domain": 3, "title": "Overloading and varargs" },
+    { "id": "3.4", "domain": 3, "title": "Scope, var, encapsulation and immutability" },
+    { "id": "3.5", "domain": 3, "title": "Inheritance, sealed types, overriding, polymorphism and pattern matching" },
+    { "id": "3.6", "domain": 3, "title": "Interfaces and functional interfaces" },
+    { "id": "3.7", "domain": 3, "title": "Enums" },
+    { "id": "4.1", "domain": 4, "title": "Exceptions" },
+    { "id": "5.1", "domain": 5, "title": "Arrays and collections" },
+    { "id": "6.1", "domain": 6, "title": "Streams and lambdas" },
+    { "id": "6.2", "domain": 6, "title": "Reduction, grouping, partitioning and parallel streams" },
+    { "id": "7.1", "domain": 7, "title": "Modules and services" },
+    { "id": "7.2", "domain": 7, "title": "Compiling, jars, runtime images and migration" },
+    { "id": "8.1", "domain": 8, "title": "Platform and virtual threads, executors" },
+    { "id": "8.2", "domain": 8, "title": "Thread-safe code and locking" },
+    { "id": "8.3", "domain": 8, "title": "Concurrent collections and parallel streams" },
+    { "id": "9.1", "domain": 9, "title": "Console and file I/O streams" },
+    { "id": "9.2", "domain": 9, "title": "Serialization" },
+    { "id": "9.3", "domain": 9, "title": "java.nio.file Path and Files" },
+    { "id": "10.1", "domain": 10, "title": "Localization and formatting" }
+  ],
+  "units": [
+    { "id": "u01", "number": 1, "title": "Java Foundations", "summary": "Types, operators, casting, wrappers, Math, String, StringBuilder and text blocks.", "symbol": "textformat.123", "objectives": ["1.1", "1.2"] },
+    { "id": "u02", "number": 2, "title": "Control Flow", "summary": "Java-only traps: switch expressions, yield, fall-through and labels.", "symbol": "arrow.triangle.branch", "objectives": ["2.1"] },
+    { "id": "u03", "number": 3, "title": "Classes & Objects", "summary": "References, GC, static, constructors, init order, overloading, var, records.", "symbol": "shippingbox", "objectives": ["3.1", "3.2", "3.3", "3.4"] },
+    { "id": "u04", "number": 4, "title": "Inheritance & Polymorphism", "summary": "Abstract and sealed types, overriding, patterns, interfaces, enums, nested classes.", "symbol": "square.stack.3d.up", "objectives": ["3.1", "3.5", "3.6", "3.7"] },
+    { "id": "u05", "number": 5, "title": "Exceptions", "summary": "try/catch/finally, try-with-resources, multi-catch, custom exceptions.", "symbol": "exclamationmark.triangle", "objectives": ["4.1"] },
+    { "id": "u06", "number": 6, "title": "Arrays & Collections", "summary": "Arrays, List, Set, Map, Deque, sorting and comparators.", "symbol": "square.grid.3x3", "objectives": ["5.1"] },
+    { "id": "u07", "number": 7, "title": "Lambdas & Streams", "summary": "Functional interfaces, streams, collectors, grouping and parallel streams.", "symbol": "line.3.horizontal.decrease", "objectives": ["6.1", "6.2"] },
+    { "id": "u08", "number": 8, "title": "Concurrency", "summary": "Platform and virtual threads, executors, locks and concurrent collections.", "symbol": "arrow.triangle.swap", "objectives": ["8.1", "8.2", "8.3"] },
+    { "id": "u09", "number": 9, "title": "I/O & NIO.2", "summary": "I/O streams, console, serialization, Path and Files.", "symbol": "doc.text", "objectives": ["9.1", "9.2", "9.3"] },
+    { "id": "u10", "number": 10, "title": "Date-Time & Localization", "summary": "LocalDate, Duration, Period, time zones, Locale and formatting.", "symbol": "calendar", "objectives": ["1.3", "10.1"] },
+    { "id": "u11", "number": 11, "title": "Modules & Packaging", "summary": "module-info, services, jars, jlink and migration.", "symbol": "cube", "objectives": ["7.1", "7.2"] }
+  ]
+}

@@ -1,0 +1,1142 @@
+{
+  "setId": "m01",
+  "title": "Practice exam 1",
+  "questions": [
+    {
+      "id": "m01-q01",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "sealed interface Cmd permits Move, Stop {}\nrecord Move(int dx, int dy) implements Cmd {}\nenum Stop implements Cmd { SOFT, HARD }\npublic class Main {\n    static String run(Cmd c) {\n        return switch (c) {\n            case Move(var x, var y) when x == 0\n                -> \"v\" + y;\n            case Move m -> \"m\" + m.dx();\n            case Stop.HARD -> \"H\";\n            case Stop s -> \"s\" + s.ordinal();\n        };\n    }\n    public static void main(String[] args) {\n        System.out.println(run(new Move(0, 3))\n            + run(new Move(2, 0))\n            + run(Stop.SOFT) + run(Stop.HARD));\n    }\n}",
+      "options": [
+        "m0m2s0H",
+        "v3m2s0H",
+        "v3m2s0s1",
+        "Compilation fails because case Stop.HARD is not allowed in a pattern switch",
+        "Compilation fails because the switch is not exhaustive"
+      ],
+      "answer": 1,
+      "explanation": "`Move(0, 3)` matches the record pattern and its guard `x == 0`: `v3`. `Move(2, 0)` fails the guard and falls to `case Move m`: `m2`.\n\nSince Java 21 a pattern switch over a sealed interface may mix patterns with **qualified enum constants**: `Stop.HARD` gives `H`, and `SOFT` reaches `case Stop s` with ordinal 0: `s0`. The constant label comes before the `Stop s` pattern, so it is not dominated (the reverse order would not compile). Every permitted subtype has an unguarded case, so the switch is exhaustive without `default`.",
+      "objective": "3.5",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "v3m2s0H"
+      }
+    },
+    {
+      "id": "m01-q02",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "int x = Integer.MAX_VALUE;\nlong y = x + 1;\nlong z = x + 1L;\nchar c = 'a';\nc *= 2;\nSystem.out.println(y + \" \" + (z > 0) + \" \"\n    + (int) c + \" \" + (-7 / 2) + \" \"\n    + (-7 % 2) + \" \" + Math.floorMod(-7, 2));",
+      "options": [
+        "-2147483648 false 194 -3 1 1",
+        "-2147483648 true 194 -3 -1 1",
+        "2147483648 true 194 -3 -1 1",
+        "-2147483648 true 194 -4 -1 1",
+        "Compilation fails because c *= 2 needs a cast"
+      ],
+      "answer": 1,
+      "explanation": "`x + 1` is evaluated in `int` arithmetic and overflows to `Integer.MIN_VALUE` *before* it is widened to `long`; `x + 1L` is done in `long`, so `z` is positive. Compound assignment includes an implicit cast, so `c *= 2` compiles and stores 97 * 2 = **194**. Integer division truncates toward zero (`-3`), `%` takes the sign of the dividend (`-1`), while `Math.floorMod` takes the sign of the divisor (`1`).",
+      "objective": "1.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "-2147483648 true 194 -3 -1 1"
+      }
+    },
+    {
+      "id": "m01-q03",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "var words = List.of(\"kiwi\", \"fig\", \"plum\",\n        \"pear\", \"date\", \"lime\", \"yam\");\nvar m = words.stream().collect(\n    Collectors.groupingBy(String::length,\n        TreeMap::new,\n        Collectors.mapping(w -> w.charAt(0),\n            Collectors.toList())));\nSystem.out.println(m);",
+      "options": [
+        "{3=[fig, yam], 4=[kiwi, plum, pear, date, lime]}",
+        "{3=[f, y], 4=[k, p, d, l]}",
+        "{3=[f, y], 4=[k, p, p, d, l]}",
+        "{3=[f, y], 4=[d, k, l, p, p]}",
+        "Compilation fails"
+      ],
+      "answer": 2,
+      "explanation": "The three-argument `groupingBy(classifier, mapFactory, downstream)` uses a `TreeMap`, so keys are sorted (3 before 4). The downstream `mapping(w -> w.charAt(0), toList())` turns every word into its first character and keeps **encounter order** with duplicates: `[k, p, p, d, l]`.\n\nNothing sorts the values, and `toList()` (not `toSet()`) keeps both `p`s. The words themselves would only appear without the `mapping` step.",
+      "objective": "6.2",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "{3=[f, y], 4=[k, p, p, d, l]}"
+      }
+    },
+    {
+      "id": "m01-q04",
+      "kind": "multiChoice",
+      "prompt": "Given:\n\nWhich two statements are true? Choose two.",
+      "code": "module com.shop.app {\n    requires transitive com.shop.model;\n    requires static com.shop.audit;\n    exports com.shop.app.api;\n    opens com.shop.app.impl\n        to com.fasterxml.jackson.databind;\n    uses com.shop.spi.PaymentProvider;\n}",
+      "options": [
+        "A module that requires com.shop.app can read com.shop.model without its own requires directive.",
+        "com.shop.audit must be on the module path at run time, or the application fails to start.",
+        "Other modules can use public types in com.shop.app.impl at compile time.",
+        "The Jackson module can reflectively access private members of classes in com.shop.app.impl at run time.",
+        "The module must also declare provides com.shop.spi.PaymentProvider with an implementation class.",
+        "Any module can reflectively access private members of classes in com.shop.app.api."
+      ],
+      "answers": [
+        0,
+        3
+      ],
+      "explanation": "**True:** `requires transitive` gives implied readability, so every module reading `com.shop.app` also reads `com.shop.model`. `opens ... to` grants deep reflection (including private members) at run time to the named module only.\n\n**False:** `requires static` is mandatory at compile time but optional at run time. `opens` gives no compile-time access; only `exports` does. `uses` just declares that this module looks up a service with `ServiceLoader`; a provider can live in another module. `exports` gives access only to public members of public types; private access by reflection needs `opens`.",
+      "objective": "7.1",
+      "examStyle": true
+    },
+    {
+      "id": "m01-q05",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "class Base {\n    Base() { show(); }\n    void show() { System.out.print(\"B \"); }\n}\nclass Derived extends Base {\n    String name = \"D\";\n    final int n = 5;\n    Derived() { show(); }\n    @Override\n    void show() {\n        System.out.print(name + n + \" \");\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        new Derived();\n    }\n}",
+      "options": [
+        "D5 D5",
+        "B D5",
+        "null5 D5",
+        "null0 D5",
+        "B null5"
+      ],
+      "answer": 2,
+      "explanation": "`Base()` runs before `Derived`'s field initializers, and its call to `show()` is dispatched to the override in `Derived`. At that moment `name` is still `null`. `n`, however, is a `final` field initialized with a constant expression, so it is a **constant variable**: the compiler inlines `5` wherever `n` is read, so it never shows its default `0`. First call prints `null5`, then the field initializers run and `Derived()` prints `D5`.\n\n`B` would only appear if `show()` were `private`, `static` or `final` in `Base` (no dynamic dispatch).",
+      "objective": "3.2",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "null5 D5"
+      }
+    },
+    {
+      "id": "m01-q06",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "class R implements AutoCloseable {\n    final String n;\n    R(String n) {\n        if (n.isEmpty())\n            throw new RuntimeException(\"init\");\n        this.n = n;\n        System.out.print(\"o\" + n + \" \");\n    }\n    public void close() {\n        System.out.print(\"c\" + n + \" \");\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        R first = new R(\"1\");\n        try (first; R b = new R(\"\");\n             R c = new R(\"3\")) {\n            System.out.print(\"body \");\n        } catch (RuntimeException e) {\n            System.out.print(e.getMessage());\n        } finally {\n            System.out.print(\" end\");\n        }\n    }\n}",
+      "options": [
+        "o1 c1 init end",
+        "o1 c3 c1 init end",
+        "o1 init end",
+        "o1 init c1 end",
+        "Compilation fails because first is declared outside the try"
+      ],
+      "answer": 0,
+      "explanation": "Since Java 9 a try-with-resources header may name an existing **effectively final** variable (`first`), so it compiles. Resources are initialized left to right; creating `b` throws, so `c` is never created and the body never runs. Every resource that *was* successfully initialized is still closed, in reverse order, before the `catch` runs: only `first`, printing `c1`. Then the catch prints `init` and `finally` prints `end`.",
+      "objective": "4.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "o1 c1 init end"
+      }
+    },
+    {
+      "id": "m01-q07",
+      "kind": "multiChoice",
+      "prompt": "Which two declarations compile? Choose two.",
+      "options": [
+        "int[] a = new int[2]{1, 2};",
+        "int b[][] = new int[3][];",
+        "int[] c = {1, 2,};",
+        "int[][] d = new int[][3];",
+        "Object[] e = new int[2];",
+        "long[] g = new int[]{1};"
+      ],
+      "answers": [
+        1,
+        2
+      ],
+      "explanation": "Brackets may follow the variable name, and only the **first** dimension must be given, so `new int[3][]` is fine. An array initializer may end with a trailing comma.\n\nWrong: you cannot give a size and an initializer together; you cannot leave out the first dimension while giving a later one. An `int[]` is an `Object`, but not an `Object[]` (its elements are primitives), and array types never widen: `int[]` is not a `long[]`.",
+      "objective": "5.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "3 2 null",
+        "source": "\npublic class Main {\n    public static void main(String[] args) {\n        int b[][] = new int[3][];\n        int[] c = {1, 2,};\n        System.out.print(b.length + \" \" + c.length + \" \" + b[0]);\n    }\n}\n"
+      }
+    },
+    {
+      "id": "m01-q08",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "int n = 0, steps = 0;\nwhile (n < 10) {\n    switch (n % 3) {\n        case 0: n += 4; break;\n        case 1: n += 2;\n        case 2: n++; continue;\n    }\n    steps++;\n}\nSystem.out.println(n + \" \" + steps);",
+      "options": [
+        "10 1",
+        "11 1",
+        "10 3",
+        "10 2",
+        "Compilation fails because continue cannot be used inside a switch"
+      ],
+      "answer": 0,
+      "explanation": "Inside a switch statement, `break` leaves only the **switch**, but `continue` belongs to the enclosing **loop** and skips `steps++`.\n\n- n=0: case 0, n=4, `break`, steps=1.\n- n=4: case 1, n=6, falls through to case 2, n=7, `continue`.\n- n=7: case 1, n=9, falls through, n=10, `continue`; the loop ends.\n\nResult `10 1`.",
+      "objective": "2.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "10 1"
+      }
+    },
+    {
+      "id": "m01-q09",
+      "kind": "singleChoice",
+      "prompt": "In the Europe/Paris zone, clocks go back from 03:00 to 02:00 on 2024-10-27. What is the result?",
+      "code": "var zone = ZoneId.of(\"Europe/Paris\");\nvar t = ZonedDateTime.of(2024, 10, 27, 2, 30,\n        0, 0, zone);\nvar later = t.plusHours(1);\nvar next = t.plusDays(1);\nSystem.out.println(t.getOffset() + \" \"\n    + later.toLocalTime() + \" \"\n    + Duration.between(t, next).toHours());",
+      "options": [
+        "+01:00 03:30 24",
+        "+01:00 02:30 25",
+        "+02:00 02:30 23",
+        "+02:00 02:30 25",
+        "+02:00 03:30 24"
+      ],
+      "answer": 3,
+      "explanation": "02:30 occurs twice on that day (overlap). `ZonedDateTime.of` keeps the **earlier** offset, `+02:00`. `plusHours` works on the instant timeline: one hour later is the second 02:30, now at `+01:00`, so the local time is still **02:30**. `plusDays(1)` works on the local timeline: 2024-10-28T02:30+01:00. Between the two instants lie **25** real hours because the day had an extra hour.",
+      "objective": "1.3",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "+02:00 02:30 25"
+      }
+    },
+    {
+      "id": "m01-q10",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "public class Main {\n    static void m(Object o) { p(\"Object\"); }\n    static void m(CharSequence c) {\n        p(\"CharSeq\");\n    }\n    static void m(String s) { p(\"String\"); }\n    static void m(int a, long b) {\n        p(\"int,long\");\n    }\n    static void m(long a, int b) {\n        p(\"long,int\");\n    }\n    static void p(String s) {\n        System.out.print(s + \" \");\n    }\n    public static void main(String[] args) {\n        m(null);\n        m(new StringBuilder(\"x\"));\n        m((Object) \"x\");\n        m(1, 2L);\n    }\n}",
+      "options": [
+        "String CharSeq Object int,long",
+        "String CharSeq String int,long",
+        "Object CharSeq Object int,long",
+        "Compilation fails because m(null) is ambiguous",
+        "Compilation fails because m(1, 2L) is ambiguous"
+      ],
+      "answer": 0,
+      "explanation": "- `m(null)`: all three reference overloads apply; `String` is a subtype of `CharSequence`, which is a subtype of `Object`, so `String` is the **most specific** and there is no ambiguity.\n- `StringBuilder` is a `CharSequence` but not a `String`.\n- The compile-time type of `(Object) \"x\"` is `Object`, and overloads are chosen at compile time.\n- `m(1, 2L)`: a `long` cannot be narrowed to `int`, so only `m(int, long)` applies. (`m(1, 2)` would be ambiguous.)",
+      "objective": "3.3",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "String CharSeq Object int,long"
+      }
+    },
+    {
+      "id": "m01-q11",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "Runnable r = () -> System.out.print(\n    Thread.currentThread().getName() + \" \");\nThread t = new Thread(r, \"worker\");\nt.run();\nt.start();\nt.join();\nSystem.out.print(t.isAlive() + \" \");\nt.start();",
+      "options": [
+        "worker worker false",
+        "main worker false, then an IllegalThreadStateException is thrown",
+        "main worker false main",
+        "worker worker false, then an IllegalThreadStateException is thrown",
+        "The order of main and worker cannot be predicted"
+      ],
+      "answer": 1,
+      "explanation": "Calling `run()` directly is an ordinary method call on the **current** thread, so it prints `main`. `start()` creates the new thread, which prints `worker`; `join()` waits for it, so the order is fixed and `isAlive()` is then `false`. A thread can be started only once: the second `start()` throws `IllegalThreadStateException`, even though the thread has terminated.",
+      "objective": "8.1",
+      "examStyle": true,
+      "verify": {
+        "expect": "exception",
+        "value": "IllegalThreadStateException",
+        "stdout": "main worker false"
+      }
+    },
+    {
+      "id": "m01-q12",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "var r = Stream.of(5, 3, 8, 1, 9)\n    .peek(System.out::print)\n    .sorted()\n    .filter(n -> n > 4)\n    .map(n -> n * 10)\n    .findFirst();\nSystem.out.println(\" \" + r.orElse(-1));",
+      "options": [
+        "13589 50",
+        "5 50",
+        "53819 50",
+        "53819 80",
+        "5381950"
+      ],
+      "answer": 2,
+      "explanation": "Streams are lazy and normally process one element at a time, which would let `findFirst` stop after `5`. But `sorted()` is a **stateful** operation: it must consume every upstream element before emitting anything, so `peek` prints all five in source order: `53819`. Then sorted order is 1, 3, 5, ... and the first element greater than 4 is 5, mapped to **50**.",
+      "objective": "6.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "53819 50"
+      }
+    },
+    {
+      "id": "m01-q13",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "final class Money {\n    private final List<String> tags;\n    Money(List<String> tags) {\n        this.tags = List.copyOf(tags);\n    }\n    List<String> tags() { return tags; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        var src = new ArrayList<>(List.of(\"a\"));\n        var m = new Money(src);\n        src.add(\"b\");\n        System.out.print(m.tags() + \" \");\n        m.tags().add(\"c\");\n        System.out.print(m.tags());\n    }\n}",
+      "options": [
+        "[a, b], then an UnsupportedOperationException is thrown",
+        "[a] [a, c]",
+        "[a], then an UnsupportedOperationException is thrown",
+        "[a, b] [a, b, c]",
+        "Compilation fails because tags is final"
+      ],
+      "answer": 2,
+      "explanation": "`List.copyOf` makes a **defensive copy**, so later changes to `src` do not leak into `Money`: `[a]`. The copy is also unmodifiable, so the getter can safely return it; `add` throws `UnsupportedOperationException`. `final` only stops the field from being reassigned; it says nothing about the list's contents, so calling `add` compiles. Without the copy (`this.tags = tags`) the output would start with `[a, b]` and the add would succeed.",
+      "objective": "3.4",
+      "examStyle": true,
+      "verify": {
+        "expect": "exception",
+        "value": "UnsupportedOperationException",
+        "stdout": "[a]"
+      }
+    },
+    {
+      "id": "m01-q14",
+      "kind": "singleChoice",
+      "prompt": "Assume `java.text.*` is imported. What is the result?",
+      "code": "Locale.setDefault(Locale.US);\nString p = \"{0} sent {1} msgs\"\n    + \" ({2,number,#.#}%) '{0}'\";\nSystem.out.println(MessageFormat.format(\n    p, \"Ann\", 1200, 12.345));",
+      "options": [
+        "Ann sent 1200 msgs (12.3%) Ann",
+        "Ann sent 1,200 msgs (12.345%) {0}",
+        "Ann sent 1,200 msgs (12.3%) {0}",
+        "Ann sent 1,200 msgs (12.3%) Ann",
+        "An IllegalArgumentException is thrown"
+      ],
+      "answer": 2,
+      "explanation": "A plain `{1}` with a number argument is formatted with the locale's number format, so 1200 becomes `1,200` in the US locale. `{2,number,#.#}` uses that decimal pattern: at most one fraction digit, so `12.3`. Single quotes escape text in a `MessageFormat` pattern, so `'{0}'` prints the literal `{0}` instead of the argument.",
+      "objective": "10.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "Ann sent 1,200 msgs (12.3%) {0}",
+        "source": "import java.text.*;\npublic class Main {\npublic static void main(String[] args) throws Exception {\nLocale.setDefault(Locale.US);\nString p = \"{0} sent {1} msgs\"\n    + \" ({2,number,#.#}%) '{0}'\";\nSystem.out.println(MessageFormat.format(\n    p, \"Ann\", 1200, 12.345));\n}\n}\n"
+      }
+    },
+    {
+      "id": "m01-q15",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "String s = \" Java \";\ns.concat(\"21\").trim();\nString[] p = \"a,b,,c,,\".split(\",\");\nString t = \"banana\".replace(\"an\", \"AN\");\nSystem.out.println(\"[\" + s + \"] \" + p.length\n    + \" \" + t.indexOf('N', 3)\n    + \" \" + t.substring(2, 4));",
+      "options": [
+        "[ Java ] 4 4 NAN",
+        "[ Java ] 4 2 NA",
+        "[ Java ] 6 4 NA",
+        "[Java21] 4 4 NA",
+        "[ Java ] 4 4 NA"
+      ],
+      "answer": 4,
+      "explanation": "Strings are immutable, and the result of `concat(...).trim()` is thrown away, so `s` is unchanged. `split` keeps empty strings in the middle but drops **trailing** empty strings: `[a, b, \"\", c]`, length 4. `replace` changes every occurrence: `bANANa`. Searching for `'N'` from index 3 finds index 4, and `substring(2, 4)` takes indexes 2 and 3 (the end is exclusive): `NA`.",
+      "objective": "1.2",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "[ Java ] 4 4 NA"
+      }
+    },
+    {
+      "id": "m01-q16",
+      "kind": "multiChoice",
+      "prompt": "Given:\n\nWhich two methods can be inserted independently at `// INSERT` so that the code compiles? Choose two.",
+      "code": "class Parent {\n    protected Number calc(int x)\n            throws IOException {\n        return x;\n    }\n}\nclass Child extends Parent {\n    // INSERT\n}",
+      "options": [
+        "public Integer calc(int x) { return x; }",
+        "Number calc(int x) { return x; }",
+        "protected Object calc(int x) throws IOException { return x; }",
+        "protected Number calc(int x) throws Exception { return x; }",
+        "public Number calc(long x) throws Exception { return x; }",
+        "protected int calc(int x) { return x; }"
+      ],
+      "answers": [
+        0,
+        4
+      ],
+      "explanation": "An override may widen access, use a **covariant** (subtype) reference return type and throw fewer or narrower checked exceptions, so `public Integer calc(int)` is valid. `calc(long)` has a different parameter list: it is an **overload**, not an override, so none of the overriding rules apply.\n\nWrong: package access is weaker than `protected`; `Object` is not a subtype of `Number`; `Exception` is broader than `IOException`; a primitive `int` is not covariant with `Number`.",
+      "objective": "3.5",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "5 6",
+        "source": "\nclass Parent {\n    protected Number calc(int x) throws IOException { return x; }\n}\nclass Child extends Parent {\n    public Integer calc(int x) { return x; }\n    public Number calc(long x) throws Exception { return x; }\n}\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        System.out.print(new Child().calc(5) + \" \" + new Child().calc(6L));\n    }\n}\n"
+      }
+    },
+    {
+      "id": "m01-q17",
+      "kind": "singleChoice",
+      "prompt": "Assume a Unix-like file system. What is the result?",
+      "code": "Path p = Path.of(\"/data/logs/app.log\");\nPath r = Path.of(\"logs/app.log\");\nSystem.out.println(p.getName(0) + \" \"\n    + p.getParent().getFileName() + \" \"\n    + p.startsWith(\"/da\") + \" \"\n    + p.endsWith(r) + \" \"\n    + r.getRoot() + \" \"\n    + p.toString().startsWith(\"/da\"));",
+      "options": [
+        "data /data/logs false false null true",
+        "/ logs false true null true",
+        "data logs false true null false",
+        "data logs false true null true",
+        "data logs true true / true"
+      ],
+      "answer": 3,
+      "explanation": "The root `/` is not a name element, so `getName(0)` is `data`. The parent is `/data/logs`, whose file name is `logs`. `Path.startsWith(String)` compares whole **name elements**, so `/da` does not match `/data`, while `String.startsWith` compares characters and returns `true`. `endsWith(r)` matches the last two elements. A relative path has no root, so `getRoot()` returns `null`.",
+      "objective": "9.3",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "data logs false true null true"
+      }
+    },
+    {
+      "id": "m01-q18",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "int[] a = {9, 2, 7, 4};\nArrays.sort(a);\nint x = Arrays.binarySearch(a, 5);\nint[] b = {2, 4, 8};\nSystem.out.println(x + \" \"\n    + Arrays.compare(a, b) + \" \"\n    + Arrays.mismatch(a, b));",
+      "options": [
+        "-3 -1 3",
+        "-2 -1 2",
+        "-3 -1 2",
+        "-3 1 2",
+        "2 -1 -1"
+      ],
+      "answer": 2,
+      "explanation": "Sorted, `a` is `[2, 4, 7, 9]`. 5 is missing; it would be inserted at index 2, so `binarySearch` returns `-(2) - 1 = -3`. `Arrays.compare` compares element by element: at index 2, 7 < 8, so the result is negative (`-1`); the different lengths do not matter because a difference was found first. `mismatch` returns that first differing index, **2** (it returns -1 only when the arrays are equal).",
+      "objective": "5.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "-3 -1 2"
+      }
+    },
+    {
+      "id": "m01-q19",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "enum Level {\n    LOW(1) {\n        int boost() { return 10; }\n    },\n    HIGH(5) {\n        int boost() { return w * 2; }\n    };\n    private final int w;\n    Level(int w) { this.w = w; }\n    abstract int boost();\n}\npublic class Main {\n    public static void main(String[] args) {\n        for (Level l : Level.values())\n            System.out.print(l.boost() + \" \");\n    }\n}",
+      "options": [
+        "10 10",
+        "0 10",
+        "10 2",
+        "Compilation fails",
+        "An exception is thrown at runtime"
+      ],
+      "answer": 3,
+      "explanation": "A constant with a body is an anonymous **subclass** of the enum. Private members are not inherited, so inside `HIGH`'s body `w` is not a field of `this`. The compiler then looks for `w` in the enclosing scope, the enum `Level`, but the constant body sits in a static context, so `w * 2` fails: *non-static variable w cannot be referenced from a static context*.\n\nWith `final int w;` (package access) it would compile and print `10 10`; with `private`, writing `this.w` would not help either.",
+      "objective": "3.7",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "compileError",
+        "line": 6
+      }
+    },
+    {
+      "id": "m01-q20",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "int total = Stream.of(\"ab\", \"cde\", \"f\")\n    .reduce(0, (acc, s) -> acc + s.length(),\n        Integer::sum);\nString j = Stream.of(\"x\", \"y\", \"z\")\n    .collect(Collectors.joining(\",\", \"[\", \"]\"));\nint max = Stream.of(3, 9, 4)\n    .max(Comparator.reverseOrder()).get();\nint prod = IntStream.rangeClosed(1, 4)\n    .reduce(1, (a, b) -> a * b);\nSystem.out.println(total + \" \" + j + \" \"\n    + max + \" \" + prod);",
+      "options": [
+        "6 [x,y,z] 9 24",
+        "3 [x,y,z] 3 24",
+        "6 x,y,z 3 10",
+        "6 [x,y,z] 3 24",
+        "Compilation fails because reduce needs a BinaryOperator<String>"
+      ],
+      "answer": 3,
+      "explanation": "The three-argument `reduce(identity, accumulator, combiner)` may change the result type: the accumulator adds each `String`'s length to an `Integer`, total **6**. `joining(delimiter, prefix, suffix)` gives `[x,y,z]`. `max` returns the largest element *according to the comparator*; with `reverseOrder()` that is the smallest number, **3**. `reduce(1, multiply)` over 1..4 gives 24.",
+      "objective": "6.2",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "6 [x,y,z] 3 24"
+      }
+    },
+    {
+      "id": "m01-q21",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "public class Main {\n    static String run(int n) {\n        var sb = new StringBuilder();\n        try {\n            sb.append(\"t\");\n            if (n > 0)\n                throw new ArithmeticException();\n            return sb.append(\"r\").toString();\n        } catch (ArithmeticException e) {\n            sb.append(\"c\");\n            throw new IllegalStateException(\n                sb.toString());\n        } finally {\n            sb.append(\"f\");\n            if (n > 1) return sb.toString();\n        }\n    }\n    public static void main(String[] args) {\n        System.out.print(run(0) + \" \");\n        System.out.print(run(2) + \" \");\n        System.out.print(run(1));\n    }\n}",
+      "options": [
+        "tr, then an IllegalStateException with message tc is thrown",
+        "trf tcf, then an IllegalStateException with message tcf is thrown",
+        "tr tcf, then an IllegalStateException with message tc is thrown",
+        "trf tcf tcf",
+        "Compilation fails because the finally block can complete abruptly"
+      ],
+      "answer": 2,
+      "explanation": "`run(0)`: the return value `\"tr\"` is computed *before* `finally` runs; appending `f` afterwards changes the builder, not the already-evaluated `String`. Prints `tr`.\n\n`run(2)`: catch builds the exception with message `tc`, but `finally` executes `return`, which **discards** the pending exception. Prints `tcf`.\n\n`run(1)`: same path, but `finally` does not return, so the `IllegalStateException(\"tc\")` propagates out of `main`. A `return` in `finally` only produces a compiler warning.",
+      "objective": "4.1",
+      "examStyle": true,
+      "verify": {
+        "expect": "exception",
+        "value": "IllegalStateException: tc",
+        "stdout": "tr tcf"
+      }
+    },
+    {
+      "id": "m01-q22",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "interface A {\n    default String hi() { return \"A\"; }\n}\ninterface B extends A {\n    default String hi() {\n        return \"B\" + A.super.hi();\n    }\n}\ninterface C extends A {}\nclass X implements B, C {}\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(new X().hi() + \" \"\n            + ((C) new X()).hi());\n    }\n}",
+      "options": [
+        "BA BA",
+        "BA A",
+        "B A",
+        "Compilation fails because X inherits two defaults for hi()",
+        "Compilation fails because A.super.hi() is not allowed in B"
+      ],
+      "answer": 0,
+      "explanation": "`B` overrides `A`'s default, and `C` merely inherits it. Since `B` is a subtype of `A`, `B.hi()` is **more specific** and wins in `X`; there is no conflict to resolve. `A.super.hi()` is legal because `A` is a direct superinterface of `B`. Casting to `C` changes only the compile-time type; the runtime object is still an `X`, so both calls print `BA`.",
+      "objective": "3.6",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "BA BA"
+      }
+    },
+    {
+      "id": "m01-q23",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "var lock = new ReentrantLock();\nlock.lock();\nlock.lock();\nSystem.out.print(lock.getHoldCount() + \" \");\nlock.unlock();\nSystem.out.print(lock.isLocked() + \" \");\nlock.unlock();\nSystem.out.print(lock.isLocked() + \" \");\nlock.unlock();",
+      "options": [
+        "2 true false, then an IllegalMonitorStateException is thrown",
+        "2 true false",
+        "1 false false, then an IllegalMonitorStateException is thrown",
+        "2 false false",
+        "The program never terminates"
+      ],
+      "answer": 0,
+      "explanation": "`ReentrantLock` is reentrant: the same thread can lock it twice, and the hold count becomes **2**. Each `unlock()` decrements the count; after the first it is still held (`true`), after the second it is free (`false`). The third `unlock()` is called by a thread that no longer holds the lock, so it throws `IllegalMonitorStateException`. A thread re-locking its own lock never deadlocks.",
+      "objective": "8.2",
+      "examStyle": true,
+      "verify": {
+        "expect": "exception",
+        "value": "IllegalMonitorStateException",
+        "stdout": "2 true false",
+        "source": "import java.util.concurrent.locks.*;\npublic class Main {\npublic static void main(String[] args) throws Exception {\nvar lock = new ReentrantLock();\nlock.lock();\nlock.lock();\nSystem.out.print(lock.getHoldCount() + \" \");\nlock.unlock();\nSystem.out.print(lock.isLocked() + \" \");\nlock.unlock();\nSystem.out.print(lock.isLocked() + \" \");\nlock.unlock();\n}\n}\n"
+      }
+    },
+    {
+      "id": "m01-q24",
+      "kind": "multiChoice",
+      "prompt": "The modular JAR for module `com.x` is in the directory `mods`, and its main class is `com.x.App`. Which two commands run it? Choose two.",
+      "options": [
+        "java --module-path mods --module com.x/com.x.App",
+        "java -cp mods -m com.x/com.x.App",
+        "java -p mods -m com.x/com.x.App",
+        "java -p mods -m com.x.App/com.x",
+        "java --module-source-path mods -m com.x/com.x.App",
+        "java -p mods com.x/com.x.App"
+      ],
+      "answers": [
+        0,
+        2
+      ],
+      "explanation": "`-p` is the short form of `--module-path`, and `-m` of `--module`; the argument is `<module>/<main class>`.\n\nWrong: `-cp` puts the JAR on the class path, so module `com.x` is not found. The module name comes **before** the slash. `--module-source-path` is a `javac` option, not a `java` option. Without `-m`, `com.x/com.x.App` is treated as a class name.",
+      "objective": "7.2",
+      "examStyle": true,
+      "codeOptions": true
+    },
+    {
+      "id": "m01-q25",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "public class Main {\n    int x = 1;\n    class Inner {\n        int x = 2;\n        void show(int x) {\n            System.out.print(x + \"\" + this.x\n                + Main.this.x + \" \");\n        }\n    }\n    static class Nested {\n        int x = 4;\n    }\n    public static void main(String[] args) {\n        var m = new Main();\n        m.x = 5;\n        Main.Inner in = m.new Inner();\n        in.show(3);\n        System.out.println(new Main.Nested().x);\n    }\n}",
+      "options": [
+        "321 4",
+        "335 4",
+        "325 4",
+        "Compilation fails because Inner is created in a static method",
+        "Compilation fails because Nested needs an outer instance"
+      ],
+      "answer": 2,
+      "explanation": "An inner (non-static) class instance must be tied to an outer instance; `m.new Inner()` supplies `m`, so it compiles even in `static main`. Inside `show`, `x` is the parameter (3), `this.x` the inner field (2), and `Main.this.x` the field of the enclosing object `m`, which was changed to **5**. A static nested class needs no outer instance: `new Main.Nested().x` is 4.",
+      "objective": "3.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "325 4"
+      }
+    },
+    {
+      "id": "m01-q26",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "Integer a = 127, b = 127;\nInteger c = 128, d = 128;\nLong e = 127L;\nSystem.out.println((a == b) + \" \" + (c == d)\n    + \" \" + a.equals(e) + \" \" + (e == 127)\n    + \" \" + Math.round(-2.5));",
+      "options": [
+        "true false false true -3",
+        "true false false true -2",
+        "true false true true -2",
+        "true true false true -3",
+        "Compilation fails"
+      ],
+      "answer": 1,
+      "explanation": "Autoboxing uses `Integer.valueOf`, which caches -128..127: `a == b` compares the same cached object (`true`), while 128 creates two distinct objects (`false`). `Integer.equals` returns `false` for any non-`Integer` argument, including a `Long` with the same value. `e == 127` mixes a wrapper with a primitive, so `e` is unboxed and compared numerically: `true`. `Math.round` adds 0.5 and takes the floor: `floor(-2.0)` = **-2**.",
+      "objective": "1.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "true false false true -2"
+      }
+    },
+    {
+      "id": "m01-q27",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "List<Integer> list = new ArrayList<>(\n        List.of(10, 20, 30, 1, 2));\nlist.remove(1);\nlist.remove(Integer.valueOf(1));\nlist.removeIf(n -> n > 25);\nlist.add(0, 5);\nSystem.out.println(list + \" \"\n    + list.indexOf(2) + \" \"\n    + list.contains(20));",
+      "options": [
+        "[5, 20, 2] 2 true",
+        "[5, 10, 2] 1 false",
+        "[5, 10, 2] 2 false",
+        "[5, 10, 20] -1 true",
+        "An IndexOutOfBoundsException is thrown"
+      ],
+      "answer": 2,
+      "explanation": "`remove(1)` with an `int` argument picks `remove(int index)`, without boxing, and removes the element at index 1 (`20`): `[10, 30, 1, 2]`. `remove(Integer.valueOf(1))` picks `remove(Object)` and removes the value 1: `[10, 30, 2]`. `removeIf` drops 30, and `add(0, 5)` inserts at the front: `[5, 10, 2]`. The value 2 is at index 2, and 20 is gone.",
+      "objective": "5.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "[5, 10, 2] 2 false"
+      }
+    },
+    {
+      "id": "m01-q28",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "Optional<String> o = Optional.of(\"  \")\n    .map(String::strip)\n    .filter(s -> !s.isEmpty());\nString r = o.map(String::length)\n    .map(String::valueOf)\n    .orElseGet(() -> \"none\");\nSystem.out.println(r + \" \" + o.isPresent());",
+      "options": [
+        "none true",
+        "none false",
+        "2 true",
+        "0 true",
+        "A NoSuchElementException is thrown"
+      ],
+      "answer": 1,
+      "explanation": "`strip()` turns `\"  \"` into `\"\"`, and `filter` drops it, so `o` is **empty**. `map` on an empty `Optional` does nothing, and `orElseGet` supplies `\"none\"`. Nothing calls `get()`, so no exception. Optionals are immutable, so `o` itself is still empty: `false`.",
+      "objective": "6.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "none false"
+      }
+    },
+    {
+      "id": "m01-q29",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "record Tag(String name, int[] ids) {\n    static int count;\n    Tag {\n        name = name.toUpperCase();\n    }\n    Tag(String name) {\n        this(name, new int[0]);\n        count++;\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        var ids = new int[] {1};\n        var a = new Tag(\"x\", ids);\n        var b = new Tag(\"X\", ids);\n        var c = new Tag(\"y\");\n        System.out.println(a.name() + \" \"\n            + a.equals(b) + \" \"\n            + c.equals(new Tag(\"Y\", new int[0]))\n            + \" \" + Tag.count);\n    }\n}",
+      "options": [
+        "X false false 0",
+        "x false false 1",
+        "X true false 1",
+        "X true true 1",
+        "Compilation fails because a record cannot declare a static field"
+      ],
+      "answer": 2,
+      "explanation": "Records may declare **static** fields (only instance fields are forbidden). The compact constructor reassigns the parameter, so both `a` and `b` store `X`. The generated `equals` compares reference-type components with `Objects.equals`; for arrays that means reference equality. `a` and `b` share the same array: `true`. `c` and the new `Tag` hold two different empty arrays: `false`. Only `c` used the one-argument constructor, so `count` is 1.",
+      "objective": "3.2",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "X true false 1"
+      }
+    },
+    {
+      "id": "m01-q30",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "public class Main {\n    static int score(Object o) {\n        return switch (o) {\n            case Integer i when i > 10 -> i;\n            case Integer i -> {\n                int t = 0;\n                switch (i) {\n                    case 1: t += 1;\n                    case 2: t += 2; break;\n                    default: t += 5;\n                }\n                yield t;\n            }\n            case String s -> s.length();\n            default -> -1;\n        };\n    }\n    public static void main(String[] args) {\n        System.out.println(score(1) + \",\"\n            + score(12) + \",\" + score(\"hey\")\n            + \",\" + score(2.0));\n    }\n}",
+      "options": [
+        "1,12,3,-1",
+        "3,12,3,2",
+        "3,12,3,-1",
+        "8,12,3,-1",
+        "Compilation fails"
+      ],
+      "answer": 2,
+      "explanation": "`score(1)`: the guard fails, so `case Integer i` runs its block. In the old-style inner switch, `case 1` has no `break` and **falls through** into `case 2`: t = 1 + 2 = 3; then `break` exits the inner switch only, and `yield 3` returns. `score(12)` matches the guarded case. `\"hey\"` has length 3. `2.0` is a `Double`, so `default` gives -1. Arrow cases never fall through, but colon cases inside them still do.",
+      "objective": "2.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "3,12,3,-1"
+      }
+    },
+    {
+      "id": "m01-q31",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "class Engine { int hp = 100; }\nclass Car implements Serializable {\n    String model = \"A\";\n    transient Engine e1 = new Engine();\n    Engine e2;\n}\npublic class Main {\n    static Car copy(Car c) throws Exception {\n        var bos = new ByteArrayOutputStream();\n        try (var out =\n                new ObjectOutputStream(bos)) {\n            out.writeObject(c);\n        }\n        try (var in = new ObjectInputStream(\n                new ByteArrayInputStream(\n                    bos.toByteArray()))) {\n            return (Car) in.readObject();\n        }\n    }\n    public static void main(String[] args)\n            throws Exception {\n        var c = new Car();\n        c.model = \"B\";\n        var d = copy(c);\n        System.out.print(d.model + \" \" + d.e1\n            + \" \" + d.e2 + \" \");\n        c.e2 = new Engine();\n        copy(c);\n        System.out.print(\"done\");\n    }\n}",
+      "options": [
+        "B null null done",
+        "A null null done",
+        "B null null, then a NotSerializableException is thrown",
+        "A NotSerializableException is thrown before anything is printed",
+        "Compilation fails because Engine is not Serializable"
+      ],
+      "answer": 2,
+      "explanation": "The first copy works: `e1` is `transient`, so it is skipped, and `e2` is `null`, so there is no `Engine` object to write. On deserialization `Car`'s initializers and constructor do **not** run, so `e1` stays `null` (not a new `Engine`) and `model` is restored as `B`.\n\nThe second copy has a non-null, non-transient `Engine`. Serializability is checked at **run time** for each object actually written, so `writeObject` throws `NotSerializableException`. The compiler does not check field types.",
+      "objective": "9.2",
+      "examStyle": true,
+      "verify": {
+        "expect": "exception",
+        "value": "NotSerializableException",
+        "stdout": "B null null"
+      }
+    },
+    {
+      "id": "m01-q32",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "record Pt(int x, int y) {}\nrecord Seg(Pt a, Pt b) {}\npublic class Main {\n    static String test(Object o) {\n        if (!(o instanceof Seg(Pt(var x, var y),\n                Pt b))) {\n            return \"none\";\n        }\n        return x + y + b.x() + \"\" + b.y();\n    }\n    public static void main(String[] args) {\n        System.out.println(test(new Seg(\n            new Pt(1, 2), new Pt(3, 4)))\n            + \" \" + test(new Seg(null, null)));\n    }\n}",
+      "options": [
+        "10 none",
+        "64, then a NullPointerException is thrown",
+        "64 none",
+        "1234 none",
+        "Compilation fails because x, y and b are not in scope"
+      ],
+      "answer": 2,
+      "explanation": "When the negated `instanceof` is true the method returns, so after the `if` the pattern is known to have matched and `x`, `y` and `b` are **in scope** (flow scoping). `x + y + b.x()` is integer addition, 1 + 2 + 3 = 6, before the `\"\"` turns the rest into string concatenation: `\"6\" + 4` = `64`.\n\nA nested record pattern like `Pt(var x, var y)` never matches `null`, so `Seg(null, null)` simply fails the match (no exception) and returns `none`. (A plain type pattern `Pt b` in a nested position would accept `null`, but the first component fails first.)",
+      "objective": "3.5",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "64 none"
+      }
+    },
+    {
+      "id": "m01-q33",
+      "kind": "multiChoice",
+      "prompt": "Method `void m()` has no `throws` clause. Which three statements compile as its body? Choose three.",
+      "options": [
+        "throw new Exception();",
+        "throw new RuntimeException();",
+        "try { throw new IOException(); } catch (Exception e) { }",
+        "try { } catch (IOException e) { }",
+        "try { } catch (Exception e) { }",
+        "try { throw new Exception(); } finally { }",
+        "Object o = new Error(); throw o;"
+      ],
+      "answers": [
+        1,
+        2,
+        4
+      ],
+      "explanation": "Unchecked exceptions never need to be declared. A checked exception that is caught inside the method does not need a `throws` clause either. `catch (Exception e)` is always allowed, even for an empty try block, because `Exception` also covers unchecked exceptions.\n\nWrong: a checked `Exception` that escapes (with or without `finally`) must be declared. Catching a checked exception like `IOException` that the try block cannot throw is a compile error. `throw` needs an expression whose static type is `Throwable` or a subclass; `Object` is not.",
+      "objective": "4.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "ok",
+        "source": "\npublic class Main {\n    static void m1() { throw new RuntimeException(); }\n    static void m2() { try { throw new IOException(); } catch (Exception e) { } }\n    static void m3() { try { } catch (Exception e) { } }\n    public static void main(String[] args) { m2(); m3(); System.out.print(\"ok\"); }\n}\n"
+      }
+    },
+    {
+      "id": "m01-q34",
+      "kind": "singleChoice",
+      "prompt": "Assume `java.text.*` is imported. What is the result?",
+      "code": "var c = NumberFormat.getCurrencyInstance(\n        Locale.US);\nvar de = NumberFormat.getInstance(\n        Locale.GERMANY);\nvar us = NumberFormat.getInstance(Locale.US);\nSystem.out.println(c.format(1234.5) + \" \"\n    + de.format(1234.5678) + \" \"\n    + us.parse(\"1,234.5abc\"));",
+      "options": [
+        "$1,234.5 1.234,5678 1234.5",
+        "$1,234.50 1.234,568, then a ParseException is thrown",
+        "$1,234.50 1.234,568 1234",
+        "$1,234.50 1,234.568 1234.5",
+        "$1,234.50 1.234,568 1234.5"
+      ],
+      "answer": 4,
+      "explanation": "US currency always shows two decimals: `$1,234.50`. The German number format uses `.` for grouping and `,` for decimals, with at most **three** fraction digits by default: `1.234,568`. `NumberFormat.parse` reads as much as it can from the start and ignores the rest, so `\"1,234.5abc\"` becomes the `Double` 1234.5; it throws `ParseException` only when nothing at the start can be parsed.",
+      "objective": "10.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "$1,234.50 1.234,568 1234.5",
+        "source": "import java.text.*;\npublic class Main {\npublic static void main(String[] args) throws Exception {\nvar c = NumberFormat.getCurrencyInstance(\n        Locale.US);\nvar de = NumberFormat.getInstance(\n        Locale.GERMANY);\nvar us = NumberFormat.getInstance(Locale.US);\nSystem.out.println(c.format(1234.5) + \" \"\n    + de.format(1234.5678) + \" \"\n    + us.parse(\"1,234.5abc\"));\n}\n}\n"
+      }
+    },
+    {
+      "id": "m01-q35",
+      "kind": "multiChoice",
+      "prompt": "Which two method declarations compile? Choose two.",
+      "options": [
+        "static <T> T pick(T a, T b) { return b; }",
+        "static T pick(T a) { return a; }",
+        "static <T> void put(List<? super T> l, T t) { l.add(t); }",
+        "static void put(List<? extends Number> l) { l.add(1); }",
+        "static <T> T make() { return new T(); }",
+        "static <T> T[] arr() { return new T[2]; }"
+      ],
+      "answers": [
+        0,
+        2
+      ],
+      "explanation": "A generic method declares its type parameter before the return type (`<T> T pick(...)`). A `List<? super T>` accepts a `T`, so `put` compiles.\n\nWrong: `T` is undeclared in `static T pick(T a)`. A `List<? extends Number>` might be a `List<Double>`, so adding `1` is rejected. Because of type erasure, you cannot write `new T()` or `new T[2]`.",
+      "objective": "5.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "2 [x]",
+        "source": "\npublic class Main {\n    static <T> T pick(T a, T b) { return b; }\n    static <T> void put(List<? super T> l, T t) { l.add(t); }\n    public static void main(String[] args) {\n        var l = new ArrayList<Object>();\n        put(l, \"x\");\n        System.out.print(pick(1, 2) + \" \" + l);\n    }\n}\n"
+      }
+    },
+    {
+      "id": "m01-q36",
+      "kind": "singleChoice",
+      "prompt": "Assume `java.util.concurrent.*` is imported. What is the result?",
+      "code": "var q = new ArrayBlockingQueue<Integer>(2);\nSystem.out.print(q.offer(1) + \" \");\nSystem.out.print(q.offer(2) + \" \");\nSystem.out.print(q.offer(3) + \" \");\nSystem.out.print(q.poll() + \" \");\nboolean ok = q.offer(4, 1, TimeUnit.SECONDS);\nSystem.out.print(ok + \" \" + q + \" \");\nq.add(5);",
+      "options": [
+        "true true true 1 true [2, 3, 4], then an IllegalStateException is thrown",
+        "true true false 1 false [2], then an IllegalStateException is thrown",
+        "true true false 1 true [2, 4]",
+        "true true false 1 true [2, 4], then an IllegalStateException is thrown",
+        "true true, then the program blocks forever"
+      ],
+      "answer": 3,
+      "explanation": "`ArrayBlockingQueue` has a fixed capacity (2). The methods differ only in what they do when the queue is full:\n\n- `offer(e)` returns `false` at once.\n- `offer(e, timeout, unit)` waits up to the timeout. Here there is room after `poll()` removed `1`, so it returns `true`: `[2, 4]`.\n- `add(e)` throws `IllegalStateException` (\"Queue full\").\n- Only `put(e)` blocks indefinitely.",
+      "objective": "8.3",
+      "examStyle": true,
+      "verify": {
+        "expect": "exception",
+        "value": "IllegalStateException",
+        "stdout": "true true false 1 true [2, 4]",
+        "source": "import java.util.concurrent.*;\npublic class Main {\npublic static void main(String[] args) throws Exception {\nvar q = new ArrayBlockingQueue<Integer>(2);\nSystem.out.print(q.offer(1) + \" \");\nSystem.out.print(q.offer(2) + \" \");\nSystem.out.print(q.offer(3) + \" \");\nSystem.out.print(q.poll() + \" \");\nboolean ok = q.offer(4, 1, TimeUnit.SECONDS);\nSystem.out.print(ok + \" \" + q + \" \");\nq.add(5);\n}\n}\n"
+      }
+    },
+    {
+      "id": "m01-q37",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "String tb = \"\"\"\n        <p>\n          \"hi\"\n        </p>\"\"\";\nString tb2 = \"\"\"\n    x\n  \"\"\";\nSystem.out.println(tb.lines().count() + \" \"\n    + tb.endsWith(\">\") + \" \"\n    + tb2.equals(\"  x\\n\") + \" \"\n    + tb.indexOf('\"'));",
+      "options": [
+        "3 true true 6",
+        "3 true true 10",
+        "4 false true 6",
+        "3 true false 6",
+        "Compilation fails because the double quotes must be escaped"
+      ],
+      "answer": 0,
+      "explanation": "When the closing `\"\"\"` sits on the last content line, there is **no** trailing newline: `tb` is `<p>\\n  \"hi\"\\n</p>`, which has 3 lines and ends with `>`. Its common indentation is 8 spaces, so `\"hi\"` keeps 2 spaces and its first quote is at index 4 + 2 = **6**. Single `\"` characters need no escaping inside a text block.\n\nIn `tb2` the closing delimiter is indented by only 2 spaces. It takes part in finding the common indentation, so 2 spaces are removed and `x` keeps 2: `\"  x\\n\"`.",
+      "objective": "1.2",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "3 true true 6"
+      }
+    },
+    {
+      "id": "m01-q38",
+      "kind": "multiChoice",
+      "prompt": "Given:\n\nWhich two methods can be inserted independently at `// INSERT` so that the class compiles? Choose two.",
+      "code": "class Tool {\n    void go(int... a) { }\n    int go(long a) { return 1; }\n    // INSERT\n}",
+      "options": [
+        "void go(int[] a) { }",
+        "long go(long a) { return 2; }",
+        "void go(Integer... a) { }",
+        "static void go(int a, int... b) { }",
+        "private int go(long b) { return 0; }",
+        "void go(int... b) throws Exception { }"
+      ],
+      "answers": [
+        2,
+        3
+      ],
+      "explanation": "An overload needs a different **parameter type list**. `Integer...` (an `Integer[]`) and `(int, int...)` both differ from `int[]` and `long`, so they are legal overloads, whatever their modifiers.\n\nWrong: `int...` is really `int[]`, so `go(int[] a)` and `go(int... b) throws Exception` duplicate the existing method. Changing only the return type, the access modifier or the parameter name does not create a new signature.",
+      "objective": "3.3",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "ok",
+        "source": "\nclass Tool {\n    void go(int... a) { }\n    int go(long a) { return 1; }\n    void go(Integer... a) { }\n    static void go(int a, int... b) { }\n}\npublic class Main {\n    public static void main(String[] args) {\n        new Tool();\n        System.out.print(\"ok\");\n    }\n}\n"
+      }
+    },
+    {
+      "id": "m01-q39",
+      "kind": "multiChoice",
+      "prompt": "Given:\n\nWhich two statements compile when inserted independently at `// INSERT`? Choose two.",
+      "code": "int x = 1;\nint[] arr = {1};\nList<Runnable> rs = new ArrayList<>();\n// INSERT",
+      "options": [
+        "rs.add(() -> x++);",
+        "rs.add(() -> arr[0]++);",
+        "rs.add(() -> System.out.print(x));",
+        "rs.add(() -> { int x = 2; });",
+        "Function<Integer, Integer> f = x -> x;",
+        "rs.add(() -> arr = new int[2]);"
+      ],
+      "answers": [
+        1,
+        2
+      ],
+      "explanation": "A lambda may read local variables only if they are **effectively final**. Reading `x` is fine. Changing an *element* of `arr` does not reassign the variable `arr`, so `arr[0]++` compiles.\n\nWrong: `x++` and `arr = new int[2]` assign captured locals. A lambda body is not a new scope for names: it cannot declare a local variable or parameter called `x` while a local `x` is in scope.",
+      "objective": "6.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "12",
+        "source": "\npublic class Main {\n    public static void main(String[] args) {\n        int x = 1;\n        int[] arr = {1};\n        List<Runnable> rs = new ArrayList<>();\n        rs.add(() -> arr[0]++);\n        rs.add(() -> System.out.print(x));\n        rs.forEach(Runnable::run);\n        System.out.print(arr[0]);\n    }\n}\n"
+      }
+    },
+    {
+      "id": "m01-q40",
+      "kind": "multiChoice",
+      "prompt": "You are migrating an application to modules bottom-up and top-down. Which two statements are true? Choose two.",
+      "options": [
+        "An automatic module reads every other module, including the unnamed module.",
+        "A named module can declare requires on the unnamed module to use JARs on the class path.",
+        "A JAR placed on the class path becomes an automatic module.",
+        "An automatic module exports and opens all of its packages.",
+        "The name of an automatic module always comes from the JAR file name, even if the manifest names it.",
+        "Code in the unnamed module can read only java.base."
+      ],
+      "answers": [
+        0,
+        3
+      ],
+      "explanation": "A plain JAR on the **module path** becomes an automatic module: it reads all modules (including the unnamed module, which is how it reaches class-path code) and exports and opens every package.\n\nWrong: the unnamed module has no name, so a named module cannot `requires` it. A JAR on the **class path** joins the unnamed module, not an automatic one. The `Automatic-Module-Name` manifest entry takes priority over the file name. The unnamed module reads every module in the boot layer.",
+      "objective": "7.2",
+      "examStyle": true
+    },
+    {
+      "id": "m01-q41",
+      "kind": "multiChoice",
+      "prompt": "Given:\n\nWhich two changes, each applied on its own, make the code compile? Choose two.",
+      "code": "sealed abstract class Vehicle\n        permits Car, Truck {}\nfinal class Car extends Vehicle {}\nclass Truck extends Vehicle {}\npublic class Main {\n    public static void main(String[] args) {\n        Vehicle v = new Car();\n        System.out.println(v instanceof Car);\n    }\n}",
+      "options": [
+        "Declare Truck as non-sealed class Truck",
+        "Declare Truck as final class Truck",
+        "Remove abstract from Vehicle",
+        "Declare Truck as sealed class Truck",
+        "Declare Truck as abstract class Truck",
+        "Remove permits Car, Truck from Vehicle"
+      ],
+      "answers": [
+        0,
+        1
+      ],
+      "explanation": "Every direct subclass of a sealed class must say how it continues the hierarchy: `final`, `sealed` or `non-sealed`. `Truck` says none of them, so the code fails until it becomes `final` or `non-sealed`.\n\nWrong: `abstract` on either class does not satisfy the rule. A `sealed` class needs permitted subclasses of its own, and `Truck` has none. Removing `permits` just lets the compiler infer `Car` and `Truck` from the same file, and `Truck` still lacks a modifier.",
+      "objective": "3.5",
+      "examStyle": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "true",
+        "source": "\nsealed abstract class Vehicle permits Car, Truck {}\nfinal class Car extends Vehicle {}\nnon-sealed class Truck extends Vehicle {}\npublic class Main {\n    public static void main(String[] args) {\n        Vehicle v = new Car();\n        System.out.println(v instanceof Car);\n    }\n}\n"
+      }
+    },
+    {
+      "id": "m01-q42",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "var in = new BufferedReader(\n    new StringReader(\"ab\\ncd\\n\\nef\"));\nint lines = 0;\nString s;\nwhile ((s = in.readLine()) != null\n        && !s.isEmpty()) {\n    lines++;\n}\nSystem.out.println(lines + \" \" + in.read());",
+      "options": [
+        "3 101",
+        "2 101",
+        "3 -1",
+        "2 10",
+        "2 -1"
+      ],
+      "answer": 1,
+      "explanation": "`readLine()` returns each line without its terminator: `\"ab\"`, `\"cd\"`, then the empty line `\"\"`, which stops the loop after 2 counted lines. Reading that empty line consumed its `\\n`, so the next `read()` returns the character `e` as an `int`: **101**. `read()` returns -1 only at end of stream, and the `\\n` (10) was already consumed.",
+      "objective": "9.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "2 101"
+      }
+    },
+    {
+      "id": "m01-q43",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "var t = LocalTime.of(23, 45);\nvar later = t.plusMinutes(30);\nvar d = Duration.between(t, later);\nvar dt = LocalDateTime.of(2024, 2, 28, 23, 45);\nSystem.out.println(later + \" \" + d + \" \"\n    + dt.plusMinutes(30).toLocalDate() + \" \"\n    + Duration.ofMinutes(90));",
+      "options": [
+        "00:15 PT-23H-30M 2024-03-01 PT90M",
+        "00:15 PT30M 2024-02-29 PT1H30M",
+        "00:15 PT-23H-30M 2024-02-29 PT1H30M",
+        "24:15 PT30M 2024-02-29 PT1H30M",
+        "A DateTimeException is thrown"
+      ],
+      "answer": 2,
+      "explanation": "`LocalTime` wraps around midnight: 23:45 + 30 min is `00:15`. A `LocalTime` has no date, so `Duration.between(23:45, 00:15)` is measured backwards on the same day: **-23 h 30 min**, printed `PT-23H-30M`. A `LocalDateTime` does roll over the date, and 2024 is a leap year, so the result is `2024-02-29`. `Duration.toString()` normalizes 90 minutes to `PT1H30M`.",
+      "objective": "1.3",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "00:15 PT-23H-30M 2024-02-29 PT1H30M"
+      }
+    },
+    {
+      "id": "m01-q44",
+      "kind": "singleChoice",
+      "prompt": "Assume `java.util.concurrent.*` is imported. What is the result?",
+      "code": "var ex = Executors.newFixedThreadPool(2);\nFuture<Integer> f = ex.submit(() -> {\n    if (true) throw new IOException(\"io\");\n    return 1;\n});\ntry {\n    f.get();\n} catch (ExecutionException e) {\n    System.out.print(e.getCause()\n        .getClass().getSimpleName());\n} finally {\n    ex.shutdown();\n}\nSystem.out.print(\" \" + f.isDone());",
+      "options": [
+        "IOException false",
+        "ExecutionException true",
+        "IOException true",
+        "Compilation fails because the lambda throws a checked exception",
+        "The program hangs"
+      ],
+      "answer": 2,
+      "explanation": "The lambda returns a value, so it is a `Callable<Integer>`, and `Callable.call()` may throw checked exceptions (unlike `Runnable.run()`). The task fails; `get()` wraps the failure in an `ExecutionException` whose **cause** is the original `IOException`. A task that ended with an exception counts as completed, so `isDone()` is `true`. `shutdown()` lets the pool's threads end, so the program exits.",
+      "objective": "8.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "IOException true",
+        "source": "import java.util.concurrent.*;\npublic class Main {\npublic static void main(String[] args) throws Exception {\nvar ex = Executors.newFixedThreadPool(2);\nFuture<Integer> f = ex.submit(() -> {\n    if (true) throw new IOException(\"io\");\n    return 1;\n});\ntry {\n    f.get();\n} catch (ExecutionException e) {\n    System.out.print(e.getCause()\n        .getClass().getSimpleName());\n} finally {\n    ex.shutdown();\n}\nSystem.out.print(\" \" + f.isDone());\n}\n}\n"
+      }
+    },
+    {
+      "id": "m01-q45",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "class Config {\n    static final int SIZE = load();\n    static int load() {\n        return Integer.parseInt(\"1O\");\n    }\n}\npublic class Main {\n    static String n(Throwable t) {\n        return t.getClass().getSimpleName();\n    }\n    public static void main(String[] args) {\n        for (int i = 0; i < 2; i++) {\n            try {\n                System.out.print(Config.SIZE);\n            } catch (NumberFormatException e) {\n                System.out.print(\"NFE \");\n            } catch (Throwable t) {\n                System.out.print(n(t) + \" \");\n            }\n        }\n    }\n}",
+      "options": [
+        "NFE NFE",
+        "NFE NoClassDefFoundError",
+        "10 10",
+        "ExceptionInInitializerError NoClassDefFoundError",
+        "ExceptionInInitializerError ExceptionInInitializerError"
+      ],
+      "answer": 3,
+      "explanation": "`\"1O\"` contains the letter O, so `parseInt` throws `NumberFormatException` during static initialization. Because `SIZE` is initialized by a method call it is not a compile-time constant, so reading it triggers class initialization. An unchecked exception from a static initializer is wrapped in `ExceptionInInitializerError`, so the `NumberFormatException` catch never matches. The class is then marked as failed, and any later use throws `NoClassDefFoundError` without retrying the initializer.",
+      "objective": "4.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "ExceptionInInitializerError NoClassDefFoundError"
+      }
+    },
+    {
+      "id": "m01-q46",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "Comparator<String> byLen =\n    Comparator.comparing(String::length);\nvar set = new TreeSet<>(byLen.thenComparing(\n    Comparator.reverseOrder()));\nset.addAll(List.of(\"bb\", \"a\", \"ccc\", \"aa\",\n        \"b\", \"bb\"));\nSystem.out.println(set + \" \" + set.ceiling(\"zz\")\n    + \" \" + set.headSet(\"bb\"));",
+      "options": [
+        "[b, a, bb, aa, ccc] null [b, a]",
+        "[a, b, aa, bb, ccc] null [a, b, aa]",
+        "[b, a, bb, aa, ccc] bb [b, a, bb]",
+        "[a, aa, b, bb, ccc] ccc [a, aa, b]",
+        "[b, a, bb, aa, ccc] bb [b, a]"
+      ],
+      "answer": 4,
+      "explanation": "The comparator sorts by length, then in **reverse** alphabetical order, giving `[b, a, bb, aa, ccc]`; the duplicate `bb` is dropped. `\"zz\"` has length 2 and, in reverse order, sorts before `bb`, so the smallest element greater than or equal to it is `bb`. `headSet(\"bb\")` is exclusive: `[b, a]`.",
+      "objective": "5.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "[b, a, bb, aa, ccc] bb [b, a]"
+      }
+    },
+    {
+      "id": "m01-q47",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "record Emp(String dept, int pay) {}\nvar emps = List.of(new Emp(\"IT\", 50),\n    new Emp(\"HR\", 40), new Emp(\"IT\", 70));\nMap<String, Integer> m = emps.stream()\n    .collect(Collectors.toMap(Emp::dept,\n        Emp::pay, Integer::sum, TreeMap::new));\nvar avg = emps.stream().collect(\n    Collectors.averagingInt(Emp::pay));\nvar low = emps.stream().collect(\n    Collectors.collectingAndThen(\n        Collectors.minBy(Comparator\n            .comparingInt(Emp::pay)),\n        o -> o.get().dept()));\nSystem.out.println(m + \" \" + avg + \" \" + low);",
+      "options": [
+        "{HR=40, IT=120} 53 HR",
+        "{HR=40, IT=120} 53.333333333333336 HR",
+        "{IT=120, HR=40} 53.333333333333336 IT",
+        "{HR=40, IT=70} 53.333333333333336 HR",
+        "An IllegalStateException is thrown because of the duplicate key IT"
+      ],
+      "answer": 1,
+      "explanation": "The merge function `Integer::sum` combines the two `IT` values (50 + 70 = 120), so the duplicate key does not throw, and `TreeMap::new` sorts the keys. `averagingInt` always returns a `Double`: 160 / 3.0 = `53.333333333333336`, not an integer. `minBy` yields an `Optional<Emp>`, and `collectingAndThen` maps that to the department of the lowest-paid employee: `HR`.",
+      "objective": "6.2",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "{HR=40, IT=120} 53.333333333333336 HR"
+      }
+    },
+    {
+      "id": "m01-q48",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "int i = 0, j = 10;\ndo {\n    i += 2;\n    j--;\n} while (i++ < j--);\nSystem.out.println(i + \" \" + j);",
+      "options": [
+        "6 6",
+        "9 5",
+        "9 4",
+        "8 4",
+        "8 5"
+      ],
+      "answer": 2,
+      "explanation": "The condition always runs, and its post-increments take effect even when it is false.\n\n- Pass 1: i=2, j=9; `2 < 9` true, then i=3, j=8.\n- Pass 2: i=5, j=7; `5 < 7` true, then i=6, j=6.\n- Pass 3: i=8, j=5; `8 < 5` false, but i=9, j=4 anyway.",
+      "objective": "2.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "9 4"
+      }
+    },
+    {
+      "id": "m01-q49",
+      "kind": "singleChoice",
+      "prompt": "Assume `java.time.format.*` is imported. What is the result?",
+      "code": "var d = LocalDate.of(2024, 12, 30);\nvar f1 = DateTimeFormatter.ofPattern(\n        \"yyyy-MM-dd\", Locale.US);\nvar f2 = DateTimeFormatter.ofPattern(\n        \"YYYY-MM-dd\", Locale.US);\nvar f3 = DateTimeFormatter.ofPattern(\n        \"dd.MM.yyyy HH:mm\", Locale.US);\nSystem.out.print(d.format(f1) + \" \"\n    + d.format(f2) + \" \");\nSystem.out.print(d.format(f3));",
+      "options": [
+        "2024-12-30 2024-12-30, then an exception is thrown",
+        "2024-12-30 2024-12-30 30.12.2024 00:00",
+        "2024-12-30 2025-12-30 30.12.2024 00:00",
+        "2024-12-30 2025-12-30, then an exception is thrown",
+        "Compilation fails because a LocalDate cannot use a pattern with HH:mm"
+      ],
+      "answer": 3,
+      "explanation": "`yyyy` is the calendar year, but `YYYY` is the **week-based year**. In the US, a week runs Sunday to Saturday and week 1 is the week containing January 1, so Monday 2024-12-30 already belongs to week 1 of **2025**. The pattern is just a `String`, so nothing is checked at compile time. At run time, formatting a `LocalDate` with `HH:mm` throws `UnsupportedTemporalTypeException`, because a date has no hour field.",
+      "objective": "10.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "exception",
+        "value": "UnsupportedTemporalTypeException",
+        "stdout": "2024-12-30 2025-12-30",
+        "source": "import java.time.format.*;\npublic class Main {\npublic static void main(String[] args) throws Exception {\nvar d = LocalDate.of(2024, 12, 30);\nvar f1 = DateTimeFormatter.ofPattern(\n        \"yyyy-MM-dd\", Locale.US);\nvar f2 = DateTimeFormatter.ofPattern(\n        \"YYYY-MM-dd\", Locale.US);\nvar f3 = DateTimeFormatter.ofPattern(\n        \"dd.MM.yyyy HH:mm\", Locale.US);\nSystem.out.print(d.format(f1) + \" \"\n    + d.format(f2) + \" \");\nSystem.out.print(d.format(f3));\n}\n}\n"
+      }
+    },
+    {
+      "id": "m01-q50",
+      "kind": "singleChoice",
+      "prompt": "What is the result?",
+      "code": "interface Pet {}\nclass Animal {}\nfinal class Fish extends Animal {}\nclass Dog extends Animal implements Pet {}\npublic class Main {\n    public static void main(String[] args) {\n        Animal a = new Dog();\n        Pet p = (Pet) a;\n        Dog d = (Dog) p;\n        System.out.print(d instanceof Pet);\n        Fish f = (Fish) a;\n        System.out.print(\" end\");\n    }\n}",
+      "options": [
+        "true end",
+        "true, then a ClassCastException is thrown",
+        "Compilation fails because Animal does not implement Pet",
+        "Compilation fails because (Fish) a can never succeed",
+        "A ClassCastException is thrown before anything is printed"
+      ],
+      "answer": 1,
+      "explanation": "A cast compiles when it *might* succeed. `Animal` is not `final`, so some subclass of `Animal` could implement `Pet`: `(Pet) a` compiles, and it succeeds because the object is a `Dog`. `(Dog) p` is also fine. `Fish` is a subclass of `Animal`, so `(Fish) a` compiles, but the object is a `Dog`, so it throws `ClassCastException` at run time.\n\nA cast such as `(Pet) new Fish()` would not compile: `Fish` is `final` and does not implement `Pet`.",
+      "objective": "3.5",
+      "examStyle": true,
+      "verify": {
+        "expect": "exception",
+        "value": "ClassCastException",
+        "stdout": "true"
+      }
+    }
+  ]
+}

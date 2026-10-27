@@ -1,0 +1,1288 @@
+{
+  "unitId": "u02",
+  "lessons": [
+    {
+      "id": "u02-l01",
+      "title": "if/else traps",
+      "summary": "No truthiness, = vs ==, dangling else and unreachable code.",
+      "minutes": 6,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Only booleans allowed",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "An `if` (and `while`, `for`, `do`) condition must have type **boolean**. Nothing else converts to true or false."
+            },
+            {
+              "type": "code",
+              "code": "int n = 1;\nString s = \"hi\";\nif (n) { }        // does not compile\nif (s) { }        // does not compile\nif (n != 0) { }   // OK\nif (!s.isEmpty()) { } // OK"
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python treats `0`, `\"\"`, `[]` and `None` as false. Java has **no truthiness**: `if (n)` with an `int` is a compile error, not a check for zero."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "= inside a condition",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`=` assigns and the expression's value is the assigned value. That value must be boolean for `if` to accept it."
+            },
+            {
+              "type": "code",
+              "code": "int x = 0;\nif (x = 5) { }      // int: compile error\n\nboolean b = false;\nif (b = true) { }   // compiles! b is now\n                    // true, branch runs"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Assignment with a boolean",
+              "text": "`if (b = true)` compiles and always takes the branch. When an exam condition uses a single `=`, check the variable's type: `int` means *Compilation fails*, `boolean` means it runs and changes the variable."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l01-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "boolean done = false;\nif (done = true) {\n    System.out.print(\"yes \");\n} else {\n    System.out.print(\"no \");\n}\nSystem.out.println(done);",
+          "options": [
+            "yes true",
+            "no false",
+            "yes false",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`done = true` assigns `true` to `done`, and the whole expression has the value `true`, so the `if` branch runs. `done` stays `true` afterwards. It compiles because `done` is a `boolean`.",
+          "objective": "2.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "yes true\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l01-e02",
+          "kind": "multiChoice",
+          "prompt": "Given `int n = 3; boolean ok = false; String s = \"\";`, which two conditions compile? Choose two.",
+          "options": [
+            "if (n)",
+            "if (ok = n > 2)",
+            "if (n = 3)",
+            "if (s)",
+            "if (!ok)"
+          ],
+          "answers": [
+            1,
+            4
+          ],
+          "explanation": "`ok = n > 2` assigns a boolean to a boolean variable, so its value is boolean. `!ok` is boolean. `n`, `n = 3` (an `int`) and `s` (a `String`) are not booleans, and Java never converts them.",
+          "objective": "2.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ok\n",
+            "source": "int n = 3; boolean ok = false;\nif (ok = n > 2) { }\nif (!ok) { }\nSystem.out.println(\"ok\");"
+          }
+        },
+        {
+          "type": "page",
+          "title": "The dangling else",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Without braces, an `if` controls exactly **one** statement. An `else` always belongs to the **nearest** unmatched `if`, whatever the indentation says."
+            },
+            {
+              "type": "code",
+              "code": "if (a)\n    if (b)\n        System.out.print(\"X\");\nelse                     // belongs to\n    System.out.print(\"Y\"); // if (b)!"
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Ignore the indentation",
+              "text": "On the exam, re-indent the code in your head by pairing each `else` with the closest `if` before it that has no `else` yet. Java does not read whitespace."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l01-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int x = 5;\nif (x > 10)\n    if (x > 2)\n        System.out.println(\"A\");\nelse\n    System.out.println(\"B\");\nSystem.out.println(\"C\");",
+          "options": [
+            "C",
+            "B\nC",
+            "A\nC",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "The `else` pairs with the nearest `if`, which is `if (x > 2)`. That whole inner `if/else` is the body of `if (x > 10)`. Since `x > 10` is false, neither A nor B prints; only `C` does.",
+          "objective": "2.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "C\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Unreachable code",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "The compiler rejects any statement it can prove will **never run**. The rules are specific; memorize this table."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Code",
+                "Result"
+              ],
+              "rows": [
+                [
+                  "`while (false) { x++; }`",
+                  "Compile error"
+                ],
+                [
+                  "`for (;false;) { x++; }`",
+                  "Compile error"
+                ],
+                [
+                  "`if (false) { x++; }`",
+                  "Compiles"
+                ],
+                [
+                  "`do { x++; } while (false);`",
+                  "Compiles, runs once"
+                ],
+                [
+                  "statement after `return;`",
+                  "Compile error"
+                ],
+                [
+                  "statement after `break;` / `continue;`",
+                  "Compile error"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "Why is if (false) allowed?",
+              "text": "Java deliberately allows `if (false)` so you can switch debug code off with a constant flag. Loops get no such exception."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "if/else that always returns",
+              "text": "If **both** branches of an `if/else` end in `return`, any statement after it is unreachable and the method does not compile."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l01-e04",
+          "kind": "tapLine",
+          "prompt": "Tap the line that causes the compile error.",
+          "code": "int x = 0;\nif (false) {\n    x++;\n}\nwhile (false) {\n    x--;\n}\nSystem.out.println(x);",
+          "answer": 5,
+          "explanation": "`while (false)` makes the loop body unreachable, and an unreachable statement is a compile error. `if (false)` on line 2 is the one allowed exception, so lines 2 to 4 compile.",
+          "objective": "2.1",
+          "verify": {
+            "expect": "compileError",
+            "line": 5
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l01-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "public class Main {\n    static int sign(int n) {\n        if (n > 0) return 1;\n        else return -1;\n        return 0;\n    }\n    public static void main(String[] a) {\n        System.out.println(sign(5));\n    }\n}",
+          "options": [
+            "1",
+            "0",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 2,
+          "explanation": "Both branches of the `if/else` return, so the `if/else` can never complete normally. `return 0;` on line 5 is unreachable, which is a compile error. Without the `else`, it would compile and print `1`.",
+          "objective": "2.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "u02-l02",
+      "title": "switch statements",
+      "summary": "Legal types, constant labels, fall-through and default.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "What can you switch on?",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Allowed",
+                "Not allowed"
+              ],
+              "rows": [
+                [
+                  "`int`, `short`, `byte`, `char`",
+                  "`long`"
+                ],
+                [
+                  "`Integer`, `Short`, `Byte`, `Character`",
+                  "`float`, `double`"
+                ],
+                [
+                  "`String`",
+                  "`boolean`"
+                ],
+                [
+                  "any `enum`",
+                  "`Long`, `Double`, `Boolean`..."
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Wrappers are unboxed before matching. That means a `null` `Integer` or `String` selector throws a **NullPointerException**."
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Coming in Unit 4",
+              "text": "Java 21 also lets you switch on any object with **type patterns** (`case String s ->`, `case null ->`). That's pattern matching, covered in Unit 4. Here we stick to constant labels."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Case labels must be constants",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Each `case` value must be a **compile-time constant** that fits the selector type, and no value may appear twice."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Literals: `case 3:`, `case 'a':`, `case \"SAT\":`",
+                "Constant expressions: `case 2 + 2:`",
+                "`final` variables initialized with a constant: `final int A = 1;` then `case A:`",
+                "Enum constants: `case MONDAY:` (no `Day.` prefix needed)"
+              ]
+            },
+            {
+              "type": "code",
+              "code": "int b = 2;            // not final\nfinal int C;\nC = 3;                // assigned later\nswitch (n) {\n    case b:  // error: not constant\n    case C:  // error: not constant\n}"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "final is not enough",
+              "text": "`final int C; C = 3;` is final but **not** a compile-time constant, because it isn't initialized in its declaration. Also: `byte b` with `case 128:` fails (128 doesn't fit in a byte), and duplicate labels fail."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l02-e01",
+          "kind": "multiChoice",
+          "prompt": "Given `final int A = 1; int b = 2; final int C; C = 3;` and `switch (n)` where `n` is an `int`, which two labels compile? Choose two.",
+          "options": [
+            "case A:",
+            "case b:",
+            "case C:",
+            "case 2 + 2:",
+            "case Math.abs(-5):"
+          ],
+          "answers": [
+            0,
+            3
+          ],
+          "explanation": "`A` is final and initialized with a constant, and `2 + 2` is a constant expression. `b` is not final, `C` is assigned after its declaration, and a method call is never a compile-time constant.",
+          "objective": "2.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ok\n",
+            "source": "final int A = 1; int n = 4;\nswitch (n) { case A: break; case 2 + 2: break; }\nSystem.out.println(\"ok\");"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Fall-through",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "In a colon-style switch, a `case` label is only an **entry point**. After jumping there, execution keeps running into the following cases until a `break` or the closing brace."
+            },
+            {
+              "type": "code",
+              "code": "int n = 1;\nswitch (n) {\n    case 1: System.out.print(\"a\");\n    case 2: System.out.print(\"b\");\n        break;\n    case 3: System.out.print(\"c\");\n}",
+              "caption": "Prints ab",
+              "verify": {
+                "expect": "stdout",
+                "value": "ab\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python's `match` runs exactly one case. Java's colon-style `switch` falls through by default. Missing `break` is the classic exam trap."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l02-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int n = 2;\nswitch (n) {\n    case 1: System.out.print(\"one \");\n    case 2: System.out.print(\"two \");\n    case 3: System.out.print(\"three \");\n        break;\n    case 4: System.out.print(\"four \");\n}",
+          "options": [
+            "two",
+            "two three",
+            "two three four",
+            "Compilation fails"
+          ],
+          "answer": 1,
+          "explanation": "Execution enters at `case 2`, prints `two `, falls through into `case 3` and prints `three `, then `break` leaves the switch. `four` is never reached.",
+          "objective": "2.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "two three \n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "default can go anywhere",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`default` may appear at the top, middle or bottom. It's used only when **no** case matches, but once entered, it falls through like any other label."
+            },
+            {
+              "type": "code",
+              "code": "int n = 7;\nswitch (n) {\n    default: System.out.print(\"D\");\n    case 1:  System.out.print(\"1\");\n}",
+              "caption": "Prints D1",
+              "verify": {
+                "expect": "stdout",
+                "value": "D1\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l02-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int n = 9;\nswitch (n) {\n    default: System.out.print(\"D\");\n    case 1: System.out.print(\"1\");\n    case 2: System.out.print(\"2\");\n        break;\n    case 3: System.out.print(\"3\");\n}",
+          "options": [
+            "D",
+            "D12",
+            "D123",
+            "Compilation fails"
+          ],
+          "answer": 1,
+          "explanation": "No case matches 9, so execution jumps to `default` (even though it's first), prints `D`, then falls through into `case 1` and `case 2` until the `break`.",
+          "objective": "2.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "D12\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l02-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "long id = 1;\nswitch (id) {\n    case 1:\n        System.out.println(\"one\");\n        break;\n    default:\n        System.out.println(\"other\");\n}",
+          "options": [
+            "one",
+            "other",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 2,
+          "explanation": "`long` is not a legal switch type for constant labels (neither are `float`, `double` and `boolean`). The code does not compile.",
+          "objective": "2.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l02-e05",
+          "kind": "fillBlanks",
+          "prompt": "Fill the blanks so the code prints only `weekend`.",
+          "code": "String day = \"SAT\";\nswitch (day) {\n    case \"SAT\", \"SUN\":\n        System.out.println(\"weekend\");\n        ___;\n    ___:\n        System.out.println(\"weekday\");\n}",
+          "bank": [
+            "break",
+            "default",
+            "continue",
+            "yield",
+            "else"
+          ],
+          "answers": [
+            "break",
+            "default"
+          ],
+          "explanation": "`break` stops the fall-through into the next label, and `default` catches every other day. `continue` is illegal outside a loop, `yield` only works in a switch **expression**, and `else` doesn't exist in switch.",
+          "objective": "2.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "weekend\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l02-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "String s = null;\nswitch (s) {\n    case \"a\":\n        System.out.println(\"a\");\n        break;\n    default:\n        System.out.println(\"other\");\n}",
+          "options": [
+            "a",
+            "other",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 3,
+          "explanation": "Switching on a `String` calls methods on it to find the matching case. A `null` selector throws a **NullPointerException**, even though there is a `default`. Only a `case null` label (a pattern-matching feature) avoids it.",
+          "objective": "2.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "NullPointerException"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u02-l03",
+      "title": "switch expressions",
+      "summary": "Arrow cases, yield, exhaustiveness and what fails to compile.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "A switch that returns a value",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A **switch expression** produces a value you can assign or return. Arrow cases (`->`) never fall through, and one case can list several labels."
+            },
+            {
+              "type": "code",
+              "code": "int day = 6;\nString kind = switch (day) {\n    case 6, 7 -> \"weekend\";\n    case 1, 2, 3, 4, 5 -> \"weekday\";\n    default -> \"invalid\";\n};   // semicolon ends the statement\nSystem.out.println(kind);",
+              "caption": "Prints weekend",
+              "verify": {
+                "expect": "stdout",
+                "value": "weekend\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Arrow cases behave like Python's `match`: one case runs, no fall-through. Unlike `match`, the whole switch is an expression with a value."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "It must be exhaustive",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A switch expression must produce a value for **every possible input**, or it does not compile."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Selector",
+                "Needs default?"
+              ],
+              "rows": [
+                [
+                  "`int`, `char`, `String`...",
+                  "Yes, always"
+                ],
+                [
+                  "`enum`, all constants listed",
+                  "No"
+                ],
+                [
+                  "`enum`, some constants missing",
+                  "Yes"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Statement vs expression",
+              "text": "An old-style switch **statement** on an `int` may skip `default` and cover only some values. A switch **expression** may not. Check whether the switch's value is used."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l03-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "int n = 3;\nString s = switch (n) {\n    case 1 -> \"one\";\n    case 2 -> \"two\";\n};\nSystem.out.println(s);",
+          "options": [
+            "null",
+            "An empty line is printed",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 2,
+          "explanation": "The switch expression has no `default`, so it doesn't cover every `int`. A non-exhaustive switch expression is a compile error, not a runtime problem.",
+          "objective": "2.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 2
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l03-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "enum Size { S, M, L }\n\npublic class Main {\n    public static void main(String[] a) {\n        Size z = Size.M;\n        int n = switch (z) {\n            case S -> 1;\n            case M -> 2;\n            case L -> 3;\n        };\n        System.out.println(n);\n    }\n}",
+          "options": [
+            "2",
+            "M",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "Every constant of `Size` has a case, so the switch expression is exhaustive and needs no `default`. `M` maps to 2.",
+          "objective": "2.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "2\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Blocks and yield",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "An arrow case can run a block `{ }`. The block hands back its value with **`yield`**, not `return`."
+            },
+            {
+              "type": "code",
+              "code": "int code = 2;\nString msg = switch (code) {\n    case 1 -> \"one\";\n    case 2 -> {\n        String t = \"tw\" + \"o\";\n        yield t;\n    }\n    default -> \"?\";\n};\nSystem.out.println(msg);",
+              "caption": "Prints two",
+              "verify": {
+                "expect": "stdout",
+                "value": "two\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`return` inside a switch expression: compile error.",
+                "A block that ends without `yield` (or a `throw`): compile error.",
+                "Colon-style cases also work in a switch expression; each path must `yield`, and **fall-through still happens**."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l03-e03",
+          "kind": "fillBlanks",
+          "prompt": "Fill the blanks so the code compiles.",
+          "code": "int code = 404;\nString msg = switch (code) {\n    case 200 -> \"OK\";\n    case 404 -> {\n        String t = \"Not found\";\n        ___ t;\n    }\n    ___ -> \"Other\";\n};\nSystem.out.println(msg);",
+          "bank": [
+            "yield",
+            "default",
+            "return",
+            "break",
+            "else",
+            "case"
+          ],
+          "answers": [
+            "yield",
+            "default"
+          ],
+          "explanation": "A block in an arrow case gives its value with `yield`. `return` would try to leave the method, which a switch expression doesn't allow, and `break` can't carry a value. `default` is needed because `int` has more values than the cases cover.",
+          "objective": "2.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "Not found\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l03-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int n = 1;\nint r = switch (n) {\n    case 1:\n        System.out.print(\"a\");\n    case 2:\n        yield 20;\n    default:\n        yield 0;\n};\nSystem.out.println(r);",
+          "options": [
+            "a20",
+            "a0",
+            "20",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "This switch expression uses colon cases, so fall-through still applies. `case 1` prints `a`, has no `yield`, and falls into `case 2`, which yields 20.",
+          "objective": "2.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "a20\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "What fails to compile",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Code",
+                "Problem"
+              ],
+              "rows": [
+                [
+                  "`case 1 -> 10;` and `default: yield 0;` together",
+                  "Mixing `->` and `:` in one switch"
+                ],
+                [
+                  "`case 1 -> { 10; }`",
+                  "A block needs `yield 10;`"
+                ],
+                [
+                  "`switch (n) { case 1 -> \"a\"; ... }` used as a statement",
+                  "`\"a\"` alone is not a statement"
+                ],
+                [
+                  "`int r = switch (n) { ... }` with no `;`",
+                  "Missing semicolon"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "Arrow cases are fine in a plain switch **statement** too, as long as each arrow is followed by a statement (`System.out.println(...)`), a block or a `throw`, not a bare value."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l03-e05",
+          "kind": "multiChoice",
+          "prompt": "Given `int n = 1;`, which two snippets compile? Choose two.",
+          "options": [
+            "int r = switch (n) {\n    case 1, 2 -> 10;\n    default -> 0;\n};",
+            "int r = switch (n) {\n    case 1 -> 10;\n    default: yield 0;\n};",
+            "int r = switch (n) {\n    case 1 -> { 10; }\n    default -> 0;\n};",
+            "int r = switch (n) {\n    case 1: yield 10;\n    default: yield 0;\n};",
+            "int r = switch (n) {\n    case 1 -> 10;\n};"
+          ],
+          "answers": [
+            0,
+            3
+          ],
+          "explanation": "Multiple labels with arrows and colon cases with `yield` are both legal. Mixing `->` and `:` fails, a block needs `yield`, and the last one has no `default`, so it isn't exhaustive.",
+          "objective": "2.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "10 10\n",
+            "optionCheck": false,
+            "source": "int n = 1;\nint r = switch (n) {\n    case 1, 2 -> 10;\n    default -> 0;\n};\nint q = switch (n) {\n    case 1: yield 10;\n    default: yield 0;\n};\nSystem.out.println(r + \" \" + q);"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l03-e06",
+          "kind": "trueFalse",
+          "prompt": "This code prints `ab`.",
+          "code": "int n = 1;\nswitch (n) {\n    case 1 -> System.out.print(\"a\");\n    case 2 -> System.out.print(\"b\");\n}",
+          "answer": false,
+          "explanation": "Arrow cases never fall through, even in a switch statement and even without `break`. Only `case 1` runs, so it prints `a`.",
+          "objective": "2.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "a\n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u02-l04",
+      "title": "Loops & labels",
+      "summary": "for with commas, enhanced for, do-while, labels and infinite loops.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "for loop details",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "for (int i = 0, j = 5; i < j; i++, j--) {\n    // i and j exist only in here\n}"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "The init part may declare several variables, but only of **one type**, written once: `int i = 0, j = 5`.",
+                "`int i = 0, int j = 5` and `int i = 0, long j = 5` do not compile.",
+                "The update part may hold several expressions separated by commas: `i++, j--`.",
+                "All three parts are optional: `for (;;)` loops forever.",
+                "A variable declared in the init part is out of scope after the loop."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python's `for i in range(n)` leaves `i` usable after the loop. In Java, using the loop's `i` after the closing brace is a compile error."
+            },
+            {
+              "type": "paragraph",
+              "text": "The init part runs once. It is either **one** local variable declaration or a comma-separated list of **statement expressions** (assignments, method calls, `++`). You can't mix the two: `for (int i = 0, j = 1, k++; ...)` and `for (i = 0, int j = 0; ...)` don't compile."
+            },
+            {
+              "type": "code",
+              "code": "int i, j;\nfor (i = 0, j = 10, System.out.print(\"go \"); i < j; i += 4, j -= 4) {\n    System.out.print(i + \":\" + j + \" \");\n}\nSystem.out.println(\"| \" + i);",
+              "caption": "The init list assigns two variables and calls a method, once",
+              "verify": {
+                "expect": "stdout",
+                "value": "go 0:10 4:6 | 8\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l04-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "for (int i = 0, j = 5; i < j; i++, j--) {\n    System.out.print(i + \"\" + j + \" \");\n}",
+          "options": [
+            "05 14 23",
+            "05 14 23 32",
+            "05 14",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "Both variables change every iteration: (0,5), (1,4), (2,3). Next would be (3,2), but `3 < 2` is false, so the loop stops after three passes.",
+          "objective": "2.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "05 14 23 \n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Enhanced for and do-while",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "The **enhanced for** loop (`for (int x : arr)`) gives you a **copy** of each element. Assigning to `x` doesn't change the array."
+            },
+            {
+              "type": "paragraph",
+              "text": "A **do-while** checks its condition **after** the body, so the body always runs at least once. It ends with a semicolon: `} while (cond);`."
+            },
+            {
+              "type": "code",
+              "code": "int n = 10;\ndo {\n    System.out.println(n); // runs once\n} while (n < 5);",
+              "caption": "Prints 10",
+              "verify": {
+                "expect": "stdout",
+                "value": "10\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l04-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int[] a = {1, 2, 3};\nfor (int x : a) {\n    x = x * 10;\n}\nSystem.out.println(a[0] + a[1] + a[2]);",
+          "options": [
+            "6",
+            "60",
+            "123",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`x` is a local copy of each element. Multiplying it changes only the copy, so the array stays `{1, 2, 3}` and the sum is 6. (`a[0] + a[1] + a[2]` is int addition, not string concatenation.)",
+          "objective": "2.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "6\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l04-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int n = 10;\ndo {\n    System.out.print(n + \" \");\n    n++;\n} while (n < 5);\nSystem.out.println(n);",
+          "options": [
+            "11",
+            "10 11",
+            "10",
+            "5"
+          ],
+          "answer": 1,
+          "explanation": "A do-while runs the body before testing. It prints `10 `, increments `n` to 11, then `11 < 5` is false, so the loop ends and `11` prints.",
+          "objective": "2.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "10 11\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Labels: break and continue outer loops",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A **label** is a name followed by a colon, placed right before a loop. `break` and `continue` can then target that loop instead of the innermost one."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Statement",
+                "Effect"
+              ],
+              "rows": [
+                [
+                  "`break;`",
+                  "Exit the innermost loop (or switch)"
+                ],
+                [
+                  "`continue;`",
+                  "Next iteration of the innermost loop"
+                ],
+                [
+                  "`break outer;`",
+                  "Exit the loop labeled `outer`"
+                ],
+                [
+                  "`continue outer;`",
+                  "Next iteration of the loop labeled `outer`"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "outer:\nfor (int i = 0; i < 3; i++) {\n    for (int j = 0; j < 3; j++) {\n        if (j == 1) continue outer;\n        System.out.print(i + \"\" + j + \" \");\n    }\n}",
+              "caption": "Prints 00 10 20",
+              "verify": {
+                "expect": "stdout",
+                "value": "00 10 20 \n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "break inside a switch",
+              "text": "A plain `break` inside a `switch` that sits in a loop leaves only the **switch**, not the loop. You need a label to leave the loop from there."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l04-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "outer:\nfor (int i = 1; i <= 3; i++) {\n    for (int j = 1; j <= 3; j++) {\n        if (j == 2) continue outer;\n        if (i == 3) break outer;\n        System.out.print(i + \"\" + j + \" \");\n    }\n}",
+          "options": [
+            "11 21",
+            "11 21 31",
+            "11 12 21 22",
+            "11 13 21 23"
+          ],
+          "answer": 0,
+          "explanation": "For i = 1 and i = 2, `j == 1` prints, then `j == 2` jumps to the next `i` (`j = 3` is never reached). For i = 3, the `break outer` check runs before the print, so the whole loop ends.",
+          "objective": "2.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "11 21 \n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l04-e05",
+          "kind": "orderLines",
+          "prompt": "Arrange the lines (inside a method with `int count = 0;`) so both loops stop completely the first time `i * j == 2`, without counting that pair.",
+          "lines": [
+            "outer:",
+            "for (int i = 0; i < 3; i++) {",
+            "    for (int j = 0; j < 3; j++) {",
+            "        if (i * j == 2) break outer;",
+            "        count++;",
+            "    }",
+            "}"
+          ],
+          "distractors": [
+            "        if (i * j == 2) break;"
+          ],
+          "explanation": "The label must sit right before the outer loop, and the check must come before `count++` so the matching pair isn't counted. A plain `break` would only exit the inner loop. The result is `count == 5`.",
+          "objective": "2.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "5\n",
+            "source": "int count = 0;\nouter:\nfor (int i = 0; i < 3; i++) {\n    for (int j = 0; j < 3; j++) {\n        if (i * j == 2) break outer;\n        count++;\n    }\n}\nSystem.out.println(count);"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Infinite loops and unreachable code",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "If a loop's condition is the **constant** `true` and nothing `break`s out of it, the loop can never finish. Any statement after it is unreachable: compile error."
+            },
+            {
+              "type": "code",
+              "code": "while (true) {\n    if (done()) break;  // has a break\n}\nnext();   // OK: reachable\n\nfor (;;) { work(); }  // no break\nnext();   // compile error"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "final makes it constant",
+              "text": "`boolean on = true; while (on) {...}` is fine: `on` is a variable. But `final boolean ON = true;` is a compile-time constant, so `while (ON)` without a break makes the next statement unreachable. `return` inside the loop doesn't count as a break."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l04-e06",
+          "kind": "tapLine",
+          "prompt": "Tap the line that causes the compile error.",
+          "code": "int i = 0;\nwhile (true) {\n    i++;\n    if (i > 3) continue;\n}\nSystem.out.println(i);",
+          "answer": 6,
+          "explanation": "`while (true)` has no `break`; `continue` only restarts the loop. The loop can never complete, so the `println` on line 6 is unreachable, which is a compile error.",
+          "objective": "2.1",
+          "verify": {
+            "expect": "compileError",
+            "line": 6
+          }
+        }
+      ]
+    },
+    {
+      "id": "u02-l05",
+      "title": "Unit 2 checkpoint",
+      "summary": "11 exam-style control-flow questions.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Checkpoint",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "11 exam-style questions on the whole unit. Most of them hinge on a single detail."
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "Exam habit",
+              "text": "Check for *Compilation fails* first: a non-boolean condition, an unreachable statement, a non-constant or out-of-range case label, a non-exhaustive switch expression, or mixed `->` and `:` cases. Then trace fall-through and labels carefully."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l05-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int x = 7;\nif (x > 5)\n    if (x > 8)\n        System.out.print(\"A\");\n    else\n        System.out.print(\"B\");\nelse\n    System.out.print(\"C\");\nSystem.out.println(\"D\");",
+          "options": [
+            "BD",
+            "CD",
+            "D",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "Pair each `else` with the nearest open `if`: the first `else` belongs to `if (x > 8)`, the second to `if (x > 5)`. 7 > 5 enters the outer branch, 7 > 8 is false, so `B` prints, then `D`.",
+          "objective": "2.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "BD\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l05-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "byte b = 10;\nswitch (b) {\n    case 10: System.out.print(\"ten\");\n    case 128: System.out.print(\"big\");\n}",
+          "options": [
+            "ten",
+            "tenbig",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 2,
+          "explanation": "Every case label must fit the selector type. A `byte` holds -128 to 127, so `case 128` doesn't compile.",
+          "objective": "2.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 4
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l05-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "String d = \"sun\";\nint len = switch (d) {\n    case \"SAT\", \"SUN\" -> 2;\n    case \"MON\" -> {\n        System.out.print(\"m\");\n        yield 1;\n    }\n    default -> 0;\n};\nSystem.out.println(len);",
+          "options": [
+            "2",
+            "0",
+            "m1",
+            "Compilation fails"
+          ],
+          "answer": 1,
+          "explanation": "String cases are compared with `equals`, which is case-sensitive. `\"sun\"` matches neither `\"SAT\"` nor `\"SUN\"`, so `default` yields 0.",
+          "objective": "2.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "0\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l05-e04",
+          "kind": "multiChoice",
+          "prompt": "Which three types can be used as the selector of a switch with constant case labels? Choose three.",
+          "options": [
+            "long",
+            "String",
+            "Character",
+            "double",
+            "boolean",
+            "Short"
+          ],
+          "answers": [
+            1,
+            2,
+            5
+          ],
+          "explanation": "Legal selectors are `char`, `byte`, `short`, `int`, their wrappers, `String` and enums. `long`, `float`, `double` and `boolean` are not.",
+          "objective": "2.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ok\n",
+            "source": "String s = \"a\"; Character c = 'a'; Short h = 1;\nswitch (s) { case \"a\": break; }\nswitch (c) { case 'a': break; }\nswitch (h) { case 1: break; }\nSystem.out.println(\"ok\");"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l05-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "int n = 1;\nswitch (n) {\n    case 1 -> \"one\";\n    default -> \"other\";\n}",
+          "options": [
+            "one",
+            "Compiles and prints nothing",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 2,
+          "explanation": "This is a switch **statement** (its value isn't used), so each arrow must be followed by a statement, block or `throw`. A bare `\"one\"` is not a statement, so it fails to compile.",
+          "objective": "2.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 3
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l05-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int count = 0;\nloop:\nfor (int i = 0; i < 5; i++) {\n    switch (i) {\n        case 2: break;\n        case 4: break loop;\n        default: count++;\n    }\n    count += 10;\n}\nSystem.out.println(count);",
+          "options": [
+            "43",
+            "33",
+            "22",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "i=0, 1, 3 go to `default` (+1) then `+10`. At i=2, `break` exits only the switch, so `+10` still runs. At i=4, `break loop` exits the for loop. Total: 11 + 11 + 10 + 11 = 43.",
+          "objective": "2.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "43\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l05-e07",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "final boolean ON = true;\nint n = 0;\nwhile (ON) {\n    if (++n == 3) return;\n}\nSystem.out.println(n);",
+          "options": [
+            "3",
+            "Nothing is printed",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 2,
+          "explanation": "`ON` is a `final` variable with a constant initializer, so `while (ON)` is treated like `while (true)`. The loop has no `break` (`return` doesn't count), so line 6 is unreachable. Without `final`, it would compile and print nothing.",
+          "objective": "2.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 6
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l05-e08",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "char c = 'b';\nint v = switch (c) {\n    case 'a': yield 1;\n    default: System.out.print(\"?\");\n    case 'b': System.out.print(\"b\");\n    case 'c': yield 3;\n};\nSystem.out.println(v);",
+          "options": [
+            "b3",
+            "?b3",
+            "3",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`'b'` matches `case 'b'`, so `default` is skipped even though it comes first. `b` prints, and there is no `yield`, so execution falls into `case 'c'`, which yields 3.",
+          "objective": "2.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "b3\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l05-e09",
+          "kind": "multiChoice",
+          "prompt": "Which two statements are true? Choose two.",
+          "options": [
+            "A switch expression on an int needs a default to compile.",
+            "A switch statement on an int needs a default to compile.",
+            "case 1, 2: is legal in a colon-style switch.",
+            "yield can be used to leave a switch statement.",
+            "A case label can be a non-final local variable."
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "A switch expression must be exhaustive, and for an `int` only `default` achieves that. A switch statement can skip `default`. Several labels separated by commas work with both `:` and `->`. `yield` only works in switch expressions, and labels must be constants.",
+          "objective": "2.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ok\n",
+            "source": "int n = 2;\nswitch (n) { case 1, 2: System.out.println(\"ok\"); }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l05-e10",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int total = 0;\nfor (int i = 0, int j = 3; i < j; i++) {\n    total += j;\n}\nSystem.out.println(total);",
+          "options": [
+            "3",
+            "6",
+            "9",
+            "Compilation fails"
+          ],
+          "answer": 3,
+          "explanation": "The init part of a `for` may declare several variables, but the type is written only once: `int i = 0, j = 3`. Repeating `int` is a syntax error.",
+          "objective": "2.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 2
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u02-l05-e11",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int i = 0, sum = 0;\ndo {\n    i++;\n    if (i % 2 == 0) continue;\n    sum += i;\n} while (i < 5);\nSystem.out.println(sum);",
+          "options": [
+            "9",
+            "4",
+            "15",
+            "The loop never ends"
+          ],
+          "answer": 0,
+          "explanation": "In a do-while, `continue` jumps to the condition check, not past it. Even numbers are skipped, so sum = 1 + 3 + 5 = 9, and the loop ends when `i < 5` is false at i = 5.",
+          "objective": "2.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "9\n"
+          }
+        }
+      ]
+    }
+  ]
+}

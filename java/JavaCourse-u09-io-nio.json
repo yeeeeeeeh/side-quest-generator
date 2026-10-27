@@ -1,0 +1,2417 @@
+{
+  "unitId": "u09",
+  "lessons": [
+    {
+      "id": "u09-l01",
+      "title": "I/O stream basics",
+      "summary": "Byte vs character streams, wrapping and closing.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Two families of streams",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`java.io` moves data as a **stream**: one value after another, from a source (file, keyboard, network) or to a destination."
+            },
+            {
+              "type": "paragraph",
+              "text": "There are two families, and the class name tells you which one you have:"
+            },
+            {
+              "type": "table",
+              "header": [
+                "Family",
+                "Reads",
+                "Writes",
+                "Unit"
+              ],
+              "rows": [
+                [
+                  "Byte streams",
+                  "`InputStream`",
+                  "`OutputStream`",
+                  "8-bit bytes"
+                ],
+                [
+                  "Character streams",
+                  "`Reader`",
+                  "`Writer`",
+                  "16-bit chars"
+                ]
+              ]
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Ends in **Stream** → bytes: `FileInputStream`, `BufferedOutputStream`, `ObjectInputStream`, `PrintStream`.",
+                "Ends in **Reader/Writer** → characters: `FileReader`, `BufferedWriter`, `PrintWriter`.",
+                "Use byte streams for binary data (images, serialized objects), character streams for text."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python picks the mode with one `open()` call: `'rb'` vs `'r'`. Java uses **different classes** for bytes and text, and the compiler won't let you mix them up."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Low-level vs high-level streams",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A **low-level** stream connects directly to a source, such as a file. A **high-level** stream **wraps** another stream and adds features: buffering, lines, objects, formatting."
+            },
+            {
+              "type": "code",
+              "code": "var in = new BufferedInputStream(\n    new FileInputStream(\"data.bin\"));\nvar r = new BufferedReader(\n    new FileReader(\"notes.txt\"));",
+              "caption": "High-level wrapping low-level of the same family"
+            },
+            {
+              "type": "table",
+              "header": [
+                "Low-level (needs a file)",
+                "High-level (needs a stream)"
+              ],
+              "rows": [
+                [
+                  "`FileInputStream`, `FileOutputStream`",
+                  "`BufferedInputStream`, `BufferedOutputStream`, `ObjectInputStream`, `ObjectOutputStream`, `PrintStream`"
+                ],
+                [
+                  "`FileReader`, `FileWriter`",
+                  "`BufferedReader`, `BufferedWriter`, `PrintWriter`"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Families don't mix",
+              "text": "`new BufferedReader(new FileInputStream(f))` does **not compile**: `BufferedReader` wants a `Reader`. To turn bytes into chars, use the bridge `InputStreamReader` (and `OutputStreamWriter` for output)."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "The bridge",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "var r = new BufferedReader(\n    new InputStreamReader(\n        new FileInputStream(\"notes.txt\")));",
+              "caption": "bytes → InputStreamReader → chars"
+            },
+            {
+              "type": "paragraph",
+              "text": "`InputStreamReader` is a `Reader` that takes an `InputStream`. You'll see it most often with the keyboard: `new InputStreamReader(System.in)`, because `System.in` is a byte stream."
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Read the constructor",
+              "text": "To decide if a wrapping compiles, ask: what type does this constructor take? `Buffered*Stream` and `Object*Stream` take a byte stream, `BufferedReader` takes a `Reader`, `BufferedWriter` takes a `Writer`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l01-e01",
+          "kind": "multiChoice",
+          "prompt": "Which two lines compile? Choose two.",
+          "options": [
+            "new BufferedReader(new FileReader(\"a.txt\"))",
+            "new BufferedReader(new FileInputStream(\"a.txt\"))",
+            "new BufferedInputStream(new FileReader(\"a.txt\"))",
+            "new ObjectInputStream(new FileInputStream(\"a.txt\"))",
+            "new FileReader(new BufferedReader(\"a.txt\"))"
+          ],
+          "answers": [
+            0,
+            3
+          ],
+          "explanation": "`BufferedReader` wraps a `Reader` and `ObjectInputStream` wraps an `InputStream`: same family, so both compile. Option 2 and 3 mix families. Option 5 is backwards: `BufferedReader` has no `String` constructor, and `FileReader` has no `BufferedReader` constructor.",
+          "objective": "9.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ok\n",
+            "source": "public class Main {\n    static void m() throws Exception {\n        new BufferedReader(new FileReader(\"a.txt\"));\n        new ObjectInputStream(new FileInputStream(\"a.txt\"));\n    }\n    public static void main(String[] a) {\n        System.out.println(\"ok\");\n    }\n}"
+          }
+        },
+        {
+          "type": "page",
+          "title": "read() returns an int",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "The basic `read()` method of both `InputStream` and `Reader` returns an `int`: the next byte (0–255) or char, or **-1 at the end** of the stream."
+            },
+            {
+              "type": "code",
+              "code": "Path f = Files.createTempFile(\"t\", \".txt\");\nFiles.writeString(f, \"Hi!\");\ntry (var in =\n        new FileInputStream(f.toFile())) {\n    int b;\n    while ((b = in.read()) != -1) {\n        System.out.print((char) b);\n    }\n}",
+              "caption": "The classic read loop",
+              "verify": {
+                "expect": "stdout",
+                "value": "Hi!"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Why int, not byte?",
+              "text": "A `byte` can't represent \"no more data\" separately from a real value. Returning `int` leaves room for -1. Exam code that stores the result in a `byte` or `char` without a cast does not compile."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l01-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Path f = Files.createTempFile(\"t\", \"\");\nFiles.writeString(f, \"abc\");\nint count = 0;\ntry (var in =\n        new FileInputStream(f.toFile())) {\n    while (in.read() != -1) count++;\n}\nSystem.out.println(count);",
+          "options": [
+            "3",
+            "4",
+            "2",
+            "-1"
+          ],
+          "answer": 0,
+          "explanation": "The file has 3 bytes: `a`, `b`, `c`. `read()` returns each, then -1, which ends the loop without being counted.",
+          "objective": "9.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "3\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "flush, close and try-with-resources",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "Buffered and other output streams keep data in memory. `flush()` pushes it to the destination.",
+                "`close()` flushes and then releases the file handle.",
+                "Closing the **outer** wrapper also closes the stream it wraps.",
+                "Use **try-with-resources**: every resource declared in `try (...)` is closed automatically, in **reverse** order of declaration, even if an exception is thrown."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "try (var w = new BufferedWriter(\n        new FileWriter(\"out.txt\"))) {\n    w.write(\"saved\");\n} // w.close() runs here, flushing \"saved\""
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "Forgetting to close or flush a buffered writer means the data may never reach the file. Expect a question asking what a file contains after code that never closes its writer."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l01-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Path f = Files.createTempFile(\"t\", \"\");\nvar w = new BufferedWriter(\n    new FileWriter(f.toFile()));\nw.write(\"hello\");\nSystem.out.println(Files.size(f));",
+          "options": [
+            "0",
+            "5",
+            "hello",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`BufferedWriter` stores \"hello\" in its buffer. Nothing calls `flush()` or `close()` before `Files.size`, so the file is still empty: **0** bytes.",
+          "objective": "9.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "0\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l01-e04",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code so it reads the first line of notes.txt and closes the reader automatically.",
+          "code": "___ (var r = new BufferedReader(\n        new ___(\"notes.txt\"))) {\n    System.out.println(r.readLine());\n}",
+          "bank": [
+            "try",
+            "FileReader",
+            "FileInputStream",
+            "finally",
+            "catch"
+          ],
+          "answers": [
+            "try",
+            "FileReader"
+          ],
+          "explanation": "Try-with-resources is `try (resource) { ... }`. `BufferedReader` needs a `Reader`, so the low-level stream is `FileReader`; `FileInputStream` is a byte stream and would not compile here.",
+          "objective": "9.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "ok\n",
+            "source": "public class Main {\n    static void m() throws Exception {\n        try (var r = new BufferedReader(\n                new FileReader(\"notes.txt\"))) {\n            System.out.println(r.readLine());\n        }\n    }\n    public static void main(String[] a) {\n        System.out.println(\"ok\");\n    }\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l01-e05",
+          "kind": "trueFalse",
+          "prompt": "When a try-with-resources statement declares two resources, they are closed in the same order they were declared.",
+          "answer": false,
+          "explanation": "Resources are closed in **reverse** order: the last one declared is closed first. That way a wrapper is closed before the stream it may depend on.",
+          "objective": "9.1"
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l01-e06",
+          "kind": "singleChoice",
+          "prompt": "Which type is returned by `Reader.read()`?",
+          "options": [
+            "int",
+            "char",
+            "byte",
+            "String"
+          ],
+          "answer": 0,
+          "explanation": "Like `InputStream.read()`, `Reader.read()` returns an `int`: the char value 0–65535, or -1 at end of stream. You cast to `char` to use it as a character.",
+          "objective": "9.1",
+          "examStyle": true,
+          "codeOptions": true
+        }
+      ]
+    },
+    {
+      "id": "u09-l02",
+      "title": "Reading & writing text",
+      "summary": "readLine, newLine, PrintWriter and append mode.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "BufferedReader.readLine()",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`BufferedReader` adds `readLine()`: it returns one line **without** the line break, or **null** at the end of the stream."
+            },
+            {
+              "type": "code",
+              "code": "Path f = Files.createTempFile(\"t\", \"\");\nFiles.writeString(f, \"one\\ntwo\\n\");\ntry (var r = new BufferedReader(\n        new FileReader(f.toFile()))) {\n    String line;\n    while ((line = r.readLine()) != null) {\n        System.out.println(\"[\" + line + \"]\");\n    }\n}",
+              "caption": "Reading line by line",
+              "verify": {
+                "expect": "stdout",
+                "value": "[one]\n[two]\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "null vs -1",
+              "text": "`read()` signals the end with **-1**. `readLine()` signals it with **null**. Mixing them up (`readLine() != -1`) does not compile: you can't compare a `String` with an `int`."
+            },
+            {
+              "type": "paragraph",
+              "text": "`mark(limit)` remembers the current position; `reset()` jumps back to it, as long as you read at most `limit` characters in between. `skip(n)` jumps forward. A `reset()` also undoes any `skip` after the mark."
+            },
+            {
+              "type": "code",
+              "code": "try (var r = new BufferedReader(\n        new StringReader(\"abcdef\"))) {\n    r.mark(10);\n    System.out.print((char) r.read());\n    r.skip(2);\n    System.out.print((char) r.read());\n    r.reset();\n    System.out.println((char) r.read());\n}",
+              "caption": "Read a, skip b c, read d, back to a",
+              "verify": {
+                "expect": "stdout",
+                "value": "ada\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "reset without mark",
+              "text": "Calling `reset()` on a `BufferedReader` with no valid mark throws `IOException`. Not every stream supports marks: check `markSupported()`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l02-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Path f = Files.createTempFile(\"t\", \"\");\nFiles.writeString(f, \"a\\n\\nb\");\nint n = 0;\ntry (var r = new BufferedReader(\n        new FileReader(f.toFile()))) {\n    while (r.readLine() != null) n++;\n}\nSystem.out.println(n);",
+          "options": [
+            "2",
+            "3",
+            "4",
+            "1"
+          ],
+          "answer": 1,
+          "explanation": "`readLine()` returns `\"a\"`, `\"\"` (the empty line between the two breaks) and `\"b\"`. Then it returns `null`. An empty line is still a line, so the count is **3**.",
+          "objective": "9.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "3\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Writing text",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`BufferedWriter` adds `newLine()`, which writes the platform's line separator. `write(String)` writes exactly what you give it, with no line break."
+            },
+            {
+              "type": "paragraph",
+              "text": "`FileWriter` **overwrites** the file by default. Pass `true` as the second argument to **append** instead."
+            },
+            {
+              "type": "code",
+              "code": "File f = Files.createTempFile(\"t\", \"\")\n    .toFile();\ntry (var w = new FileWriter(f)) {\n    w.write(\"A\");\n}\ntry (var w = new FileWriter(f, true)) {\n    w.write(\"B\");\n}\ntry (var w = new FileWriter(f)) {\n    w.write(\"C\");\n}\nSystem.out.println(\n    Files.readString(f.toPath()));",
+              "caption": "Only the middle writer appends",
+              "verify": {
+                "expect": "stdout",
+                "value": "C\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Declared type matters",
+              "text": "`newLine()` and `readLine()` exist only on `BufferedWriter` / `BufferedReader`. If the variable is declared as `Writer` or `Reader`, calling them does not compile, even when the object really is buffered."
+            },
+            {
+              "type": "paragraph",
+              "text": "`reader.transferTo(writer)` (Java 10) copies every remaining character and returns how many as a `long`. It doesn't flush or close either side."
+            },
+            {
+              "type": "code",
+              "code": "var out = new StringWriter();\nlong n = new StringReader(\"hello\")\n    .transferTo(out);\nSystem.out.println(n + \" \" + out);",
+              "verify": {
+                "expect": "stdout",
+                "value": "5 hello\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l02-e02",
+          "kind": "tapLine",
+          "prompt": "Tap the line that causes a compilation error.",
+          "code": "Writer w = new BufferedWriter(\n    new FileWriter(\"log.txt\"));\nw.write(\"start\");\nw.newLine();\nw.close();",
+          "answer": 4,
+          "explanation": "The declared type is `Writer`, and `Writer` has no `newLine()` method. The compiler only looks at the reference type. Declaring `BufferedWriter w` fixes it.",
+          "objective": "9.1",
+          "verify": {
+            "expect": "compileError",
+            "line": 4
+          }
+        },
+        {
+          "type": "page",
+          "title": "PrintWriter and PrintStream",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`PrintWriter` (characters) and `PrintStream` (bytes) add `print`, `println`, `printf` and `format`. `System.out` and `System.err` are `PrintStream`s."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Their print methods **never throw `IOException`**. Errors are recorded and can be checked with `checkError()`.",
+                "Their **constructors** that open a file can still throw `FileNotFoundException`.",
+                "`PrintWriter` can wrap a `Writer` **or** an `OutputStream`, or take a file name directly.",
+                "`printf` and `format` do the same thing: `%s` text, `%d` integer, `%.2f` decimal, `%n` line break."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "var sw = new StringWriter();\ntry (var pw = new PrintWriter(sw)) {\n    pw.printf(\"%s=%d%n\", \"x\", 7);\n    pw.print(2.5);\n}\nSystem.out.println(sw);",
+              "caption": "PrintWriter writing into a String",
+              "verify": {
+                "expect": "stdout",
+                "value": "x=7\n2.5\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "`printf(\"%s=%d\", ...)` is like Python's `\"%s=%d\" % (...)`. Java's `%n` is the portable line break."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l02-e03",
+          "kind": "trueFalse",
+          "prompt": "`PrintWriter.println(String)` can throw an `IOException`, so calls to it must be inside a try/catch.",
+          "answer": false,
+          "explanation": "Print methods of `PrintWriter` and `PrintStream` swallow I/O errors and set an internal flag instead; call `checkError()` to see it. That's why `System.out.println` never needs a try/catch.",
+          "objective": "9.1"
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l02-e04",
+          "kind": "singleChoice",
+          "prompt": "Which line compiles?",
+          "options": [
+            "new PrintWriter(new FileOutputStream(\"a.txt\"))",
+            "new PrintStream(new FileWriter(\"a.txt\"))",
+            "new BufferedWriter(new FileOutputStream(\"a.txt\"))",
+            "new FileWriter(new FileOutputStream(\"a.txt\"))"
+          ],
+          "answer": 0,
+          "explanation": "`PrintWriter` is special: it has constructors for both `Writer` and `OutputStream`. `PrintStream` has no `Writer` constructor, `BufferedWriter` needs a `Writer`, and `FileWriter` has no stream constructor.",
+          "objective": "9.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ok\n",
+            "source": "public class Main {\n    static void m() throws Exception {\n        new PrintWriter(new FileOutputStream(\"a.txt\"));\n    }\n    public static void main(String[] a) {\n        System.out.println(\"ok\");\n    }\n}",
+            "optionCheck": false
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l02-e05",
+          "kind": "orderLines",
+          "prompt": "Put the lines in order to print every line of a file, closing the reader automatically.",
+          "lines": [
+            "try (var r = new BufferedReader(new FileReader(f))) {",
+            "    String line;",
+            "    while ((line = r.readLine()) != null) {",
+            "        System.out.println(line);",
+            "    }",
+            "}"
+          ],
+          "distractors": [
+            "    while ((line = r.readLine()) != -1) {"
+          ],
+          "explanation": "Declare the resource in `try (...)`, declare the loop variable, then assign and test in one expression: `(line = r.readLine()) != null`.",
+          "objective": "9.1"
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l02-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Path f = Files.createTempFile(\"t\", \"\");\nFile file = f.toFile();\ntry (var w = new FileWriter(file)) {\n    w.write(\"a\");\n}\ntry (var w = new FileWriter(file, true)) {\n    w.write(\"b\");\n}\nSystem.out.println(Files.readString(f));",
+          "options": [
+            "ab",
+            "b",
+            "a\nb",
+            "ba"
+          ],
+          "answer": 0,
+          "explanation": "The first writer creates the file with `a`. The second opens it in append mode (`true`) and adds `b`, so the file contains `ab`.",
+          "objective": "9.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ab\n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u09-l03",
+      "title": "Console I/O",
+      "summary": "System.in/out/err, Console and Scanner.",
+      "minutes": 6,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Three standard streams",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Field",
+                "Type",
+                "Use"
+              ],
+              "rows": [
+                [
+                  "`System.in`",
+                  "`InputStream`",
+                  "Keyboard input (bytes)"
+                ],
+                [
+                  "`System.out`",
+                  "`PrintStream`",
+                  "Normal output"
+                ],
+                [
+                  "`System.err`",
+                  "`PrintStream`",
+                  "Error output"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "They are opened by the JVM. Don't close them yourself: once `System.out` is closed, later prints silently go nowhere."
+            },
+            {
+              "type": "code",
+              "code": "var br = new BufferedReader(\n    new InputStreamReader(System.in));\nString name = br.readLine();",
+              "caption": "Reading a line from the keyboard with streams"
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "out vs err",
+              "text": "Both usually show up in the terminal, but they are separate streams. Redirecting output to a file (`> out.txt`) captures `System.out` only."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "The Console class",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`System.console()` returns a `java.io.Console`, or **null** when there is no interactive console (for example in an IDE or when input is redirected). Always check for null."
+            },
+            {
+              "type": "code",
+              "code": "Console c = System.console();\nif (c != null) {\n    String user = c.readLine(\"User: \");\n    char[] pw = c.readPassword(\"Password: \");\n    c.format(\"Hi %s%n\", user);\n    Arrays.fill(pw, ' ');\n}"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`readLine()` / `readLine(fmt, args...)` return a `String`.",
+                "`readPassword()` returns a **`char[]`** and does not echo what you type.",
+                "`format` and `printf` print formatted text and return the `Console`.",
+                "`reader()` returns a `Reader`, `writer()` a `PrintWriter`."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "Why char[]?",
+              "text": "A `String` is immutable and may stay in memory (and the string pool) until garbage collection. A `char[]` can be wiped right after use with `Arrays.fill`. Expect this reason on the exam."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l03-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the return type of `Console.readPassword()`?",
+          "options": [
+            "char[]",
+            "String",
+            "byte[]",
+            "char"
+          ],
+          "answer": 0,
+          "explanation": "It returns `char[]` so the program can overwrite the password in memory as soon as it's done with it.",
+          "objective": "9.1",
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l03-e02",
+          "kind": "multiChoice",
+          "prompt": "Which two statements about `java.io.Console` are true? Choose two.",
+          "options": [
+            "`System.console()` may return null.",
+            "`new Console()` creates a console for the current process.",
+            "`readPassword()` echoes the characters typed.",
+            "`readLine(String fmt, Object... args)` prints a prompt and reads a line.",
+            "`Console.format` returns `void`."
+          ],
+          "answers": [
+            0,
+            3
+          ],
+          "explanation": "There's no public constructor; you get the Console from `System.console()`, which may be null. `readLine` can take a format prompt. `readPassword` hides the input, and `format`/`printf` return the `Console` itself so calls can be chained.",
+          "objective": "9.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "source": "public class Main {\n    public static void main(String[] a) {\n        Console c = new Console();\n    }\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l03-e03",
+          "kind": "trueFalse",
+          "prompt": "A program that calls `System.console().readLine()` always works, because every Java program has a console.",
+          "answer": false,
+          "explanation": "When no interactive console is attached (IDE run, background job, redirected input), `System.console()` returns null, and calling `readLine()` on it throws a `NullPointerException`.",
+          "objective": "9.1"
+        },
+        {
+          "type": "page",
+          "title": "Scanner (briefly)",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`java.util.Scanner` reads tokens from `System.in`, a `String` or a file: `nextInt()`, `nextDouble()`, `next()` (one word), `nextLine()` (rest of the line), plus `hasNext...()` checks."
+            },
+            {
+              "type": "code",
+              "code": "var sc = new Scanner(\"7 days\\nweek\");\nint n = sc.nextInt();\nString rest = sc.nextLine();\nString next = sc.nextLine();\nSystem.out.println(\n    n + \"|\" + rest + \"|\" + next);",
+              "caption": "Scanner over a String",
+              "verify": {
+                "expect": "stdout",
+                "value": "7| days|week\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "nextInt() then nextLine()",
+              "text": "`nextInt()` stops right after the number. The following `nextLine()` returns the **rest of that same line** (here `\" days\"`, or `\"\"` if the number ended the line), not the next line."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l03-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var sc = new Scanner(\"5\\nb\");\nint x = sc.nextInt();\nSystem.out.println(\"[\" + sc.nextLine() + \"]\");",
+          "options": [
+            "[]",
+            "[b]",
+            "[a]",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`nextInt()` reads `5` and stops before the line break. `nextLine()` then returns what's left of line 1: an empty string.",
+          "objective": "9.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "[]\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l03-e05",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code to read one line from the keyboard using streams.",
+          "code": "var br = new BufferedReader(\n    new ___(System.___));\nString s = br.readLine();",
+          "bank": [
+            "InputStreamReader",
+            "in",
+            "FileReader",
+            "out",
+            "console"
+          ],
+          "answers": [
+            "InputStreamReader",
+            "in"
+          ],
+          "explanation": "`System.in` is an `InputStream` (bytes). `BufferedReader` needs a `Reader`, so wrap it in the bridge class `InputStreamReader`. `FileReader` takes a file, not a stream.",
+          "objective": "9.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "ok\n",
+            "source": "public class Main {\n    static void m() throws Exception {\n        var br = new BufferedReader(\n            new InputStreamReader(System.in));\n        String s = br.readLine();\n    }\n    public static void main(String[] a) {\n        System.out.println(\"ok\");\n    }\n}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u09-l04",
+      "title": "Serialization",
+      "summary": "Turning objects into bytes and back.",
+      "minutes": 9,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Serializable",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "**Serialization** writes an object (and everything it references) as bytes. **Deserialization** rebuilds it. A class opts in by implementing `java.io.Serializable`, a **marker interface** with no methods."
+            },
+            {
+              "type": "code",
+              "code": "class Cat implements Serializable {\n    private static final long\n        serialVersionUID = 1L;\n    String name;\n    int age;\n}"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`ObjectOutputStream.writeObject(obj)` writes it.",
+                "`ObjectInputStream.readObject()` returns **`Object`**, so you must **cast**. It throws `IOException` and the checked `ClassNotFoundException`.",
+                "`serialVersionUID` is a version number. If the stored value differs from the class's current one, reading throws `InvalidClassException`."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Like `pickle`, but Java refuses classes that didn't opt in: writing a non-`Serializable` object throws `NotSerializableException`."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Writing and reading",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "try (var out = new ObjectOutputStream(\n        new FileOutputStream(\"cats.ser\"))) {\n    out.writeObject(new Cat());\n}\ntry (var in = new ObjectInputStream(\n        new FileInputStream(\"cats.ser\"))) {\n    Cat c = (Cat) in.readObject();\n}"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "No cast, no compile",
+              "text": "`Cat c = in.readObject();` does not compile: the return type is `Object`. A wrong cast compiles but throws `ClassCastException` at runtime."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l04-e01",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code that saves and restores a `Cat`.",
+          "code": "out.___(cat);\n// later\nCat c = ___ in.readObject();",
+          "bank": [
+            "writeObject",
+            "(Cat)",
+            "write",
+            "(Object)",
+            "readCat"
+          ],
+          "answers": [
+            "writeObject",
+            "(Cat)"
+          ],
+          "explanation": "`ObjectOutputStream.writeObject` saves the object. `readObject()` returns `Object`, so it must be cast to `(Cat)`. `write` only writes bytes.",
+          "objective": "9.2",
+          "verify": {
+            "expect": "stdout",
+            "value": "ok\n",
+            "source": "class Cat implements Serializable {}\npublic class Main {\n    static void m(ObjectOutputStream out,\n            ObjectInputStream in, Cat cat)\n            throws Exception {\n        out.writeObject(cat);\n        Cat c = (Cat) in.readObject();\n    }\n    public static void main(String[] a) {\n        System.out.println(\"ok\");\n    }\n}"
+          }
+        },
+        {
+          "type": "page",
+          "title": "What is NOT saved",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "**`transient`** fields are skipped on purpose (passwords, caches).",
+                "**`static`** fields belong to the class, not the object, so they are never saved.",
+                "On deserialization, the Serializable class's **constructors and field initializers do not run**. Skipped fields get default values: `0`, `false`, `null`."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "class Account implements Serializable {\n    String user = \"guest\";\n    transient String pin = \"1234\";\n    transient int tries = 3;\n}\n// after a round trip: user kept,\n// pin = null, tries = 0"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Initializers don't help",
+              "text": "`transient int tries = 3;` comes back as **0**, not 3: the initializer isn't run during deserialization. And a `static` field shows whatever value the class has **now**, not when the object was saved."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l04-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Account implements Serializable {\n    String name = \"Ada\";\n    transient int tries = 3;\n    transient String pin = \"1234\";\n    static int count = 5;\n}\n// in main:\nvar a = new Account();\n// ... a is serialized here ...\nAccount.count = 9;\nvar b = copy(a); // deserialized copy\nSystem.out.println(b.name + \" \" + b.tries\n    + \" \" + b.pin + \" \" + Account.count);",
+          "options": [
+            "Ada 0 null 9",
+            "Ada 3 null 9",
+            "Ada 0 1234 5",
+            "Ada 3 1234 5"
+          ],
+          "answer": 0,
+          "explanation": "`name` is saved. `tries` and `pin` are transient, so they come back as `0` and `null`; the initializers don't run. `count` is static: not saved, and it was changed to 9 before reading, so 9 is printed.",
+          "objective": "9.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "Ada 0 null 9\n",
+            "source": "class Account implements Serializable {\n    String name = \"Ada\";\n    transient int tries = 3;\n    transient String pin = \"1234\";\n    static int count = 5;\n}\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        var a = new Account();\n        var bytes = new ByteArrayOutputStream();\n        try (var out = new ObjectOutputStream(bytes)) {\n            out.writeObject(a);\n        }\n        Account.count = 9;\n        Account b;\n        try (var in = new ObjectInputStream(\n                new ByteArrayInputStream(bytes.toByteArray()))) {\n            b = (Account) in.readObject();\n        }\n        System.out.println(b.name + \" \" + b.tries\n            + \" \" + b.pin + \" \" + Account.count);\n    }\n}"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Inheritance and constructors",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "When an object is deserialized, Java walks up its class hierarchy to the **first superclass that is not Serializable** and runs **that class's no-arg constructor**. Serializable classes below it get no constructor call; their fields come from the stream."
+            },
+            {
+              "type": "code",
+              "code": "class Animal {            // not Serializable\n    Animal() { print(\"A\"); }\n}\nclass Dog extends Animal\n        implements Serializable {\n    Dog() { print(\"D\"); }\n}\n// new Dog()     prints AD\n// deserializing prints A"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "No accessible no-arg constructor",
+              "text": "If that first non-serializable superclass has no accessible no-arg constructor, the code still **compiles**, but deserialization fails at runtime with `InvalidClassException`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l04-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "import java.io.*;\nclass Animal {\n    Animal() { System.out.print(\"A\"); }\n}\nclass Dog extends Animal\n        implements Serializable {\n    Dog() { System.out.print(\"D\"); }\n}\npublic class Main {\n    public static void main(String[] a)\n            throws Exception {\n        var bos = new ByteArrayOutputStream();\n        try (var out =\n                new ObjectOutputStream(bos)) {\n            out.writeObject(new Dog());\n        }\n        try (var in = new ObjectInputStream(\n                new ByteArrayInputStream(\n                    bos.toByteArray()))) {\n            in.readObject();\n        }\n    }\n}",
+          "options": [
+            "ADA",
+            "ADAD",
+            "AD",
+            "ADD"
+          ],
+          "answer": 0,
+          "explanation": "`new Dog()` prints `A` then `D`. Deserializing runs only the no-arg constructor of the first non-serializable superclass, `Animal`: one more `A`. `Dog()` is not called. Total: `ADA`.",
+          "objective": "9.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ADA\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Fields must be serializable too",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Serialization saves the whole object graph. Every non-transient, non-static field must hold something serializable (or `null`). Otherwise `writeObject` throws **`NotSerializableException`** at runtime."
+            },
+            {
+              "type": "code",
+              "code": "class Engine {}  // not Serializable\nclass Car implements Serializable {\n    Engine e = new Engine(); // problem\n    transient Engine t = new Engine(); // ok\n}"
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Mostly safe",
+              "text": "`String`, wrapper classes like `Integer`, arrays of serializable things, and the common collections (`ArrayList`, `HashMap`) are all serializable."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l04-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "import java.io.*;\nclass Engine {}\nclass Car implements Serializable {\n    Engine engine = new Engine();\n}\npublic class Main {\n    public static void main(String[] a)\n            throws IOException {\n        var bos = new ByteArrayOutputStream();\n        try (var out =\n                new ObjectOutputStream(bos)) {\n            out.writeObject(new Car());\n        }\n        System.out.println(\"saved\");\n    }\n}",
+          "options": [
+            "An exception is thrown at runtime",
+            "Compilation fails",
+            "saved",
+            "Nothing is printed"
+          ],
+          "answer": 0,
+          "explanation": "It compiles: the compiler doesn't check field types. At runtime `writeObject` reaches the `Engine` object, which isn't `Serializable`, and throws `NotSerializableException` before `saved` is printed.",
+          "objective": "9.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "NotSerializableException",
+            "stdout": ""
+          }
+        },
+        {
+          "type": "page",
+          "title": "Records and reading many objects",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "A **record** that implements `Serializable` is rebuilt by calling its **canonical constructor**, so validation in a compact constructor runs again.",
+                "There's no \"-1\" or \"null\" at the end of an object stream: `readObject()` throws **`EOFException`** when no object is left. Catch it to end a read loop."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "try (var in = new ObjectInputStream(\n        new FileInputStream(\"cats.ser\"))) {\n    while (true) {\n        Cat c = (Cat) in.readObject();\n        cats.add(c);\n    }\n} catch (EOFException e) {\n    // end of file reached\n}",
+              "caption": "Reading until the end of the stream"
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l04-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "import java.io.*;\nrecord Point(int x) implements Serializable {\n    Point { System.out.print(\"R\"); }\n}\npublic class Main {\n    public static void main(String[] a)\n            throws Exception {\n        var bos = new ByteArrayOutputStream();\n        try (var out =\n                new ObjectOutputStream(bos)) {\n            out.writeObject(new Point(1));\n        }\n        try (var in = new ObjectInputStream(\n                new ByteArrayInputStream(\n                    bos.toByteArray()))) {\n            in.readObject();\n        }\n    }\n}",
+          "options": [
+            "RRR",
+            "RR",
+            "R",
+            "Nothing is printed"
+          ],
+          "answer": 1,
+          "explanation": "The compact constructor runs when the record is created (`R`). Records are deserialized through their canonical constructor, so it runs a second time when the copy is read: `RR`.",
+          "objective": "9.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "RR\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l04-e06",
+          "kind": "trueFalse",
+          "prompt": "`ObjectInputStream.readObject()` returns `null` when it reaches the end of the stream.",
+          "answer": false,
+          "explanation": "It throws `EOFException`. `null` can't mean \"end\" because `null` is a valid value that may have been written with `writeObject(null)`.",
+          "objective": "9.2"
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l04-e07",
+          "kind": "multiChoice",
+          "prompt": "Which two field values are NOT written by `writeObject`? Choose two.",
+          "options": [
+            "`transient int id`",
+            "`static String label`",
+            "`private String name`",
+            "`final int size`",
+            "`int[] scores`"
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "`transient` fields are skipped on purpose, and `static` fields belong to the class, not the instance. `private`, `final` and array fields are all saved normally.",
+          "objective": "9.2",
+          "examStyle": true
+        }
+      ]
+    },
+    {
+      "id": "u09-l05",
+      "title": "Path",
+      "summary": "Creating, inspecting and combining paths.",
+      "minutes": 9,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Meet Path",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "NIO.2 (`java.nio.file`) represents a location with the **`Path`** interface. Create one with `Path.of(...)` or the older `Paths.get(...)`; both do the same thing."
+            },
+            {
+              "type": "code",
+              "code": "Path a = Path.of(\"/zoo/animals\");\nPath b = Path.of(\"zoo\", \"animals\", \"cat\");\nPath c = Paths.get(\"notes.txt\");\nSystem.out.println(b);",
+              "caption": "Parts are joined with the separator",
+              "verify": {
+                "expect": "stdout",
+                "value": "zoo/animals/cat\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "**Absolute** paths start at the root (`/` on Unix, `C:\\\\` on Windows). Everything else is **relative** to the current directory.",
+                "Creating a `Path` does **not** touch the file system. The file doesn't have to exist.",
+                "`Path` is **immutable**: methods return a new `Path`."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Similar to `pathlib.Path`. But Java uses `Path.of(...)` (no `new`, it's an interface) and joins with `resolve`, not `/`."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Taking a path apart",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "Path p =\n    Path.of(\"/zoo/animals/bear/koala.txt\");\np.getFileName()  // koala.txt\np.getParent()    // /zoo/animals/bear\np.getRoot()      // /\np.getNameCount() // 4\np.getName(0)     // zoo\np.subpath(1, 3)  // animals/bear"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "The root is **not** a name. `getName(0)` is the element closest to the root.",
+                "`subpath(begin, end)`: `end` is **exclusive**, like `substring`. Bad indexes throw `IllegalArgumentException`.",
+                "`getParent()` and `getRoot()` return **null** when there's nothing to return, e.g. `Path.of(\"koala.txt\").getParent()`."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Index errors",
+              "text": "`subpath(0, 5)` on a 4-name path throws `IllegalArgumentException`, not `IndexOutOfBoundsException`. So does `getName(4)`."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Names, not characters",
+              "text": "`Path.startsWith` and `endsWith` compare **whole name elements**, unlike `String`. `Path.of(\"/data\").startsWith(\"/da\")` is `false`. A root-only path has no names: `Path.of(\"/\").getFileName()` is `null` and `getNameCount()` is 0."
+            },
+            {
+              "type": "code",
+              "code": "Path p = Path.of(\"/data/logs\");\nSystem.out.println(p.startsWith(\"/data\"));\nSystem.out.println(p.startsWith(\"/da\"));\nSystem.out.println(\n    p.toString().startsWith(\"/da\"));\nSystem.out.println(p.endsWith(\"logs\"));\nPath root = Path.of(\"/\");\nSystem.out.println(root.getFileName()\n    + \" \" + root.getNameCount());",
+              "verify": {
+                "expect": "stdout",
+                "value": "true\nfalse\ntrue\ntrue\nnull 0\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l05-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var p = Path.of(\n    \"/zoo/animals/bear/koala.txt\");\nSystem.out.println(p.getNameCount() + \" \"\n    + p.subpath(1, 3));",
+          "options": [
+            "4 animals/bear",
+            "5 zoo/animals",
+            "4 zoo/animals/bear",
+            "3 animals/bear/koala.txt"
+          ],
+          "answer": 0,
+          "explanation": "The root `/` isn't counted, so there are 4 names: zoo(0), animals(1), bear(2), koala.txt(3). `subpath(1, 3)` takes indexes 1 and 2: `animals/bear`.",
+          "objective": "9.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "4 animals/bear\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l05-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var p = Path.of(\"koala.txt\");\nSystem.out.println(p.getParent() + \" \"\n    + p.getRoot());",
+          "options": [
+            "null null",
+            "koala.txt null",
+            "null /",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "A relative path with one name has no parent and no root, so both methods return `null`. No exception is thrown.",
+          "objective": "9.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "null null\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "resolve and relativize",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`p.resolve(q)` joins `q` onto `p`. If `q` is **absolute**, the result is just `q`."
+            },
+            {
+              "type": "code",
+              "code": "Path base = Path.of(\"/home/kim\");\nSystem.out.println(\n    base.resolve(\"docs/a.txt\"));\nSystem.out.println(base.resolve(\"/tmp\"));",
+              "caption": "Absolute argument wins",
+              "verify": {
+                "expect": "stdout",
+                "value": "/home/kim/docs/a.txt\n/tmp\n"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "`p.resolveSibling(q)` resolves `q` against `p`'s **parent**: handy for a file next to `p`. An absolute `q` is again returned as is."
+            },
+            {
+              "type": "code",
+              "code": "Path p = Path.of(\"/data/in/report.txt\");\nSystem.out.println(\n    p.resolveSibling(\"summary.txt\"));\nSystem.out.println(\n    p.resolveSibling(\"/tmp/x\"));",
+              "verify": {
+                "expect": "stdout",
+                "value": "/data/in/summary.txt\n/tmp/x\n"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "`p.relativize(q)` answers: how do I get from `p` to `q`? Both must be absolute, or both relative; mixing them throws `IllegalArgumentException`."
+            },
+            {
+              "type": "code",
+              "code": "Path from = Path.of(\"/a/b\");\nPath to = Path.of(\"/a/c/d\");\nSystem.out.println(from.relativize(to));\nSystem.out.println(to.relativize(from));",
+              "caption": "Walk up with .., then down",
+              "verify": {
+                "expect": "stdout",
+                "value": "../c/d\n../../b\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l05-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var p = Path.of(\"a/b\");\nvar q = Path.of(\"a/c/x\");\nSystem.out.println(p.relativize(q));",
+          "options": [
+            "../c/x",
+            "c/x",
+            "../../c/x",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "From `a/b`, go up one level to `a`, then down into `c/x`: `../c/x`. Both paths are relative, so relativize is allowed.",
+          "objective": "9.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "../c/x\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l05-e04",
+          "kind": "tapLine",
+          "prompt": "Tap the line that throws an exception at runtime.",
+          "code": "var p1 = Path.of(\"/data/logs\");\nvar p2 = Path.of(\"app.log\");\nvar p3 = p1.resolve(p2);\nvar p4 = p3.subpath(0, 2);\nvar p5 = p4.relativize(p1);",
+          "answer": 5,
+          "explanation": "`p3` is `/data/logs/app.log` and `p4` is the relative `data/logs`. Line 5 relativizes a relative path against an absolute one, which throws `IllegalArgumentException`.",
+          "objective": "9.3",
+          "verify": {
+            "expect": "exception",
+            "value": "IllegalArgumentException"
+          }
+        },
+        {
+          "type": "page",
+          "title": "normalize, toAbsolutePath, toRealPath",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "`normalize()` removes `.` and resolves `x/..` pairs, purely as text. Leading `..` in a relative path stays.",
+                "`toAbsolutePath()` puts the current directory in front of a relative path. No file needs to exist.",
+                "`toRealPath()` asks the file system: it normalizes, follows symbolic links, and throws **`NoSuchFileException`** (an `IOException`) if the file doesn't exist."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "System.out.println(\n    Path.of(\"a/./b/../c\").normalize());\nSystem.out.println(\n    Path.of(\"../x/../y\").normalize());",
+              "verify": {
+                "expect": "stdout",
+                "value": "a/c\n../y\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Immutable: the ignored return value",
+              "text": "`p.normalize();` on its own line does nothing useful: `p` is unchanged and the new `Path` is thrown away. Exam code loves this. Write `p = p.normalize();`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l05-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Path p = Path.of(\"x/./y/../z\");\np.normalize();\nSystem.out.println(p);",
+          "options": [
+            "x/./y/../z",
+            "x/z",
+            "x/y/z",
+            "z"
+          ],
+          "answer": 0,
+          "explanation": "`normalize()` returns a **new** Path and `p` is never reassigned. Printing `p` shows the original text.",
+          "objective": "9.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "x/./y/../z\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "equals vs Files.isSameFile",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`Path.equals` compares the path **text** (no normalizing, no file system). `Files.isSameFile(a, b)` asks the file system whether both point to the same file."
+            },
+            {
+              "type": "code",
+              "code": "var a = Path.of(\"docs/../notes.txt\");\nvar b = Path.of(\"notes.txt\");\nSystem.out.println(a.equals(b));\nSystem.out.println(a.normalize().equals(b));",
+              "verify": {
+                "expect": "stdout",
+                "value": "false\ntrue\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "`Files.isSameFile` returns `true` immediately if the paths are `equals`. Otherwise it really looks at the files on disk, so it declares `throws IOException`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l05-e06",
+          "kind": "multiChoice",
+          "prompt": "Which two statements are true? Choose two.",
+          "options": [
+            "`Path.of(\"/a\").resolve(\"/b\")` is `/b`.",
+            "`Path.of(\"data.txt\")` throws an exception if the file doesn't exist.",
+            "`toRealPath()` requires the file to exist.",
+            "`normalize()` modifies the Path it is called on.",
+            "`relativize` works between an absolute and a relative path."
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "`resolve` returns its argument when the argument is absolute. `toRealPath` reads the file system and throws `NoSuchFileException` for missing files. Creating a Path never checks existence, `Path` is immutable, and mixing absolute/relative in `relativize` throws `IllegalArgumentException`.",
+          "objective": "9.3",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "/b\nNSFE\n",
+            "source": "System.out.println(Path.of(\"/a\").resolve(\"/b\"));\ntry {\n    Path.of(\"no-such-file-xyz\").toRealPath();\n} catch (NoSuchFileException e) {\n    System.out.println(\"NSFE\");\n}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u09-l06",
+      "title": "Files basics",
+      "summary": "Check, create, delete, copy and move.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "The Files helper class",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`java.nio.file.Files` is a class of **static** methods that act on `Path`s. Most of them throw the checked **`IOException`** (or a subclass)."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Method",
+                "Returns",
+                "Throws?"
+              ],
+              "rows": [
+                [
+                  "`exists(p)`, `notExists(p)`",
+                  "`boolean`",
+                  "no"
+                ],
+                [
+                  "`isDirectory(p)`, `isRegularFile(p)`",
+                  "`boolean`",
+                  "no (false if missing)"
+                ],
+                [
+                  "`size(p)`",
+                  "`long` bytes",
+                  "`IOException`"
+                ],
+                [
+                  "`getLastModifiedTime(p)`",
+                  "`FileTime`",
+                  "`IOException`"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Exceptions you'll see",
+              "text": "All in `java.nio.file`, all subclasses of `IOException`: `NoSuchFileException`, `FileAlreadyExistsException`, `DirectoryNotEmptyException`."
+            },
+            {
+              "type": "paragraph",
+              "text": "`exists`, `isRegularFile` and `isDirectory` **follow symbolic links**: they look at the target. Pass `LinkOption.NOFOLLOW_LINKS` to check the link itself. `Files.isSymbolicLink(p)` asks whether `p` is a link."
+            },
+            {
+              "type": "code",
+              "code": "Path d = Files.createTempDirectory(\"t\");\nPath link = d.resolve(\"link\");\nFiles.createSymbolicLink(link,\n    d.resolve(\"missing.txt\"));\nSystem.out.println(Files.exists(link));\nSystem.out.println(Files.exists(link,\n    LinkOption.NOFOLLOW_LINKS));\nSystem.out.println(Files.isSymbolicLink(link));",
+              "caption": "A link to a file that doesn't exist",
+              "verify": {
+                "expect": "stdout",
+                "value": "false\ntrue\ntrue\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Creating files and directories",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "`createFile(p)`: new empty file. Throws `FileAlreadyExistsException` if it exists.",
+                "`createDirectory(p)`: one directory. The **parent must exist** (else `NoSuchFileException`); throws `FileAlreadyExistsException` if it exists.",
+                "`createDirectories(p)`: creates all missing parents too, and does **nothing** if the directory already exists."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "Path d = Files.createTempDirectory(\"t\");\nFiles.createDirectories(d.resolve(\"a/b/c\"));\nFiles.createDirectories(d.resolve(\"a/b/c\"));\nSystem.out.println(\n    Files.isDirectory(d.resolve(\"a/b\")));",
+              "caption": "Calling createDirectories twice is fine",
+              "verify": {
+                "expect": "stdout",
+                "value": "true\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l06-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "Path d = Files.createTempDirectory(\"t\");\nFiles.createDirectory(d.resolve(\"x/y\"));\nSystem.out.println(\n    Files.exists(d.resolve(\"x/y\")));",
+          "options": [
+            "An exception is thrown at runtime",
+            "true",
+            "false",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`createDirectory` creates exactly one level. The parent `x` doesn't exist, so it throws `NoSuchFileException`. `createDirectories` would have worked.",
+          "objective": "9.3",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "NoSuchFileException",
+            "stdout": ""
+          }
+        },
+        {
+          "type": "page",
+          "title": "Deleting",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "`delete(p)` throws `NoSuchFileException` if nothing is there.",
+                "`deleteIfExists(p)` returns `true` if it deleted something, `false` if nothing was there.",
+                "Both throw **`DirectoryNotEmptyException`** for a directory that still has entries. There's no built-in recursive delete."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "Path d = Files.createTempDirectory(\"t\");\nPath f = Files.createFile(d.resolve(\"a.txt\"));\nSystem.out.println(Files.deleteIfExists(f));\nSystem.out.println(Files.deleteIfExists(f));",
+              "verify": {
+                "expect": "stdout",
+                "value": "true\nfalse\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l06-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "Path d = Files.createTempDirectory(\"t\");\nFiles.createFile(d.resolve(\"n.txt\"));\nSystem.out.println(Files.deleteIfExists(d));",
+          "options": [
+            "An exception is thrown at runtime",
+            "true",
+            "false",
+            "true\nfalse"
+          ],
+          "answer": 0,
+          "explanation": "`deleteIfExists` only avoids the exception for a **missing** path. The directory exists and contains `n.txt`, so it throws `DirectoryNotEmptyException`.",
+          "objective": "9.3",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "DirectoryNotEmptyException",
+            "stdout": ""
+          }
+        },
+        {
+          "type": "page",
+          "title": "Copy and move",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`Files.copy(source, target, options...)` and `Files.move(source, target, options...)`. By default they **refuse to overwrite**: if the target exists they throw `FileAlreadyExistsException`."
+            },
+            {
+              "type": "table",
+              "header": [
+                "`StandardCopyOption`",
+                "Effect"
+              ],
+              "rows": [
+                [
+                  "`REPLACE_EXISTING`",
+                  "Overwrite an existing target"
+                ],
+                [
+                  "`ATOMIC_MOVE`",
+                  "`move` happens as one step, or fails with `AtomicMoveNotSupportedException`"
+                ],
+                [
+                  "`COPY_ATTRIBUTES`",
+                  "`copy` keeps timestamps and similar attributes"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "Path d = Files.createTempDirectory(\"t\");\nPath a = d.resolve(\"a.txt\");\nPath b = d.resolve(\"b.txt\");\nFiles.writeString(a, \"new\");\nFiles.writeString(b, \"old\");\nFiles.copy(a, b,\n    StandardCopyOption.REPLACE_EXISTING);\nSystem.out.println(Files.readString(b));",
+              "verify": {
+                "expect": "stdout",
+                "value": "new\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Copying a **directory** copies only the directory itself, not its contents (a shallow copy).",
+                "`move` renames when source and target are in the same directory."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python's `shutil.copy` silently overwrites. Java's `Files.copy` throws unless you pass `REPLACE_EXISTING`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l06-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "Path d = Files.createTempDirectory(\"t\");\nPath a = d.resolve(\"a.txt\");\nPath b = d.resolve(\"b.txt\");\nFiles.writeString(a, \"a\");\nFiles.writeString(b, \"b\");\nFiles.move(a, b);\nSystem.out.println(Files.readString(b));",
+          "options": [
+            "An exception is thrown at runtime",
+            "a",
+            "b",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`b.txt` already exists and no `REPLACE_EXISTING` option is given, so `move` throws `FileAlreadyExistsException`.",
+          "objective": "9.3",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "FileAlreadyExistsException",
+            "stdout": ""
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l06-e04",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code so that the copy overwrites `backup.txt` if it already exists.",
+          "code": "Files.___(src, dst,\n    StandardCopyOption.___);",
+          "bank": [
+            "copy",
+            "REPLACE_EXISTING",
+            "ATOMIC_MOVE",
+            "OVERWRITE",
+            "clone"
+          ],
+          "answers": [
+            "copy",
+            "REPLACE_EXISTING"
+          ],
+          "explanation": "`Files.copy` with `StandardCopyOption.REPLACE_EXISTING` overwrites the target. `ATOMIC_MOVE` is for `move`, and there is no `OVERWRITE` option.",
+          "objective": "9.3",
+          "verify": {
+            "expect": "stdout",
+            "value": "1\n",
+            "source": "Path d = Files.createTempDirectory(\"t\");\nPath src = d.resolve(\"a.txt\");\nPath dst = d.resolve(\"backup.txt\");\nFiles.writeString(src, \"1\");\nFiles.writeString(dst, \"0\");\nFiles.copy(src, dst,\n    StandardCopyOption.REPLACE_EXISTING);\nSystem.out.println(Files.readString(dst));"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l06-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Path d = Files.createTempDirectory(\"t\");\nPath f = d.resolve(\"h.txt\");\nFiles.writeString(f, \"hello\");\nSystem.out.println(Files.size(f) + \" \"\n    + Files.isRegularFile(f) + \" \"\n    + Files.isDirectory(f));",
+          "options": [
+            "5 true false",
+            "5 false true",
+            "0 true false",
+            "6 true true"
+          ],
+          "answer": 0,
+          "explanation": "`hello` is 5 bytes. The file is a regular file, so `isRegularFile` is true and `isDirectory` is false.",
+          "objective": "9.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "5 true false\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l06-e06",
+          "kind": "trueFalse",
+          "prompt": "`Files.createDirectories(p)` throws `FileAlreadyExistsException` when the directory `p` already exists.",
+          "answer": false,
+          "explanation": "`createDirectories` succeeds quietly if the directory is already there. Only `createDirectory` (singular) throws in that case. (Both throw if `p` exists as a regular file.)",
+          "objective": "9.3"
+        }
+      ]
+    },
+    {
+      "id": "u09-l07",
+      "title": "Reading, writing & walking with Files",
+      "summary": "readAllLines vs lines, list, walk and find.",
+      "minutes": 9,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Reading and writing whole files",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Method",
+                "Returns / does"
+              ],
+              "rows": [
+                [
+                  "`readString(p)`",
+                  "Whole file as one `String`"
+                ],
+                [
+                  "`readAllLines(p)`",
+                  "`List<String>`, all loaded into memory"
+                ],
+                [
+                  "`lines(p)`",
+                  "`Stream<String>`, read **lazily**"
+                ],
+                [
+                  "`writeString(p, text, opts...)`",
+                  "Write a `String`"
+                ],
+                [
+                  "`write(p, lines, opts...)`",
+                  "Write an `Iterable` of lines (or a `byte[]`)"
+                ],
+                [
+                  "`newBufferedReader(p)`",
+                  "`BufferedReader`"
+                ],
+                [
+                  "`newBufferedWriter(p, opts...)`",
+                  "`BufferedWriter`"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "All use UTF-8 by default. Writing **creates or overwrites** the file unless you pass `StandardOpenOption.APPEND`."
+            },
+            {
+              "type": "code",
+              "code": "Path f = Files.createTempFile(\"t\", \"\");\nFiles.writeString(f, \"a\\n\");\nFiles.writeString(f, \"b\\n\",\n    StandardOpenOption.APPEND);\nSystem.out.println(Files.readAllLines(f));",
+              "verify": {
+                "expect": "stdout",
+                "value": "[a, b]\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "lines() must be closed",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`Files.lines` keeps the file open while the stream is used. Close the stream, ideally with try-with-resources."
+            },
+            {
+              "type": "code",
+              "code": "Path f = Files.createTempFile(\"t\", \"\");\nFiles.write(f, List.of(\"cat\", \"cow\", \"dog\"));\ntry (Stream<String> s = Files.lines(f)) {\n    System.out.println(s.filter(\n        w -> w.startsWith(\"c\")).count());\n}",
+              "verify": {
+                "expect": "stdout",
+                "value": "2\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "Big files",
+              "text": "`readAllLines` loads everything at once and can run out of memory on a huge file. `lines` reads as the stream asks for data. Note the types: `List<String>` vs `Stream<String>`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l07-e01",
+          "kind": "singleChoice",
+          "prompt": "Which declaration compiles?",
+          "options": [
+            "Stream<String> s = Files.lines(p);",
+            "List<String> s = Files.lines(p);",
+            "Stream<String> s = Files.readAllLines(p);",
+            "String[] s = Files.readAllLines(p);"
+          ],
+          "answer": 0,
+          "explanation": "`Files.lines` returns `Stream<String>`; `Files.readAllLines` returns `List<String>`. The other combinations don't compile.",
+          "objective": "9.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ok\n",
+            "source": "public class Main {\n    static void m(Path p) throws Exception {\n        Stream<String> s = Files.lines(p);\n    }\n    public static void main(String[] a) {\n        System.out.println(\"ok\");\n    }\n}",
+            "optionCheck": false
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l07-e02",
+          "kind": "orderLines",
+          "prompt": "Put the lines in order to print each line of `f` in upper case and close the file.",
+          "lines": [
+            "try (Stream<String> s = Files.lines(f)) {",
+            "    s.map(String::toUpperCase)",
+            "     .forEach(System.out::println);",
+            "}"
+          ],
+          "distractors": [
+            "try (List<String> s = Files.lines(f)) {"
+          ],
+          "explanation": "Open the stream as a resource in `try (...)`, chain the operations, and the closing brace closes the file.",
+          "objective": "9.3"
+        },
+        {
+          "type": "page",
+          "title": "list, walk and find",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Method",
+                "Goes",
+                "Includes start?"
+              ],
+              "rows": [
+                [
+                  "`Files.list(dir)`",
+                  "One level only",
+                  "No"
+                ],
+                [
+                  "`Files.walk(start)`",
+                  "All levels, depth-first",
+                  "Yes"
+                ],
+                [
+                  "`Files.walk(start, maxDepth)`",
+                  "Up to `maxDepth`",
+                  "Yes"
+                ],
+                [
+                  "`Files.find(start, maxDepth, matcher)`",
+                  "Up to `maxDepth`, filtered",
+                  "If it matches"
+                ]
+              ]
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "All three return a `Stream<Path>` that must be **closed**.",
+                "`find` needs a `maxDepth` (no overload without it) and a `BiPredicate<Path, BasicFileAttributes>`.",
+                "Symbolic links are not followed unless you pass `FileVisitOption.FOLLOW_LINKS`."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "Path d = Files.createTempDirectory(\"t\");\nFiles.createDirectories(d.resolve(\"sub\"));\nFiles.writeString(d.resolve(\"a.txt\"), \"1\");\nFiles.writeString(\n    d.resolve(\"sub/b.txt\"), \"22\");\ntry (var s = Files.list(d)) {\n    System.out.println(s.count());\n}\ntry (var s = Files.walk(d)) {\n    System.out.println(s.count());\n}\ntry (var s = Files.find(d, 10,\n        (p, attr) -> attr.size() == 2)) {\n    s.forEach(p -> System.out.println(\n        p.getFileName()));\n}",
+              "caption": "list: a.txt, sub. walk adds the start and sub/b.txt",
+              "verify": {
+                "expect": "stdout",
+                "value": "2\n4\nb.txt\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l07-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Path d = Files.createTempDirectory(\"t\");\nFiles.createDirectory(d.resolve(\"in\"));\nFiles.createFile(d.resolve(\"x.txt\"));\nFiles.createFile(d.resolve(\"in/y.txt\"));\ntry (var s = Files.walk(d, 1)) {\n    System.out.println(s.count());\n}",
+          "options": [
+            "3",
+            "2",
+            "4",
+            "5"
+          ],
+          "answer": 0,
+          "explanation": "`walk` includes the start directory itself. Depth 1 adds its direct children `x.txt` and `in`. `in/y.txt` is at depth 2, beyond the limit. Total: **3**.",
+          "objective": "9.3",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "3\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l07-e04",
+          "kind": "tapLine",
+          "prompt": "Tap the line that causes a compilation error.",
+          "code": "Path d = Path.of(\"logs\");\ntry (var s = Files.list(d)) {\n    s.forEach(System.out::println);\n}\ntry (var s = Files.find(d,\n        (p, a) -> a.isRegularFile())) {\n    s.forEach(System.out::println);\n}",
+          "answer": 5,
+          "explanation": "`Files.find` has no overload without the `int maxDepth` argument. It must be `Files.find(d, 10, (p, a) -> ...)`. `Files.list` with one argument is fine.",
+          "objective": "9.3",
+          "verify": {
+            "expect": "compileError",
+            "line": 5
+          }
+        },
+        {
+          "type": "page",
+          "title": "File attributes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`Files.readAttributes(path, BasicFileAttributes.class)` reads several attributes in one call. `BasicFileAttributes` lives in `java.nio.file.attribute`."
+            },
+            {
+              "type": "code",
+              "code": "import java.nio.file.*;\nimport java.nio.file.attribute.*;\n\npublic class Attrs {\n    public static void main(String[] a)\n            throws Exception {\n        Path f =\n            Files.createTempFile(\"t\", \"\");\n        Files.writeString(f, \"abc\");\n        var attr = Files.readAttributes(\n            f, BasicFileAttributes.class);\n        System.out.println(attr.size() + \" \"\n            + attr.isDirectory() + \" \"\n            + attr.isRegularFile());\n    }\n}",
+              "verify": {
+                "expect": "stdout",
+                "value": "3 false true\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Also: `creationTime()`, `lastModifiedTime()`, `lastAccessTime()` (all `FileTime`), `isSymbolicLink()`.",
+                "To **change** timestamps, use `Files.getFileAttributeView(p, BasicFileAttributeView.class).setTimes(...)` or `Files.setLastModifiedTime`."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l07-e05",
+          "kind": "multiChoice",
+          "prompt": "Which two statements are true? Choose two.",
+          "options": [
+            "`Files.list` returns only the direct entries of a directory.",
+            "`Files.walk(dir)` does not include `dir` itself.",
+            "`Files.readAllLines` returns a `Stream<String>`.",
+            "The stream returned by `Files.walk` should be closed.",
+            "`Files.writeString` appends to an existing file by default."
+          ],
+          "answers": [
+            0,
+            3
+          ],
+          "explanation": "`list` is one level deep, and all of `list`, `walk`, `find` and `lines` hold the file system open, so close them. `walk` does include the start path, `readAllLines` returns a `List`, and `writeString` truncates unless you pass `APPEND`.",
+          "objective": "9.3",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "1\ntrue\n2\n",
+            "source": "Path d = Files.createTempDirectory(\"t\");\nFiles.createDirectory(d.resolve(\"s\"));\nFiles.createFile(d.resolve(\"s/f\"));\ntry (var s = Files.list(d)) {\n    System.out.println(s.count());\n}\ntry (var s = Files.walk(d)) {\n    System.out.println(s.anyMatch(p -> p.equals(d)));\n}\nPath f = d.resolve(\"w.txt\");\nFiles.writeString(f, \"1\");\nFiles.writeString(f, \"2\");\nSystem.out.println(Files.readString(f));"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l07-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Path f = Files.createTempFile(\"t\", \"\");\nFiles.writeString(f, \"a\");\nFiles.writeString(f, \"b\");\nSystem.out.println(Files.readString(f));",
+          "options": [
+            "b",
+            "ab",
+            "a",
+            "a\nb"
+          ],
+          "answer": 0,
+          "explanation": "Without `StandardOpenOption.APPEND`, `writeString` uses `CREATE`, `TRUNCATE_EXISTING` and `WRITE`: the second call replaces the content.",
+          "objective": "9.3",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "b\n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u09-l08",
+      "title": "Old vs new: File vs Path",
+      "summary": "Mapping java.io.File to Path and Files.",
+      "minutes": 6,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Two APIs for one job",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`java.io.File` is the original (Java 1.0) way to point at a file. NIO.2's `Path` + `Files` replaced it, but the exam still expects you to map between them."
+            },
+            {
+              "type": "code",
+              "code": "File file = new File(\"data.txt\");\nPath path = file.toPath();\nFile back = path.toFile();",
+              "caption": "Converting between the two"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Biggest difference",
+              "text": "`File` methods usually report failure by returning **`false`** (or `null`). `Files` methods throw an **exception** that says why."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "The mapping table",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "java.io.File",
+                "NIO.2"
+              ],
+              "rows": [
+                [
+                  "`new File(\"x\")`",
+                  "`Path.of(\"x\")`"
+                ],
+                [
+                  "`f.exists()`",
+                  "`Files.exists(p)`"
+                ],
+                [
+                  "`f.isFile()`",
+                  "`Files.isRegularFile(p)`"
+                ],
+                [
+                  "`f.isDirectory()`",
+                  "`Files.isDirectory(p)`"
+                ],
+                [
+                  "`f.getName()`",
+                  "`p.getFileName()`"
+                ],
+                [
+                  "`f.getParent()` (String)",
+                  "`p.getParent()` (Path)"
+                ],
+                [
+                  "`f.getAbsolutePath()`",
+                  "`p.toAbsolutePath()`"
+                ],
+                [
+                  "`f.length()`",
+                  "`Files.size(p)`"
+                ],
+                [
+                  "`f.lastModified()` (long)",
+                  "`Files.getLastModifiedTime(p)` (FileTime)"
+                ],
+                [
+                  "`f.mkdir()` / `f.mkdirs()`",
+                  "`Files.createDirectory` / `createDirectories`"
+                ],
+                [
+                  "`f.delete()` (boolean)",
+                  "`Files.delete(p)` / `deleteIfExists(p)`"
+                ],
+                [
+                  "`f.renameTo(f2)`",
+                  "`Files.move(p, p2)`"
+                ],
+                [
+                  "`f.listFiles()`",
+                  "`Files.list(p)`"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Name traps",
+              "text": "There's no `Files.isFile` and no `File.isRegularFile`. `getName()` is `File`; `getFileName()` is `Path`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l08-e01",
+          "kind": "singleChoice",
+          "prompt": "Which NIO.2 call corresponds to `file.mkdirs()`?",
+          "options": [
+            "Files.createDirectories(path)",
+            "Files.createDirectory(path)",
+            "Files.mkdirs(path)",
+            "path.mkdirs()"
+          ],
+          "answer": 0,
+          "explanation": "`mkdirs()` creates missing parents, like `Files.createDirectories`. `createDirectory` matches `mkdir()`. `Files.mkdirs` and `Path.mkdirs` don't exist.",
+          "objective": "9.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "true\n",
+            "source": "Path d = Files.createTempDirectory(\"t\");\nFiles.createDirectories(d.resolve(\"a/b\"));\nSystem.out.println(Files.isDirectory(d.resolve(\"a/b\")));",
+            "optionCheck": false
+          }
+        },
+        {
+          "type": "page",
+          "title": "Booleans vs exceptions",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "File f = new File(\"nope/x.txt\");\nSystem.out.println(f.mkdir());\nSystem.out.println(f.delete());\n// Files.createDirectory(f.toPath())\n//   -> NoSuchFileException\n// Files.delete(f.toPath())\n//   -> NoSuchFileException",
+              "caption": "File just says false, without a reason",
+              "verify": {
+                "expect": "stdout",
+                "value": "false\nfalse\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`File.listFiles()` returns `null` (not an empty array) when the `File` isn't a directory.",
+                "`File.length()` returns `0` for a file that doesn't exist.",
+                "With NIO.2 the exception type tells you what went wrong."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l08-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "Path d = Files.createTempDirectory(\"t\");\nPath p = d.resolve(\"ghost.txt\");\nSystem.out.println(p.toFile().delete());\nFiles.delete(p);\nSystem.out.println(\"done\");",
+          "options": [
+            "false, then an exception is thrown",
+            "false\nfalse",
+            "true, then an exception is thrown",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`File.delete()` returns `false` when there is nothing to delete. `Files.delete` throws `NoSuchFileException` instead.",
+          "objective": "9.3",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "NoSuchFileException",
+            "stdout": "false\n",
+            "optionCheck": false
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l08-e03",
+          "kind": "trueFalse",
+          "prompt": "`new File(\"report.txt\")` creates an empty file named report.txt on disk.",
+          "answer": false,
+          "explanation": "Like `Path.of`, the constructor only creates an object that describes a location. Use `createNewFile()` or `Files.createFile` to actually create the file.",
+          "objective": "9.3"
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l08-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Path d = Files.createTempDirectory(\"t\");\nFile f = new File(d.toFile(), \"none\");\nSystem.out.println(f.exists() + \" \"\n    + f.length() + \" \" + f.listFiles());",
+          "options": [
+            "false 0 null",
+            "true 0 null",
+            "false -1 null",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "The file doesn't exist. `exists()` returns `false`, `length()` returns `0`, and `listFiles()` returns `null` for anything that isn't a directory. `File` methods don't throw here.",
+          "objective": "9.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "false 0 null\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l08-e05",
+          "kind": "fillBlanks",
+          "prompt": "Complete the NIO.2 versions of the `File` calls in the comments.",
+          "code": "// f.isFile()\nboolean a = Files.___(p);\n// f.getName()\nPath b = p.___();\n// f.length()\nlong c = Files.___(p);",
+          "bank": [
+            "isRegularFile",
+            "getFileName",
+            "size",
+            "isFile",
+            "getName",
+            "length"
+          ],
+          "answers": [
+            "isRegularFile",
+            "getFileName",
+            "size"
+          ],
+          "explanation": "`isFile` → `Files.isRegularFile`, `getName` → `Path.getFileName`, `length` → `Files.size`. `Path` does have a `getName(int)`, but it needs an index, and `Files` has no `isFile` or `length`.",
+          "objective": "9.3",
+          "verify": {
+            "expect": "stdout",
+            "value": "true 2\n",
+            "source": "Path p = Files.createTempFile(\"t\", \".txt\");\nFiles.writeString(p, \"xy\");\nboolean a = Files.isRegularFile(p);\nPath b = p.getFileName();\nlong c = Files.size(p);\nSystem.out.println(a + \" \" + c);"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l08-e06",
+          "kind": "multiChoice",
+          "prompt": "Which two return types are correct? Choose two.",
+          "options": [
+            "`File.getParent()` returns `String`",
+            "`Path.getParent()` returns `String`",
+            "`Files.getLastModifiedTime(p)` returns `FileTime`",
+            "`File.lastModified()` returns `FileTime`",
+            "`Files.list(p)` returns `File[]`"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "`File.getParent()` is a `String` (use `getParentFile()` for a `File`), while `Path.getParent()` is a `Path`. `File.lastModified()` is a `long` of milliseconds; NIO.2 uses `FileTime`. `Files.list` returns `Stream<Path>`.",
+          "objective": "9.3",
+          "examStyle": true
+        }
+      ]
+    },
+    {
+      "id": "u09-l09",
+      "title": "Unit 9 checkpoint",
+      "summary": "Exam-style mix: streams, serialization, Path, Files.",
+      "minutes": 12,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Checkpoint",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "12 exam-style questions covering the whole unit. Read each line carefully: one constructor type, one missing option or one ignored return value changes the answer."
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "Exam habit",
+              "text": "First ask: does it compile? (Stream families mixed, `readObject` without a cast, `find` without `maxDepth`.) Then: does it throw? (Existing target without `REPLACE_EXISTING`, non-empty directory, mixed absolute/relative `relativize`.)"
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l09-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var p = Path.of(\"/a/b\")\n    .resolve(Path.of(\"/c/./d\"))\n    .normalize();\nSystem.out.println(p);",
+          "options": [
+            "/c/d",
+            "/a/b/c/d",
+            "a/b/c/d",
+            "/a/c/d"
+          ],
+          "answer": 0,
+          "explanation": "`resolve` returns its argument when the argument is absolute, so the result is `/c/d`. `normalize` doesn't change it.",
+          "objective": "9.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "/c/d\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l09-e02",
+          "kind": "singleChoice",
+          "prompt": "Which line compiles?",
+          "options": [
+            "new BufferedWriter(new OutputStreamWriter(System.out))",
+            "new BufferedWriter(System.out)",
+            "new BufferedReader(System.in)",
+            "new InputStreamReader(new FileReader(\"a\"))"
+          ],
+          "answer": 0,
+          "explanation": "`System.out` is a byte stream; `OutputStreamWriter` bridges it to a `Writer`, which `BufferedWriter` accepts. `BufferedWriter`/`BufferedReader` can't take byte streams directly, and `InputStreamReader` wants an `InputStream`, not a `Reader`.",
+          "objective": "9.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ok\n",
+            "source": "public class Main {\n    public static void main(String[] a) throws Exception {\n        var w = new BufferedWriter(new OutputStreamWriter(System.out));\n        w.write(\"ok\");\n        w.newLine();\n        w.flush();\n    }\n}",
+            "optionCheck": false
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l09-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class User implements Serializable {\n    String name = \"Bo\";\n    transient int level = 7;\n    transient boolean active = true;\n}\n// u2 = deserialized copy of new User()\nSystem.out.println(u2.name + \" \"\n    + u2.level + \" \" + u2.active);",
+          "options": [
+            "Bo 0 false",
+            "Bo 7 true",
+            "null 0 false",
+            "Bo 7 false"
+          ],
+          "answer": 0,
+          "explanation": "`name` is saved. `level` and `active` are transient, so they come back with defaults `0` and `false`. Field initializers of a Serializable class don't run during deserialization.",
+          "objective": "9.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "Bo 0 false\n",
+            "source": "class User implements Serializable {\n    String name = \"Bo\";\n    transient int level = 7;\n    transient boolean active = true;\n}\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        var bytes = new ByteArrayOutputStream();\n        try (var out = new ObjectOutputStream(bytes)) {\n            out.writeObject(new User());\n        }\n        User u2;\n        try (var in = new ObjectInputStream(\n                new ByteArrayInputStream(bytes.toByteArray()))) {\n            u2 = (User) in.readObject();\n        }\n        System.out.println(u2.name + \" \"\n            + u2.level + \" \" + u2.active);\n    }\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l09-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "import java.io.*;\nclass P {\n    P() { System.out.print(\"P\"); }\n}\nclass Q extends P implements Serializable {\n    Q() { System.out.print(\"Q\"); }\n}\npublic class Main {\n    public static void main(String[] a)\n            throws Exception {\n        var bos = new ByteArrayOutputStream();\n        try (var o =\n                new ObjectOutputStream(bos)) {\n            o.writeObject(new Q());\n        }\n        try (var i = new ObjectInputStream(\n                new ByteArrayInputStream(\n                    bos.toByteArray()))) {\n            i.readObject();\n        }\n    }\n}",
+          "options": [
+            "PQP",
+            "PQPQ",
+            "PQ",
+            "QP"
+          ],
+          "answer": 0,
+          "explanation": "Creating `Q` runs `P()` then `Q()`: `PQ`. On deserialization only the no-arg constructor of the first non-serializable superclass (`P`) runs: `P`. Result: `PQP`.",
+          "objective": "9.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "PQP\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l09-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "import java.io.*;\nclass Cat implements Serializable {\n    String name = \"Fluffy\";\n}\npublic class Main {\n    static Cat load(ObjectInputStream in)\n            throws Exception {\n        Cat c = in.readObject();\n        return c;\n    }\n    public static void main(String[] a) {}\n}",
+          "options": [
+            "Compilation fails",
+            "Fluffy",
+            "An exception is thrown at runtime",
+            "null"
+          ],
+          "answer": 0,
+          "explanation": "`readObject()` returns `Object`. Assigning it to `Cat` without a cast is a compile error on the `Cat c = ...` line.",
+          "objective": "9.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 8
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l09-e06",
+          "kind": "multiChoice",
+          "prompt": "Which two calls throw an exception if `dir` is an existing, non-empty directory? Choose two.",
+          "options": [
+            "Files.delete(dir)",
+            "Files.deleteIfExists(dir)",
+            "Files.createDirectories(dir)",
+            "Files.isDirectory(dir)",
+            "Files.list(dir).close()"
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "Both delete methods throw `DirectoryNotEmptyException`. `createDirectories` does nothing for an existing directory, `isDirectory` just returns `true`, and `list` reads the entries without complaint.",
+          "objective": "9.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "A\nB\ntrue\nend\n",
+            "source": "Path dir = Files.createTempDirectory(\"t\");\nFiles.createFile(dir.resolve(\"f\"));\ntry { Files.delete(dir); }\ncatch (DirectoryNotEmptyException e) { System.out.println(\"A\"); }\ntry { Files.deleteIfExists(dir); }\ncatch (DirectoryNotEmptyException e) { System.out.println(\"B\"); }\nFiles.createDirectories(dir);\nSystem.out.println(Files.isDirectory(dir));\nFiles.list(dir).close();\nSystem.out.println(\"end\");"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l09-e07",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var p = Path.of(\"/w/x/y/z\");\nSystem.out.println(p.getNameCount() + \" \"\n    + p.subpath(1, 3));",
+          "options": [
+            "4 x/y",
+            "4 /x/y",
+            "5 y/z",
+            "3 x/y"
+          ],
+          "answer": 0,
+          "explanation": "Names are `w`, `x`, `y`, `z` (the root isn't one), so the count is 4. `subpath(1, 3)` returns the relative path of indexes 1 and 2: `x/y`.",
+          "objective": "9.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "4 x/y\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l09-e08",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Path d = Files.createTempDirectory(\"t\");\nFiles.createDirectory(d.resolve(\"sub\"));\nFiles.createFile(d.resolve(\"a.txt\"));\nFiles.createFile(d.resolve(\"sub/b.txt\"));\ntry (var s = Files.list(d)) {\n    System.out.println(s.count());\n}",
+          "options": [
+            "2",
+            "3",
+            "1",
+            "0"
+          ],
+          "answer": 0,
+          "explanation": "`Files.list` is one level deep: it sees `a.txt` and the directory `sub`, not `sub/b.txt`, and not the start directory itself.",
+          "objective": "9.3",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "2\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l09-e09",
+          "kind": "multiChoice",
+          "prompt": "Which three statements are true? Choose three.",
+          "options": [
+            "`readPassword()` returns a `char[]`.",
+            "`PrintWriter.printf` declares `throws IOException`.",
+            "`BufferedReader.readLine()` returns `null` at the end of the stream.",
+            "`InputStream.read()` returns `-1` at the end of the stream.",
+            "`System.in` is a `Reader`."
+          ],
+          "answers": [
+            0,
+            2,
+            3
+          ],
+          "explanation": "`readPassword` returns `char[]` so it can be wiped. `readLine` ends with `null`, `read` with `-1`. Print methods never throw `IOException`, and `System.in` is an `InputStream`, not a `Reader`.",
+          "objective": "9.1",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l09-e10",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Path d = Files.createTempDirectory(\"t\");\nFiles.createDirectory(d.resolve(\"x\"));\nvar a = d.resolve(\"x/../q.txt\");\nvar b = d.resolve(\"q.txt\");\nFiles.createFile(b);\nSystem.out.println(a.equals(b) + \" \"\n    + Files.isSameFile(a, b));",
+          "options": [
+            "false true",
+            "true true",
+            "false false",
+            "true false"
+          ],
+          "answer": 0,
+          "explanation": "`equals` compares the text: `x/../q.txt` is not `q.txt`, so `false`. `isSameFile` asks the file system, which resolves `x/..` and finds the same file: `true`.",
+          "objective": "9.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "false true\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l09-e11",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Path f = Files.createTempFile(\"t\", \"\");\nvar w = new BufferedWriter(\n    new FileWriter(f.toFile()));\nw.write(\"xy\");\nlong before = Files.size(f);\ntry (var pw = new PrintWriter(\n        new FileWriter(f.toFile()))) {\n    pw.print(\"x\");\n}\nSystem.out.println(before + \" \"\n    + Files.readString(f));",
+          "options": [
+            "0 x",
+            "0 xy",
+            "2 xy",
+            "2 x"
+          ],
+          "answer": 0,
+          "explanation": "The `FileWriter` is never flushed or closed before `Files.size`, so the file is still empty: 0. Then the try-with-resources `PrintWriter` writes `x` and closes, which **overwrites** the file (no append flag): `x`.",
+          "objective": "9.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "0 x\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u09-l09-e12",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var p1 = Path.of(\"/a/b/c\");\nvar p2 = Path.of(\"/a/x/y\");\nSystem.out.println(p1.relativize(p2));",
+          "options": [
+            "../../x/y",
+            "../x/y",
+            "x/y",
+            "/x/y"
+          ],
+          "answer": 0,
+          "explanation": "From `/a/b/c`, two steps up reach `/a`, then down into `x/y`: `../../x/y`.",
+          "objective": "9.3",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "../../x/y\n"
+          }
+        }
+      ]
+    }
+  ]
+}

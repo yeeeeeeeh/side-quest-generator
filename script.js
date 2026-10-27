@@ -313,6 +313,7 @@ const TAB_PANELS = {
   ikea: { panel: "ikea-panel", init: () => ikeaInit() },
   shop: { panel: "shop-panel", init: () => shopInit() },
   retire: { panel: "retire-panel", init: () => retireInit() },
+  java: { panel: "java-panel", init: () => javaInit() },
 };
 
 function showTab(tab) {

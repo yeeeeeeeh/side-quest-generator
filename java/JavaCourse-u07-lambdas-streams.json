@@ -1,0 +1,3258 @@
+{
+  "unitId": "u07",
+  "lessons": [
+    {
+      "id": "u07-l01",
+      "title": "Lambda syntax",
+      "summary": "Write lambdas and know which forms compile.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Code as a value",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A **lambda** is a short block of code you can store in a variable and pass around. It always implements a **functional interface**: an interface with exactly **one abstract method**."
+            },
+            {
+              "type": "code",
+              "code": "Runnable r = () -> System.out.println(\"hi\");\nr.run();\nr.run();",
+              "caption": "Prints hi twice",
+              "verify": {
+                "expect": "stdout",
+                "value": "hi\nhi\n"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "`Runnable` has one abstract method, `run()`. The lambda is its body. Nothing runs until someone calls `r.run()`."
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "A Python `lambda` is limited to one expression. A Java lambda can also have a `{ ... }` body with statements. And a Java lambda has no type of its own: the **target type** (the variable or parameter it is assigned to) decides which interface it implements. So `var f = x -> x;` does not compile."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Which forms compile?",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Shape: `parameters -> body`. The rules for parentheses and braces are strict."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Lambda",
+                "Compiles?"
+              ],
+              "rows": [
+                [
+                  "`x -> x * 2`",
+                  "Yes: one untyped param, no parens needed"
+                ],
+                [
+                  "`(x) -> x * 2`",
+                  "Yes"
+                ],
+                [
+                  "`(int x) -> x * 2`",
+                  "Yes: typed params need parens"
+                ],
+                [
+                  "`int x -> x * 2`",
+                  "No"
+                ],
+                [
+                  "`x -> { return x * 2; }`",
+                  "Yes: braces need `return` and `;`"
+                ],
+                [
+                  "`x -> return x * 2;`",
+                  "No: `return` needs braces"
+                ],
+                [
+                  "`x -> { x * 2 }`",
+                  "No: a block needs statements"
+                ],
+                [
+                  "`() -> {}`",
+                  "Yes: no params need `()`"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Braces change everything",
+              "text": "Without braces the body is one expression and its value is returned. With braces it is a normal block: you need `return` (if a value is expected) and every statement needs `;`."
+            },
+            {
+              "type": "paragraph",
+              "text": "When the functional method returns `void` (like `Consumer` or `Runnable`), an expression body must be a **statement expression**: a method call, assignment, `++`/`--` or `new`. Any value it returns is thrown away. A plain value like `7` is not a statement."
+            },
+            {
+              "type": "code",
+              "code": "List<String> names = new ArrayList<>();\nConsumer<String> add = s -> names.add(s); // OK: boolean ignored\nRunnable r = () -> 7;                      // does not compile",
+              "caption": "Line 3 does not compile",
+              "verify": {
+                "expect": "compileError",
+                "line": 3
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l01-e01",
+          "kind": "multiChoice",
+          "prompt": "Given `Function<Integer, Integer> f = ...;` which two lambdas compile? Choose two.",
+          "options": [
+            "x -> { x + 1 }",
+            "(var x) -> x + 1",
+            "Integer x -> x + 1",
+            "x -> { return x + 1; }",
+            "(x) -> return x + 1"
+          ],
+          "answers": [
+            1,
+            3
+          ],
+          "explanation": "Braces turn the body into a block, so `{ x + 1 }` is missing both `return` and `;`. A typed parameter (`Integer x`) needs parentheses. `return` without braces is illegal. `(var x)` and the full block form are fine.",
+          "objective": "6.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "6\n",
+            "source": "Function<Integer, Integer> f = (var x) -> x + 1;\nFunction<Integer, Integer> g = x -> { return x + 1; };\nSystem.out.println(f.apply(1) + g.apply(3));"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Several parameters: all or none",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "With two or more parameters, parentheses are required. Types must be given for **all** parameters or **none**, and you can't mix `var` with explicit types."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Parameter list",
+                "Compiles?"
+              ],
+              "rows": [
+                [
+                  "`(a, b)`",
+                  "Yes"
+                ],
+                [
+                  "`(int a, int b)`",
+                  "Yes"
+                ],
+                [
+                  "`(var a, var b)`",
+                  "Yes"
+                ],
+                [
+                  "`(int a, b)`",
+                  "No: mixed typed/untyped"
+                ],
+                [
+                  "`(var a, b)`",
+                  "No: `var` on some only"
+                ],
+                [
+                  "`(var a, int b)`",
+                  "No: `var` mixed with a type"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "Expect a list of lambdas where one has a mixed parameter list. Look at every parameter, not just the first one."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l01-e02",
+          "kind": "singleChoice",
+          "prompt": "Which lambda does NOT compile as a `BiFunction<Integer, Integer, Integer>`?",
+          "options": [
+            "(a, b) -> a + b",
+            "(var a, var b) -> a + b",
+            "(Integer a, Integer b) -> a + b",
+            "(var a, Integer b) -> a + b"
+          ],
+          "answer": 3,
+          "explanation": "Parameter types are all-or-none. `var` counts as a type style of its own, so `var` on one parameter and `Integer` on another is illegal.",
+          "objective": "6.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "compileError",
+            "source": "BiFunction<Integer, Integer, Integer> f =\n    (var a, Integer b) -> a + b;",
+            "optionCheck": false
+          }
+        },
+        {
+          "type": "page",
+          "title": "Captured variables",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A lambda can read local variables from the enclosing method, but only if they are **final** or **effectively final** (never changed after initialization)."
+            },
+            {
+              "type": "code",
+              "code": "int n = 3;\nSupplier<Integer> s = () -> n * 2;\nSystem.out.println(s.get());",
+              "caption": "Prints 6: n is effectively final",
+              "verify": {
+                "expect": "stdout",
+                "value": "6\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Reassigning the variable **anywhere** (before or after the lambda) makes it not effectively final. javac then reports the error **at the use inside the lambda**.",
+                "Changing it inside the lambda (`n++`) is also an error.",
+                "Fields and static fields have no such rule: lambdas may read and change them.",
+                "Calling methods on the object is fine: `list.add(x)` does not reassign `list`."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "No shadowing",
+              "text": "A lambda parameter can't reuse the name of a local variable in scope: `int x = 1; Function<Integer, Integer> f = x -> x;` does not compile. Lambdas don't open a new scope for names."
+            },
+            {
+              "type": "code",
+              "code": "int count = 0;\nRunnable r = () -> {\n    int count = 5;   // does not compile\n    System.out.println(count);\n};",
+              "caption": "A local declared inside the body can't reuse an enclosing name either",
+              "verify": {
+                "expect": "compileError",
+                "line": 3
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l01-e03",
+          "kind": "tapLine",
+          "prompt": "Tap the line where javac reports the compile error.",
+          "code": "String name = \"Ana\";\nint n = 3;\nSupplier<String> s = () -> name + n;\nname = \"Bo\";\nSystem.out.println(s.get());",
+          "answer": 3,
+          "explanation": "Line 4 reassigns `name`, so `name` is no longer effectively final. The error is reported where the lambda uses it: line 3 (\"local variables referenced from a lambda expression must be final or effectively final\").",
+          "objective": "6.1",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l01-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int x = 10;\nFunction<Integer, Integer> f = x -> x * 2;\nSystem.out.println(f.apply(3));",
+          "options": [
+            "6",
+            "20",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 2,
+          "explanation": "The lambda parameter `x` has the same name as the local variable `x` on line 1. A lambda doesn't create a new scope for its parameters, so this is a duplicate declaration and line 2 doesn't compile.",
+          "objective": "6.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 2
+          }
+        },
+        {
+          "type": "page",
+          "title": "`this` inside a lambda",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Inside a lambda, `this` means the same as just outside it: the **enclosing object**. A lambda is not an object you can talk to with `this`. (Inside an anonymous class, `this` is the anonymous object.)"
+            },
+            {
+              "type": "code",
+              "code": "public class Greeter {\n    String name = \"outer\";\n    void run() {\n        Runnable r = () ->\n            System.out.println(this.name);\n        r.run();\n    }\n    public static void main(String[] a) {\n        new Greeter().run();\n    }\n}",
+              "caption": "Prints outer",
+              "verify": {
+                "expect": "stdout",
+                "value": "outer\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Static context",
+              "text": "In a `static` method there is no `this`, so a lambda there can't use `this` either."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l01-e05",
+          "kind": "trueFalse",
+          "prompt": "Inside a lambda body, `this` refers to the lambda object itself.",
+          "answer": false,
+          "explanation": "`this` in a lambda refers to the enclosing instance, exactly as it would in the surrounding method. Only anonymous classes get their own `this`.",
+          "objective": "6.1"
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l01-e06",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code so it prints 5.",
+          "code": "BiFunction<Integer, Integer, Integer> add =\n    ___ -> ___;\nSystem.out.println(add.apply(2, 3));",
+          "bank": [
+            "(a, b)",
+            "a + b",
+            "a, b",
+            "{ a + b }",
+            "(int a, b)"
+          ],
+          "answers": [
+            "(a, b)",
+            "a + b"
+          ],
+          "explanation": "Two parameters need parentheses: `(a, b)`. `(int a, b)` mixes typed and untyped. The body `a + b` is an expression whose value is returned; `{ a + b }` would need `return` and `;`.",
+          "objective": "6.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "5\n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u07-l02",
+      "title": "Built-in functional interfaces",
+      "summary": "Supplier, Consumer, Function, Predicate and friends.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "The core set",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`java.util.function` has ready-made interfaces. You must know each one's **abstract method name** and shape."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Interface",
+                "Method",
+                "Shape"
+              ],
+              "rows": [
+                [
+                  "`Supplier<T>`",
+                  "`get()`",
+                  "() -> T"
+                ],
+                [
+                  "`Consumer<T>`",
+                  "`accept(T)`",
+                  "T -> void"
+                ],
+                [
+                  "`BiConsumer<T, U>`",
+                  "`accept(T, U)`",
+                  "T, U -> void"
+                ],
+                [
+                  "`Function<T, R>`",
+                  "`apply(T)`",
+                  "T -> R"
+                ],
+                [
+                  "`BiFunction<T, U, R>`",
+                  "`apply(T, U)`",
+                  "T, U -> R"
+                ],
+                [
+                  "`Predicate<T>`",
+                  "`test(T)`",
+                  "T -> boolean"
+                ],
+                [
+                  "`BiPredicate<T, U>`",
+                  "`test(T, U)`",
+                  "T, U -> boolean"
+                ],
+                [
+                  "`UnaryOperator<T>`",
+                  "`apply(T)`",
+                  "T -> T"
+                ],
+                [
+                  "`BinaryOperator<T>`",
+                  "`apply(T, T)`",
+                  "T, T -> T"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Operators are Functions",
+              "text": "`UnaryOperator<T>` extends `Function<T, T>` and `BinaryOperator<T>` extends `BiFunction<T, T, T>`. That's why their method is also `apply`."
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "Wrong method names are a favourite trap: `supplier.apply()`, `predicate.apply(x)`, `consumer.get()`. They don't compile."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l02-e01",
+          "kind": "singleChoice",
+          "prompt": "Which method does `Predicate<T>` declare as its abstract method?",
+          "options": [
+            "boolean test(T t)",
+            "boolean apply(T t)",
+            "boolean accept(T t)",
+            "boolean get(T t)"
+          ],
+          "answer": 0,
+          "explanation": "Predicate's single abstract method is `test`. `apply` belongs to Function, `accept` to Consumer, `get` to Supplier.",
+          "objective": "6.1",
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l02-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Supplier<String> s = () -> \"hihi\";\nFunction<String, Integer> len =\n    x -> x.length();\nConsumer<Integer> c =\n    n -> System.out.println(n * 2);\nc.accept(len.apply(s.get()));",
+          "options": [
+            "4",
+            "8",
+            "hihi",
+            "Compilation fails"
+          ],
+          "answer": 1,
+          "explanation": "`s.get()` gives \"hihi\", `len.apply` turns it into its length 4, and the consumer prints `4 * 2` = **8**. Each interface is called by its own method: `get`, `apply`, `accept`.",
+          "objective": "6.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "8\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l02-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Predicate<String> p = s -> s.isEmpty();\nSystem.out.println(p.apply(\"\"));",
+          "options": [
+            "true",
+            "false",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 2,
+          "explanation": "`Predicate` has `test`, not `apply`, so line 2 doesn't compile.",
+          "objective": "6.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 2
+          }
+        },
+        {
+          "type": "page",
+          "title": "Combining functions",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Functional interfaces have **default methods** that build new functions out of old ones."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Method",
+                "Meaning"
+              ],
+              "rows": [
+                [
+                  "`f.andThen(g)`",
+                  "run f, then g on the result"
+                ],
+                [
+                  "`f.compose(g)`",
+                  "run **g first**, then f"
+                ],
+                [
+                  "`p.and(q)`, `p.or(q)`",
+                  "logical and / or (short-circuit)"
+                ],
+                [
+                  "`p.negate()`",
+                  "logical not"
+                ],
+                [
+                  "`Predicate.not(p)`",
+                  "static version of negate"
+                ],
+                [
+                  "`c1.andThen(c2)`",
+                  "Consumer: run c1, then c2"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "Function<Integer, Integer> plus1 = x -> x + 1;\nFunction<Integer, Integer> times2 = x -> x * 2;\nSystem.out.println(\n    plus1.andThen(times2).apply(5));\nSystem.out.println(\n    plus1.compose(times2).apply(5));",
+              "caption": "(5+1)*2 = 12, then 5*2+1 = 11",
+              "verify": {
+                "expect": "stdout",
+                "value": "12\n11\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "compose runs backwards",
+              "text": "`f.compose(g)` means f(g(x)): the **argument** runs first. `f.andThen(g)` means g(f(x)). Read them out loud before you calculate."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l02-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Function<Integer, Integer> f = x -> x - 1;\nFunction<Integer, Integer> g = x -> x * 10;\nSystem.out.println(\n    f.compose(g).andThen(f).apply(3));",
+          "options": [
+            "28",
+            "19",
+            "29",
+            "20"
+          ],
+          "answer": 0,
+          "explanation": "`f.compose(g)` runs g first: 3 * 10 = 30, then f: 29. `.andThen(f)` applies f once more: **28**.",
+          "objective": "6.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "28\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l02-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Predicate<String> isLong = s -> s.length() > 3;\nPredicate<String> startsA =\n    s -> s.startsWith(\"a\");\nPredicate<String> p =\n    isLong.negate().or(startsA);\nSystem.out.println(p.test(\"apple\") + \" \"\n    + p.test(\"kiwi\") + \" \"\n    + p.test(\"fig\"));",
+          "options": [
+            "true false true",
+            "false false true",
+            "true true false",
+            "true false false"
+          ],
+          "answer": 0,
+          "explanation": "`p` is \"not longer than 3, or starts with a\". \"apple\" starts with a: true. \"kiwi\" has 4 letters and no a: false. \"fig\" is short: true.",
+          "objective": "6.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "true false true\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Primitive variants",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Generic interfaces box primitives (`int` to `Integer`). Primitive versions avoid that. Read the name to know the shape:"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`IntXxx` **takes** an int: `IntPredicate.test(int)`, `IntConsumer.accept(int)`, `IntFunction<R>.apply(int)`.",
+                "`ToIntXxx` **returns** an int: `ToIntFunction<T>.applyAsInt(T)`, `ToIntBiFunction<T, U>`.",
+                "Takes and returns int: `IntUnaryOperator.applyAsInt(int)`, `IntBinaryOperator.applyAsInt(int, int)`.",
+                "`IntSupplier.getAsInt()`, `BooleanSupplier.getAsBoolean()`. Same idea for `Long` and `Double`."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "IntFunction<String> tag = i -> \"#\" + i;\nToIntFunction<String> len = s -> s.length();\nIntBinaryOperator max = (a, b) -> a > b ? a : b;\nSystem.out.println(tag.apply(7) + \" \"\n    + len.applyAsInt(\"abc\") + \" \"\n    + max.applyAsInt(4, 9));",
+              "caption": "Prints #7 3 9",
+              "verify": {
+                "expect": "stdout",
+                "value": "#7 3 9\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "AsInt, AsDouble",
+              "text": "When the method returns a primitive, its name ends with `As...`: `applyAsInt`, `getAsDouble`. `ToIntFunction` has no `apply` method."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l02-e06",
+          "kind": "multiChoice",
+          "prompt": "Which two declarations compile? Choose two.",
+          "options": [
+            "IntFunction<String> f = i -> \"#\" + i;",
+            "ToIntFunction<String> f = s -> s.length();",
+            "IntPredicate p = i -> i + 1;",
+            "IntSupplier s = () -> \"1\";",
+            "IntUnaryOperator u = (a, b) -> a + b;"
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "`IntFunction<R>` takes an int and returns R; `ToIntFunction<T>` takes T and returns an int. `IntPredicate` must return a boolean, `IntSupplier` an int (not a String), and `IntUnaryOperator` takes one parameter.",
+          "objective": "6.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "#1 2\n",
+            "source": "IntFunction<String> f = i -> \"#\" + i;\nToIntFunction<String> g = s -> s.length();\nSystem.out.println(f.apply(1) + \" \" + g.applyAsInt(\"ab\"));"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l02-e07",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code so it prints true.",
+          "code": "ToIntFunction<String> len = s -> s.length();\nIntPredicate even = n -> n % 2 == 0;\nSystem.out.println(\n    even.___(len.___(\"java\")));",
+          "bank": [
+            "test",
+            "applyAsInt",
+            "apply",
+            "get",
+            "accept",
+            "getAsInt"
+          ],
+          "answers": [
+            "test",
+            "applyAsInt"
+          ],
+          "explanation": "`IntPredicate`'s method is `test(int)`. `ToIntFunction`'s method is `applyAsInt(T)` because it returns a primitive int. \"java\" has 4 letters, which is even.",
+          "objective": "6.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "true\n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u07-l03",
+      "title": "Method references",
+      "summary": "Shorter lambdas with ::, and the four kinds.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Four kinds of method reference",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "When a lambda only calls one existing method, you can write a **method reference** with `::` instead."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Kind",
+                "Example",
+                "Same as"
+              ],
+              "rows": [
+                [
+                  "Static",
+                  "`Integer::parseInt`",
+                  "`s -> Integer.parseInt(s)`"
+                ],
+                [
+                  "Bound (a specific object)",
+                  "`System.out::println`",
+                  "`x -> System.out.println(x)`"
+                ],
+                [
+                  "Unbound (any object of the type)",
+                  "`String::length`",
+                  "`s -> s.length()`"
+                ],
+                [
+                  "Constructor",
+                  "`ArrayList::new`",
+                  "`() -> new ArrayList<>()`"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "Function<String, Integer> p = Integer::parseInt;\nConsumer<Object> out = System.out::println;\nFunction<String, Integer> len = String::length;\nSupplier<List<String>> mk = ArrayList::new;\nout.accept(p.apply(\"41\") + len.apply(\"ab\"));\nList<String> list = mk.get();\nlist.add(\"x\");\nout.accept(list);",
+              "caption": "Prints 43, then [x]",
+              "verify": {
+                "expect": "stdout",
+                "value": "43\n[x]\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "No parentheses, no arguments",
+              "text": "A method reference never has `()` and never passes extra arguments. If you need `s.substring(1)`, write a lambda."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l03-e01",
+          "kind": "singleChoice",
+          "prompt": "Which lambda is equivalent to `String::toUpperCase` used as a `Function<String, String>`?",
+          "options": [
+            "s -> s.toUpperCase()",
+            "() -> String.toUpperCase()",
+            "s -> String.toUpperCase(s)",
+            "(s, t) -> s.toUpperCase(t)"
+          ],
+          "answer": 0,
+          "explanation": "`String::toUpperCase` is an unbound instance reference: the function's parameter becomes the object the method is called on. There is no static `String.toUpperCase(String)`.",
+          "objective": "6.1",
+          "examStyle": true,
+          "codeOptions": true
+        },
+        {
+          "type": "page",
+          "title": "Bound vs unbound",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "**Unbound**: `Type::method`. The first parameter of the function becomes the receiver; the rest become the method's arguments."
+            },
+            {
+              "type": "paragraph",
+              "text": "**Bound**: `expr::method`. The receiver is fixed when the reference is created; all parameters become arguments."
+            },
+            {
+              "type": "code",
+              "code": "BiPredicate<String, String> starts =\n    String::startsWith;\nPredicate<String> isPrefixOfJava =\n    \"java\"::startsWith;\nSystem.out.println(starts.test(\"lambda\", \"la\"));\nSystem.out.println(isPrefixOfJava.test(\"ja\"));\nSystem.out.println(isPrefixOfJava.test(\"va\"));",
+              "caption": "true, true, false",
+              "verify": {
+                "expect": "stdout",
+                "value": "true\ntrue\nfalse\n"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "`starts` means `(s, p) -> s.startsWith(p)`. `isPrefixOfJava` means `p -> \"java\".startsWith(p)`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l03-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "BiFunction<String, Integer, Character> f =\n    String::charAt;\nFunction<Integer, Character> g =\n    \"hello\"::charAt;\nSystem.out.println(\n    f.apply(\"java\", 1) + \"\" + g.apply(4));",
+          "options": [
+            "ao",
+            "jo",
+            "208",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`f` is unbound: `\"java\".charAt(1)` is 'a'. `g` is bound to \"hello\": `charAt(4)` is 'o'. Adding `\"\"` makes it String concatenation, so the result is \"ao\", not the sum 97 + 111 = 208.",
+          "objective": "6.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ao\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Constructor references",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`ClassName::new` refers to a constructor. The **target type** decides which constructor is used."
+            },
+            {
+              "type": "code",
+              "code": "Supplier<StringBuilder> a = StringBuilder::new;\nFunction<String, StringBuilder> b =\n    StringBuilder::new;\nIntFunction<int[]> arr = int[]::new;\nSystem.out.println(a.get().append(\"x\")\n    + \" \" + b.apply(\"hi\") + \" \"\n    + arr.apply(3).length);",
+              "caption": "Prints x hi 3",
+              "verify": {
+                "expect": "stdout",
+                "value": "x hi 3\n"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "`StringBuilder::new` is `() -> new StringBuilder()` as a Supplier, but `s -> new StringBuilder(s)` as a Function."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l03-e03",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "Supplier<String> a = String::new;\nFunction<String, String> b = String::new;\nFunction<String, Integer> c = String::length;\nSupplier<Integer> d = String::length;\nConsumer<String> e = System.out::println;",
+          "answer": 4,
+          "explanation": "`String::length` is unbound: it needs a String to call `length()` on. A `Supplier` has no parameter to provide one, so line 4 fails. The constructor references on lines 1 and 2 pick `new String()` and `new String(String)`.",
+          "objective": "6.1",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l03-e04",
+          "kind": "multiChoice",
+          "prompt": "Which three assignments compile? Choose three.",
+          "options": [
+            "Function<String, Integer> f = Integer::parseInt;",
+            "Supplier<Double> s = Math::random;",
+            "BiFunction<String, String, Boolean> e = String::equals;",
+            "Predicate<String> p = String::length;",
+            "Supplier<String> u = String::toUpperCase;"
+          ],
+          "answers": [
+            0,
+            1,
+            2
+          ],
+          "explanation": "`parseInt(String)` and `Math.random()` are static methods matching the shapes. `String::equals` is unbound: `(a, b) -> a.equals(b)`. `length()` returns an int, not a boolean, and `toUpperCase` needs a String receiver that a Supplier can't give.",
+          "objective": "6.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "7 true\n",
+            "source": "Function<String, Integer> f = Integer::parseInt;\nSupplier<Double> s = Math::random;\nBiFunction<String, String, Boolean> e = String::equals;\ns.get();\nSystem.out.println(f.apply(\"7\") + \" \" + e.apply(\"a\", \"a\"));"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Ambiguous references",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A method reference must match **exactly one** way of calling. If both a static and an instance method fit, it's ambiguous and doesn't compile."
+            },
+            {
+              "type": "code",
+              "code": "Function<Integer, String> f = Integer::toString;",
+              "caption": "Does not compile: ambiguous",
+              "verify": {
+                "expect": "compileError",
+                "line": 1
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "`Integer::toString` could mean the static `Integer.toString(int)` or the instance `i.toString()`. Both fit `Integer -> String`. Use a lambda instead: `i -> i.toString()`."
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "When you see `Integer::toString` or similar on a type that has a static and an instance method with the same name, suspect a compile error."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l03-e05",
+          "kind": "trueFalse",
+          "prompt": "`System.out::println` is a bound method reference: its receiver, `System.out`, is fixed when the reference is created.",
+          "answer": true,
+          "explanation": "`expr::method` is bound. `System.out` is evaluated once, when the reference is created, and every call goes to that PrintStream.",
+          "objective": "6.1"
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l03-e06",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code so it prints [OK] 8.",
+          "code": "Function<String, Integer> toInt = ___::parseInt;\nSupplier<List<String>> make = ___::new;\nFunction<String, String> up = String::___;\nList<String> list = make.get();\nlist.add(up.apply(\"ok\"));\nSystem.out.println(list + \" \"\n    + toInt.apply(\"8\"));",
+          "bank": [
+            "Integer",
+            "ArrayList",
+            "toUpperCase",
+            "List",
+            "String",
+            "upper"
+          ],
+          "answers": [
+            "Integer",
+            "ArrayList",
+            "toUpperCase"
+          ],
+          "explanation": "`parseInt` is a static method of `Integer`. `List` is an interface, so `List::new` can't work: use `ArrayList::new`. `String::toUpperCase` is unbound: the Function's argument is the receiver.",
+          "objective": "6.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "[OK] 8\n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u07-l04",
+      "title": "Stream basics",
+      "summary": "Pipelines, laziness, single use and infinite streams.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "A pipeline",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A **stream** is a sequence of elements processed in a **pipeline**: one **source**, zero or more **intermediate operations**, and one **terminal operation**."
+            },
+            {
+              "type": "code",
+              "code": "List<String> names = List.of(\"ann\", \"bob\", \"cy\");\nlong n = names.stream()     // source\n    .filter(s -> s.length() == 3)  // intermediate\n    .count();                 // terminal\nSystem.out.println(n);",
+              "caption": "Prints 2",
+              "verify": {
+                "expect": "stdout",
+                "value": "2\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Intermediate operations return a new `Stream` (filter, map, sorted...).",
+                "The terminal operation returns something else (a count, a List, an Optional, or nothing) and ends the stream.",
+                "The source collection is **not** changed."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Think of a Python generator expression: nothing is computed until you consume it. But a Java stream is not a collection: no indexing, no `len()`, and you can consume it only once."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Lazy evaluation",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Intermediate operations are **lazy**: they only describe work. Nothing runs until a terminal operation starts pulling elements."
+            },
+            {
+              "type": "paragraph",
+              "text": "When it runs, each element travels **through the whole pipeline** before the next one starts."
+            },
+            {
+              "type": "code",
+              "code": "Stream.of(\"a\", \"b\", \"c\")\n    .peek(s -> System.out.print(s))\n    .map(String::toUpperCase)\n    .forEach(s -> System.out.print(s));",
+              "caption": "Prints aAbBcC, element by element",
+              "verify": {
+                "expect": "stdout",
+                "value": "aAbBcC"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "No terminal, no output",
+              "text": "A pipeline with `peek`/`map` but no terminal operation prints nothing and runs no lambdas."
+            },
+            {
+              "type": "paragraph",
+              "text": "`sorted()` breaks that rhythm. It is **stateful**: it can't emit anything until it has seen every element. So everything before it runs for all elements, even when a short-circuit terminal like `findFirst()` needs only one."
+            },
+            {
+              "type": "code",
+              "code": "Stream.of(\"c\", \"a\", \"b\")\n    .peek(s -> System.out.print(s))\n    .sorted()\n    .findFirst()\n    .ifPresent(s -> System.out.print(\" -> \" + s));",
+              "caption": "Prints cab -> a: peek saw all three",
+              "verify": {
+                "expect": "stdout",
+                "value": "cab -> a"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l04-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "List<Integer> seen = new ArrayList<>();\nStream<Integer> s = Stream.of(1, 2, 3)\n    .peek(seen::add)\n    .map(x -> x * 2);\nSystem.out.println(seen.size());",
+          "options": [
+            "0",
+            "3",
+            "6",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "There is no terminal operation, so `peek` never runs and nothing is added to `seen`. The stream is only described, not executed.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "0\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l04-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Stream.of(\"x\", \"y\")\n    .peek(s -> System.out.print(\"a\" + s))\n    .peek(s -> System.out.print(\"b\" + s))\n    .forEach(s -> System.out.print(\"c\" + s));",
+          "options": [
+            "axbxcxaybycy",
+            "axaybxbycxcy",
+            "cxcyaxaybxby",
+            "Nothing is printed"
+          ],
+          "answer": 0,
+          "explanation": "Streams process one element at a time through all stages: x goes through a, b and c, then y does.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "axbxcxaybycy"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Streams are single-use",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Once a stream has been used, by a terminal operation **or** by chaining an intermediate operation onto it, it can't be used again."
+            },
+            {
+              "type": "code",
+              "code": "Stream<String> s = Stream.of(\"a\", \"b\");\nSystem.out.println(s.count());\nSystem.out.println(s.count());",
+              "caption": "Prints 2, then IllegalStateException",
+              "verify": {
+                "expect": "exception",
+                "value": "IllegalStateException",
+                "stdout": "2\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "It compiles",
+              "text": "Reusing a stream is a **runtime** error (`IllegalStateException: stream has already been operated upon or closed`), not a compile error. If you need the data twice, call `list.stream()` twice."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l04-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Stream<Integer> s = Stream.of(1, 2, 3);\nStream<Integer> big = s.filter(x -> x > 1);\nSystem.out.println(s.count());",
+          "options": [
+            "3",
+            "2",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 3,
+          "explanation": "`s.filter(...)` uses `s`: the new stream `big` is now linked to it. Calling `s.count()` afterwards reuses `s`, which throws `IllegalStateException` at runtime.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "IllegalStateException"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Making streams",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Source",
+                "Gives"
+              ],
+              "rows": [
+                [
+                  "`list.stream()`",
+                  "elements of any Collection"
+                ],
+                [
+                  "`Stream.of(a, b, c)`",
+                  "the listed values"
+                ],
+                [
+                  "`Arrays.stream(array)`",
+                  "elements of an array"
+                ],
+                [
+                  "`Stream.empty()`",
+                  "no elements"
+                ],
+                [
+                  "`Stream.iterate(1, x -> x * 2)`",
+                  "1, 2, 4, 8... **infinite**"
+                ],
+                [
+                  "`Stream.iterate(1, x -> x < 100, x -> x * 2)`",
+                  "finite: stops when the test fails"
+                ],
+                [
+                  "`Stream.generate(() -> \"z\")`",
+                  "z, z, z... **infinite**"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Use `limit(n)` to cut an infinite stream down. A `Map` has no `stream()`: use `map.entrySet().stream()`."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Infinite streams",
+              "text": "`count()`, `forEach()`, `sorted()` or `collect()` on an infinite stream without `limit` never finish. Short-circuit operations like `findFirst()` or `anyMatch()` can finish, if a match exists."
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Stream.builder needs a type witness",
+              "text": "`Stream.builder()` lets you add values one by one. When you chain it in one expression, give the type explicitly: `Stream.<String>builder()`. Without it, Java infers `Object` and `build()` returns a `Stream<Object>`, which can't be assigned to `Stream<String>`."
+            },
+            {
+              "type": "code",
+              "code": "Stream<String> s = Stream.<String>builder()\n    .add(\"x\").add(\"y\").build();\nSystem.out.println(s.toList());",
+              "caption": "Prints [x, y]",
+              "verify": {
+                "expect": "stdout",
+                "value": "[x, y]\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l04-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Stream.iterate(1, x -> x * 3)\n    .limit(4)\n    .forEach(x -> System.out.print(x + \" \"));",
+          "options": [
+            "1 3 9 27",
+            "3 9 27 81",
+            "1 3 9 27 81",
+            "The program never ends"
+          ],
+          "answer": 0,
+          "explanation": "`iterate` starts with the seed 1, then applies x * 3: 1, 3, 9, 27, ... `limit(4)` keeps exactly four elements.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "1 3 9 27 "
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l04-e05",
+          "kind": "multiChoice",
+          "prompt": "Which two statements finish and print a number? Choose two.",
+          "options": [
+            "System.out.println(Stream.generate(() -> 1).limit(3).count());",
+            "System.out.println(Stream.iterate(1, x -> x + 1).count());",
+            "System.out.println(Stream.iterate(1, x -> x < 5, x -> x + 1).count());",
+            "System.out.println(Stream.generate(() -> 1).sorted().limit(3).count());",
+            "System.out.println(Stream.iterate(1, x -> x + 1).filter(x -> x < 0).findFirst());"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "`limit(3)` makes the generated stream finite (3). The three-argument `iterate` stops when `x < 5` fails (4). Counting an infinite stream never ends; `sorted()` must read every element before passing any on; and `findFirst()` waits forever for a negative number that never comes.",
+          "objective": "6.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "3\n4\n",
+            "source": "System.out.println(Stream.generate(() -> 1).limit(3).count());\nSystem.out.println(Stream.iterate(1, x -> x < 5, x -> x + 1).count());"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l04-e06",
+          "kind": "trueFalse",
+          "prompt": "Calling `map()` on a stream immediately runs the mapping function on every element.",
+          "answer": false,
+          "explanation": "`map` is an intermediate operation and is lazy. The function runs only when a terminal operation pulls elements through, one at a time.",
+          "objective": "6.2"
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l04-e07",
+          "kind": "orderLines",
+          "prompt": "Arrange the lines so the program prints [A, B].",
+          "lines": [
+            "List<String> out = Stream.of(\"a\", \"b\", \"c\")",
+            "    .filter(s -> !s.equals(\"c\"))",
+            "    .map(String::toUpperCase)",
+            "    .toList();",
+            "System.out.println(out);"
+          ],
+          "distractors": [
+            "    .forEach(System.out::println);"
+          ],
+          "explanation": "Source first, then intermediate operations, then the terminal `toList()`. The filter must come before `map`: after `map` the element is \"C\", which is not equal to \"c\", so nothing would be removed.",
+          "objective": "6.2",
+          "verify": {
+            "expect": "stdout",
+            "value": "[A, B]\n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u07-l05",
+      "title": "Intermediate operations",
+      "summary": "filter, map, flatMap, sorted, distinct, limit, skip and more.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "filter, map, flatMap",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Operation",
+                "Does"
+              ],
+              "rows": [
+                [
+                  "`filter(Predicate)`",
+                  "keeps elements that pass the test"
+                ],
+                [
+                  "`map(Function)`",
+                  "turns each element into exactly one new element"
+                ],
+                [
+                  "`flatMap(Function)`",
+                  "turns each element into a **stream** and joins them all"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "List<List<Integer>> nested = List.of(\n    List.of(1, 2), List.of(3), List.of());\nList<Integer> flat = nested.stream()\n    .flatMap(List::stream)\n    .toList();\nSystem.out.println(flat);",
+              "caption": "Prints [1, 2, 3]",
+              "verify": {
+                "expect": "stdout",
+                "value": "[1, 2, 3]\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "map vs flatMap",
+              "text": "`map` is one in, one out, so the count never changes. `flatMap` is one in, zero or more out. Empty inner lists simply disappear."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l05-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "long n = Stream.of(\"ab\", \"cd\", \"e\")\n    .map(s -> s.split(\"\"))\n    .count();\nlong m = Stream.of(\"ab\", \"cd\", \"e\")\n    .flatMap(s -> Stream.of(s.split(\"\")))\n    .count();\nSystem.out.println(n + \" \" + m);",
+          "options": [
+            "3 5",
+            "5 5",
+            "3 3",
+            "5 3"
+          ],
+          "answer": 0,
+          "explanation": "`map` keeps one element per input, here three arrays: 3. `flatMap` spreads each array into separate letters: a, b, c, d, e: 5.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "3 5\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "distinct, sorted, skip, limit",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Operation",
+                "Does"
+              ],
+              "rows": [
+                [
+                  "`distinct()`",
+                  "removes duplicates (uses `equals`)"
+                ],
+                [
+                  "`sorted()`",
+                  "natural order; elements must be `Comparable`"
+                ],
+                [
+                  "`sorted(Comparator)`",
+                  "order given by the comparator"
+                ],
+                [
+                  "`skip(n)`",
+                  "drops the first n elements"
+                ],
+                [
+                  "`limit(n)`",
+                  "keeps at most the first n elements"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "List<Integer> r = Stream.of(5, 3, 5, 1, 3, 4)\n    .distinct()      // 5, 3, 1, 4\n    .sorted()        // 1, 3, 4, 5\n    .skip(1)         // 3, 4, 5\n    .limit(2)        // 3, 4\n    .toList();\nSystem.out.println(r);",
+              "caption": "Prints [3, 4]",
+              "verify": {
+                "expect": "stdout",
+                "value": "[3, 4]\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "sorted() needs Comparable",
+              "text": "`sorted()` on elements that don't implement `Comparable` compiles fine but throws `ClassCastException` when the terminal operation runs."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l05-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "List<String> r = Stream.of(\n        \"pear\", \"fig\", \"apple\", \"kiwi\", \"fig\")\n    .distinct()\n    .sorted(Comparator\n        .comparing(String::length)\n        .thenComparing(Comparator.reverseOrder()))\n    .skip(1)\n    .toList();\nSystem.out.println(r);",
+          "options": [
+            "[pear, kiwi, apple]",
+            "[kiwi, pear, apple]",
+            "[fig, pear, kiwi, apple]",
+            "[pear, kiwi, apple, fig]"
+          ],
+          "answer": 0,
+          "explanation": "`distinct` drops the second fig. Sorting by length puts fig (3) first, then the 4-letter words in reverse alphabetical order (pear before kiwi), then apple. `skip(1)` removes fig.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "[pear, kiwi, apple]\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l05-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "record Box(int w) {}\nList<Box> boxes = Stream.of(new Box(2), new Box(1))\n    .sorted()\n    .toList();\nSystem.out.println(boxes);",
+          "options": [
+            "[Box[w=1], Box[w=2]]",
+            "[Box[w=2], Box[w=1]]",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 3,
+          "explanation": "`Box` does not implement `Comparable`. `sorted()` still compiles (it accepts any stream) but throws `ClassCastException` when `toList()` runs the pipeline.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "ClassCastException"
+          }
+        },
+        {
+          "type": "page",
+          "title": "takeWhile, dropWhile, peek, mapMulti",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "`takeWhile(p)` keeps elements **until the first one that fails**, then stops.",
+                "`dropWhile(p)` skips elements until the first one that fails, then keeps **everything** after it.",
+                "`filter(p)` checks every element. That's the difference.",
+                "`peek(Consumer)` looks at each element as it passes; meant for debugging.",
+                "`mapMulti((e, sink) -> ...)` is like flatMap without building streams: call `sink.accept(x)` zero or more times per element."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "List<Integer> src = List.of(1, 2, 5, 1, 7);\nSystem.out.println(src.stream()\n    .takeWhile(x -> x < 3).toList());\nSystem.out.println(src.stream()\n    .dropWhile(x -> x < 3).toList());\nSystem.out.println(src.stream()\n    .filter(x -> x < 3).toList());",
+              "caption": "[1, 2], then [5, 1, 7], then [1, 2, 1]",
+              "verify": {
+                "expect": "stdout",
+                "value": "[1, 2]\n[5, 1, 7]\n[1, 2, 1]\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Prefix only when ordered",
+              "text": "The \"until the first failure\" rule holds for **ordered** streams (a `List`, `Stream.of`, `iterate`). On an **unordered** stream, such as one from a `HashSet`, the result isn't predictable when only some elements match: any subset of the matching elements may be taken or dropped."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l05-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "List<Integer> a = Stream.of(2, 4, 5, 6, 1)\n    .dropWhile(x -> x % 2 == 0)\n    .toList();\nList<Integer> b = Stream.of(2, 4, 5, 6, 1)\n    .takeWhile(x -> x % 2 == 0)\n    .toList();\nSystem.out.println(a + \" \" + b);",
+          "options": [
+            "[5, 6, 1] [2, 4]",
+            "[5, 1] [2, 4, 6]",
+            "[5, 6, 1] [2, 4, 6]",
+            "[5, 1] [2, 4]"
+          ],
+          "answer": 0,
+          "explanation": "`dropWhile` skips 2 and 4, stops dropping at 5 and keeps everything after: [5, 6, 1]. `takeWhile` keeps 2 and 4 and stops at 5, so 6 is never reached: [2, 4].",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "[5, 6, 1] [2, 4]\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l05-e05",
+          "kind": "trueFalse",
+          "prompt": "For the same predicate, `takeWhile` and `filter` always return the same elements.",
+          "answer": false,
+          "explanation": "`filter` tests every element. `takeWhile` stops at the first element that fails, so later matching elements are lost. They only agree when all matches come before the first failure.",
+          "objective": "6.2"
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l05-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "List<Integer> r = Stream.of(1, 2, 3)\n    .<Integer>mapMulti((n, sink) -> {\n        if (n != 2) {\n            sink.accept(n);\n            sink.accept(n * 10);\n        }\n    })\n    .toList();\nSystem.out.println(r);",
+          "options": [
+            "[1, 10, 3, 30]",
+            "[1, 10, 2, 20, 3, 30]",
+            "[1, 3]",
+            "[10, 30]"
+          ],
+          "answer": 0,
+          "explanation": "For each element except 2, the lambda pushes two values into the sink: n and n * 10. For 2 it pushes nothing.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "[1, 10, 3, 30]\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l05-e07",
+          "kind": "fillBlanks",
+          "prompt": "Complete the pipeline so it prints [c, b].",
+          "code": "List<String> r = Stream.of(\"b\", \"a\", \"b\", \"c\")\n    .___()\n    .___(Comparator.reverseOrder())\n    .___(2)\n    .toList();\nSystem.out.println(r);",
+          "bank": [
+            "distinct",
+            "sorted",
+            "limit",
+            "skip",
+            "filter",
+            "peek"
+          ],
+          "answers": [
+            "distinct",
+            "sorted",
+            "limit"
+          ],
+          "explanation": "`distinct` gives b, a, c. `sorted` with a reverse comparator gives c, b, a. `limit(2)` keeps c, b. (`skip(2)` would leave only a.)",
+          "objective": "6.2",
+          "verify": {
+            "expect": "stdout",
+            "value": "[c, b]\n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u07-l06",
+      "title": "Terminal operations & Optional",
+      "summary": "count, min, find, match, toList and Optional.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Terminal operations",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Operation",
+                "Returns"
+              ],
+              "rows": [
+                [
+                  "`forEach(Consumer)`",
+                  "void"
+                ],
+                [
+                  "`count()`",
+                  "long"
+                ],
+                [
+                  "`min(Comparator)`, `max(Comparator)`",
+                  "`Optional<T>`"
+                ],
+                [
+                  "`findFirst()`, `findAny()`",
+                  "`Optional<T>`"
+                ],
+                [
+                  "`anyMatch`, `allMatch`, `noneMatch`",
+                  "boolean"
+                ],
+                [
+                  "`toList()`",
+                  "unmodifiable List"
+                ],
+                [
+                  "`collect(...)`, `reduce(...)`",
+                  "see later lessons"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "min and max need a Comparator",
+              "text": "On a `Stream<T>`, `max()` with no argument doesn't compile. Only primitive streams (`IntStream`) have a no-arg `max()`."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "toList() is unmodifiable",
+              "text": "The List from `Stream.toList()` throws `UnsupportedOperationException` on `add`, `remove` or `set`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l06-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "List<String> list = Stream.of(\"a\", \"b\").toList();\nlist.add(\"c\");\nSystem.out.println(list);",
+          "options": [
+            "[a, b, c]",
+            "[a, b]",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 3,
+          "explanation": "`Stream.toList()` returns an unmodifiable list. `add` compiles (it's a `List`) but throws `UnsupportedOperationException`.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "UnsupportedOperationException"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Matching and short-circuiting",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`anyMatch`, `allMatch`, `noneMatch`, `findFirst`, `findAny` and `limit` are **short-circuiting**: they stop as soon as the answer is known. They can even finish on infinite streams."
+            },
+            {
+              "type": "table",
+              "header": [
+                "On an empty stream",
+                "Result"
+              ],
+              "rows": [
+                [
+                  "`anyMatch(p)`",
+                  "false: nothing matched"
+                ],
+                [
+                  "`allMatch(p)`",
+                  "true: nothing failed"
+                ],
+                [
+                  "`noneMatch(p)`",
+                  "true: nothing matched"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "boolean b = Stream.iterate(1, x -> x + 1)\n    .anyMatch(x -> x > 5);\nSystem.out.println(b);",
+              "caption": "Prints true; stops at 6",
+              "verify": {
+                "expect": "stdout",
+                "value": "true\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l06-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "List<Integer> e = List.of();\nSystem.out.println(\n    e.stream().anyMatch(x -> x > 0) + \" \"\n    + e.stream().allMatch(x -> x > 0) + \" \"\n    + e.stream().noneMatch(x -> x > 0));",
+          "options": [
+            "false true true",
+            "false false true",
+            "true true true",
+            "false false false"
+          ],
+          "answer": 0,
+          "explanation": "With no elements, there is nothing that matches (anyMatch false, noneMatch true) and nothing that fails (allMatch true).",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "false true true\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l06-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "List<Integer> seen = new ArrayList<>();\nboolean r = Stream.of(1, 3, 4, 5, 6)\n    .peek(seen::add)\n    .anyMatch(x -> x % 2 == 0);\nSystem.out.println(r + \" \" + seen);",
+          "options": [
+            "true [1, 3, 4]",
+            "true [1, 3, 4, 5, 6]",
+            "true []",
+            "false [1, 3, 4]"
+          ],
+          "answer": 0,
+          "explanation": "`anyMatch` short-circuits: once 4 (even) passes, it stops pulling elements. Only 1, 3 and 4 went through `peek`.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "true [1, 3, 4]\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Optional",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`Optional<T>` is a box that holds **one value or nothing**. Methods like `min`, `max` and `findFirst` return it because the stream might be empty."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Create",
+                "Meaning"
+              ],
+              "rows": [
+                [
+                  "`Optional.of(v)`",
+                  "v must not be null (else NullPointerException)"
+                ],
+                [
+                  "`Optional.ofNullable(v)`",
+                  "empty if v is null"
+                ],
+                [
+                  "`Optional.empty()`",
+                  "an empty Optional"
+                ]
+              ]
+            },
+            {
+              "type": "table",
+              "header": [
+                "Read",
+                "On empty"
+              ],
+              "rows": [
+                [
+                  "`get()`, `orElseThrow()`",
+                  "throw NoSuchElementException"
+                ],
+                [
+                  "`orElse(x)`",
+                  "return x (x is **always** evaluated)"
+                ],
+                [
+                  "`orElseGet(supplier)`",
+                  "call the supplier (only when empty)"
+                ],
+                [
+                  "`orElseThrow(supplier)`",
+                  "throw the supplied exception"
+                ],
+                [
+                  "`isPresent()`, `isEmpty()`",
+                  "false, true"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "`map`, `filter`, `ifPresent` and `ifPresentOrElse` let you work with the value without unpacking it."
+            },
+            {
+              "type": "code",
+              "code": "Optional<String> o = Stream.of(\"kiwi\", \"fig\")\n    .min(Comparator.naturalOrder());\nSystem.out.println(o);\nSystem.out.println(\n    o.map(String::length).orElse(0));",
+              "caption": "Prints Optional[fig], then 3",
+              "verify": {
+                "expect": "stdout",
+                "value": "Optional[fig]\n3\n"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "If the function you pass already returns an `Optional`, use `flatMap`. `map` would wrap it again and give you an `Optional<Optional<T>>`."
+            },
+            {
+              "type": "code",
+              "code": "Function<String, Optional<Integer>> len = s ->\n    s.isEmpty() ? Optional.empty() : Optional.of(s.length());\nOptional<String> o = Optional.of(\"pear\");\nOptional<Optional<Integer>> nested = o.map(len);\nOptional<Integer> flat = o.flatMap(len);\nSystem.out.println(nested + \" \" + flat);",
+              "caption": "Prints Optional[Optional[4]] Optional[4]",
+              "verify": {
+                "expect": "stdout",
+                "value": "Optional[Optional[4]] Optional[4]\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l06-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "public class Opt {\n    static String make(String s) {\n        System.out.print(s);\n        return s;\n    }\n    public static void main(String[] a) {\n        Optional<String> o = Optional.of(\"x\");\n        String r1 = o.orElse(make(\"A\"));\n        String r2 = o.orElseGet(() -> make(\"B\"));\n        System.out.println(r1 + r2);\n    }\n}",
+          "options": [
+            "xx",
+            "Axx",
+            "ABxx",
+            "AB"
+          ],
+          "answer": 1,
+          "explanation": "The argument of `orElse` is a normal method argument: `make(\"A\")` runs (printing A) even though the Optional has a value. `orElseGet` only calls its supplier when the Optional is empty, so B is never printed. Both return \"x\".",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "Axx\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l06-e05",
+          "kind": "multiChoice",
+          "prompt": "Which two expressions throw `NoSuchElementException`? Choose two.",
+          "options": [
+            "Optional.empty().get()",
+            "Optional.ofNullable(null).orElse(null)",
+            "Optional.of(null)",
+            "Optional.empty().orElseThrow()",
+            "Optional.empty().isPresent()"
+          ],
+          "answers": [
+            0,
+            3
+          ],
+          "explanation": "`get()` and `orElseThrow()` on an empty Optional throw `NoSuchElementException`. `Optional.of(null)` throws `NullPointerException` instead. `orElse(null)` just returns null, and `isPresent()` returns false.",
+          "objective": "6.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "NoSuchElementException\nok\nNullPointerException\nNoSuchElementException\nok\n",
+            "source": "List<Supplier<Object>> tests = List.of(\n    () -> Optional.empty().get(),\n    () -> Optional.ofNullable(null).orElse(null),\n    () -> Optional.of(null),\n    () -> Optional.empty().orElseThrow(),\n    () -> Optional.empty().isPresent());\nfor (var t : tests) {\n    try {\n        t.get();\n        System.out.println(\"ok\");\n    } catch (Exception e) {\n        System.out.println(e.getClass().getSimpleName());\n    }\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l06-e06",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "List<Integer> nums = List.of(3, 1, 2);\nOptional<Integer> lo = nums.stream()\n    .min(Integer::compare);\nint hi = nums.stream().max(Integer::compare);\nlong n = nums.stream().count();",
+          "answer": 4,
+          "explanation": "`max(Comparator)` returns `Optional<Integer>`, which can't be assigned to an `int`. You would need `.get()` or `.orElse(0)`.",
+          "objective": "6.2",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l06-e07",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Optional<String> o = Optional.of(\"java\")\n    .filter(s -> s.length() > 4);\no.ifPresentOrElse(\n    s -> System.out.println(\"got \" + s),\n    () -> System.out.println(\"none\"));",
+          "options": [
+            "got java",
+            "none",
+            "got java\nnone",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 1,
+          "explanation": "\"java\" has 4 letters, and `filter` keeps it only if the length is greater than 4, so the Optional becomes empty. `ifPresentOrElse` runs the second argument.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "none\n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u07-l07",
+      "title": "Primitive streams",
+      "summary": "IntStream, ranges, sum, average and conversions.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "IntStream, LongStream, DoubleStream",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Primitive streams hold `int`, `long` or `double` values directly. They avoid boxing and add math methods."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Method (IntStream)",
+                "Returns"
+              ],
+              "rows": [
+                [
+                  "`IntStream.range(1, 5)`",
+                  "1, 2, 3, 4 (end excluded)"
+                ],
+                [
+                  "`IntStream.rangeClosed(1, 5)`",
+                  "1, 2, 3, 4, 5"
+                ],
+                [
+                  "`sum()`",
+                  "int (0 if empty)"
+                ],
+                [
+                  "`average()`",
+                  "OptionalDouble"
+                ],
+                [
+                  "`max()`, `min()`",
+                  "OptionalInt"
+                ],
+                [
+                  "`count()`",
+                  "long"
+                ],
+                [
+                  "`summaryStatistics()`",
+                  "IntSummaryStatistics"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "average is always OptionalDouble",
+              "text": "Even on an `IntStream`, `average()` returns `OptionalDouble`, read with `getAsDouble()`. `max()` returns `OptionalInt`, read with `getAsInt()`."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Primitive streams take primitive interfaces",
+              "text": "`DoubleStream.allMatch` takes a `DoublePredicate`, not a `Predicate<Double>`. A lambda written in place adapts to either, but a variable typed `Predicate<Double>` doesn't compile there. The same goes for `IntPredicate`, `IntFunction` and friends."
+            },
+            {
+              "type": "code",
+              "code": "Predicate<Double> big = d -> d > 1.5;\nDoublePredicate alsoBig = d -> d > 1.5;\nSystem.out.println(DoubleStream.of(2.0, 3.0).allMatch(alsoBig));\nSystem.out.println(DoubleStream.of(2.0, 3.0).allMatch(big));",
+              "caption": "Line 4 does not compile",
+              "verify": {
+                "expect": "compileError",
+                "line": 4
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l07-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "System.out.println(\n    IntStream.range(1, 5).sum() + \" \"\n    + IntStream.rangeClosed(1, 5).sum());",
+          "options": [
+            "10 15",
+            "15 15",
+            "10 10",
+            "15 21"
+          ],
+          "answer": 0,
+          "explanation": "`range(1, 5)` excludes 5: 1+2+3+4 = 10. `rangeClosed(1, 5)` includes it: 15.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "10 15\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l07-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "OptionalDouble avg = IntStream.range(5, 5).average();\nSystem.out.println(avg.isPresent() + \" \"\n    + IntStream.of(1, 2).average().getAsDouble());",
+          "options": [
+            "false 1.5",
+            "true 1.5",
+            "false 1",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`range(5, 5)` is empty, so its average is an empty `OptionalDouble`. The average of 1 and 2 is 1.5, a double.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "false 1.5\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Converting between stream types",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "From",
+                "Method",
+                "To"
+              ],
+              "rows": [
+                [
+                  "`Stream<T>`",
+                  "`mapToInt(ToIntFunction)`",
+                  "IntStream"
+                ],
+                [
+                  "`IntStream`",
+                  "`map(IntUnaryOperator)`",
+                  "IntStream"
+                ],
+                [
+                  "`IntStream`",
+                  "`mapToObj(IntFunction)`",
+                  "Stream<R>"
+                ],
+                [
+                  "`IntStream`",
+                  "`boxed()`",
+                  "Stream<Integer>"
+                ],
+                [
+                  "`IntStream`",
+                  "`asDoubleStream()`",
+                  "DoubleStream"
+                ],
+                [
+                  "`String`",
+                  "`chars()`",
+                  "IntStream of char codes"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "int total = Stream.of(\"a\", \"bb\", \"ccc\")\n    .mapToInt(String::length)\n    .sum();\nList<Integer> sq = IntStream.rangeClosed(1, 3)\n    .map(i -> i * i)\n    .boxed()\n    .toList();\nSystem.out.println(total + \" \" + sq);",
+              "caption": "Prints 6 [1, 4, 9]",
+              "verify": {
+                "expect": "stdout",
+                "value": "6 [1, 4, 9]\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Stream<Integer> has no sum()",
+              "text": "`List<Integer>.stream().sum()` doesn't compile. Convert first with `mapToInt(x -> x)`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l07-e03",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "List<Integer> nums = List.of(1, 2, 3);\nint a = nums.stream().mapToInt(x -> x).sum();\nint b = nums.stream().sum();\nlong c = nums.stream().count();",
+          "answer": 3,
+          "explanation": "`sum()` exists only on primitive streams. `nums.stream()` is a `Stream<Integer>`, so line 3 fails. `count()` is available on every stream.",
+          "objective": "6.2",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l07-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "\"hi\".chars().forEach(System.out::print);",
+          "options": [
+            "hi",
+            "104105",
+            "h i",
+            "Compilation fails"
+          ],
+          "answer": 1,
+          "explanation": "`chars()` returns an `IntStream`. Each element is an int (the char code), so `print(int)` prints 104 and 105. Cast with `(char) c` to print letters.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "104105"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l07-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "IntSummaryStatistics st = IntStream.of(4, 8, 6)\n    .summaryStatistics();\nSystem.out.println(st.getMin() + \" \"\n    + st.getMax() + \" \" + st.getAverage()\n    + \" \" + st.getSum());",
+          "options": [
+            "4 8 6.0 18",
+            "4 8 6 18",
+            "8 4 6.0 18",
+            "4 8 6.0 3"
+          ],
+          "answer": 0,
+          "explanation": "`IntSummaryStatistics` collects min, max, average, sum and count in one pass. `getAverage()` returns a double, so it prints 6.0.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "4 8 6.0 18\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l07-e06",
+          "kind": "multiChoice",
+          "prompt": "Which two expressions return an `OptionalInt`? Choose two.",
+          "options": [
+            "IntStream.of(1).max()",
+            "IntStream.of(1).sum()",
+            "IntStream.of(1).average()",
+            "IntStream.of(1).findFirst()",
+            "Stream.of(1).max(Integer::compare)"
+          ],
+          "answers": [
+            0,
+            3
+          ],
+          "explanation": "On an `IntStream`, `max()` and `findFirst()` return `OptionalInt`. `sum()` returns a plain int, `average()` returns `OptionalDouble`, and `max` on a `Stream<Integer>` returns `Optional<Integer>`.",
+          "objective": "6.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "2\n",
+            "source": "OptionalInt a = IntStream.of(1).max();\nOptionalInt b = IntStream.of(1).findFirst();\nSystem.out.println(a.getAsInt() + b.getAsInt());"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l07-e07",
+          "kind": "trueFalse",
+          "prompt": "`IntStream.range(0, 3)` produces the values 0, 1, 2 and 3.",
+          "answer": false,
+          "explanation": "`range` excludes its end value: 0, 1, 2. Use `rangeClosed(0, 3)` to include 3.",
+          "objective": "6.2"
+        }
+      ]
+    },
+    {
+      "id": "u07-l08",
+      "title": "reduce and collect",
+      "summary": "Combine elements with reduce, Collectors and toMap.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Three forms of reduce",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Signature",
+                "Returns"
+              ],
+              "rows": [
+                [
+                  "`reduce(identity, accumulator)`",
+                  "T"
+                ],
+                [
+                  "`reduce(accumulator)`",
+                  "`Optional<T>` (stream may be empty)"
+                ],
+                [
+                  "`reduce(identity, accumulator, combiner)`",
+                  "U (a different type)"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "List<Integer> nums = List.of(1, 2, 3, 4);\nint sum = nums.stream().reduce(0, Integer::sum);\nOptional<Integer> prod = nums.stream()\n    .reduce((a, b) -> a * b);\nint chars = Stream.of(\"ab\", \"cde\").reduce(0,\n    (acc, s) -> acc + s.length(),\n    Integer::sum);\nSystem.out.println(sum + \" \" + prod.get()\n    + \" \" + chars);",
+              "caption": "Prints 10 24 5",
+              "verify": {
+                "expect": "stdout",
+                "value": "10 24 5\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "The **identity** is the starting value and the result for an empty stream.",
+                "The **accumulator** folds the next element into the running result.",
+                "The **combiner** merges two partial results (used by parallel streams). You need it when the result type differs from the element type."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Like `functools.reduce(f, items, start)`, but in Java the identity comes **first**."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l08-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "String s = Stream.of(\"a\", \"b\", \"c\")\n    .reduce(\"x\", (acc, e) -> acc + e);\nSystem.out.println(s);",
+          "options": [
+            "xabc",
+            "abcx",
+            "abc",
+            "xaxbxc"
+          ],
+          "answer": 0,
+          "explanation": "The identity \"x\" is the starting value. Each element is appended in order: x, xa, xab, xabc.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "xabc\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l08-e02",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "List<Integer> nums = List.of(2, 3);\nint a = nums.stream().reduce(1, (x, y) -> x * y);\nint b = nums.stream().reduce((x, y) -> x * y);\nOptional<Integer> c = nums.stream()\n    .reduce(Integer::max);",
+          "answer": 3,
+          "explanation": "Without an identity, `reduce` returns `Optional<Integer>`, because an empty stream has no result. It can't be assigned to an `int`.",
+          "objective": "6.2",
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "page",
+          "title": "collect with Collectors",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Collector",
+                "Result"
+              ],
+              "rows": [
+                [
+                  "`Collectors.toList()`, `toSet()`",
+                  "List, Set"
+                ],
+                [
+                  "`Collectors.joining(sep, prefix, suffix)`",
+                  "String"
+                ],
+                [
+                  "`Collectors.counting()`",
+                  "Long"
+                ],
+                [
+                  "`Collectors.summingInt(f)`",
+                  "Integer"
+                ],
+                [
+                  "`Collectors.averagingInt(f)`",
+                  "Double"
+                ],
+                [
+                  "`Collectors.toMap(keyF, valueF)`",
+                  "Map"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "List<String> w = List.of(\"ant\", \"bee\", \"cat\");\nSystem.out.println(w.stream()\n    .collect(Collectors.joining(\", \", \"[\", \"]\")));\nSystem.out.println(w.stream()\n    .collect(Collectors.averagingInt(String::length)));",
+              "caption": "Prints [ant, bee, cat], then 3.0",
+              "verify": {
+                "expect": "stdout",
+                "value": "[ant, bee, cat]\n3.0\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Mind the types",
+              "text": "`counting()` gives a `Long`, `averagingInt` a `Double` (even for whole numbers), `joining` only works on a stream of `CharSequence` like `String`."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Two kinds of toList",
+              "text": "`stream.toList()` returns an **unmodifiable** list. `Collectors.toList()` makes **no guarantee** about mutability, type or thread-safety, so don't rely on being able to `add` to it. If you need a list you can change, use `Collectors.toCollection(ArrayList::new)`."
+            },
+            {
+              "type": "paragraph",
+              "text": "You can also collect without `Collectors`, using `collect(supplier, accumulator, combiner)`. The supplier makes an empty container, the accumulator adds one element, and the combiner merges two containers. The combiner is only used by **parallel** streams."
+            },
+            {
+              "type": "code",
+              "code": "ArrayList<String> out = Stream.of(\"b\", \"a\")\n    .collect(ArrayList::new,     // supplier\n             ArrayList::add,     // accumulator\n             ArrayList::addAll); // combiner\nSystem.out.println(out);",
+              "caption": "Prints [b, a]",
+              "verify": {
+                "expect": "stdout",
+                "value": "[b, a]\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Beyond the core: Collector.of",
+              "text": "To package those pieces into a reusable `Collector`, use `Collector.of(supplier, accumulator, combiner, finisher)`. The optional **finisher** turns the container into the final result, e.g. a `StringBuilder` into a `String` with `StringBuilder::toString`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l08-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var c = Stream.of(\"a\", \"b\")\n    .collect(Collectors.counting());\nvar s = Stream.of(\"a\", \"bb\")\n    .collect(Collectors.summingInt(String::length));\nvar avg = Stream.of(1, 2)\n    .collect(Collectors.averagingInt(x -> x));\nSystem.out.println(c + \" \" + s + \" \" + avg);",
+          "options": [
+            "2 3 1.5",
+            "2 3 1",
+            "2 2 1.5",
+            "2.0 3 1.5"
+          ],
+          "answer": 0,
+          "explanation": "`counting()` counts 2 elements. `summingInt` adds lengths 1 + 2 = 3. `averagingInt` always returns a Double: 1.5.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "2 3 1.5\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "toMap and duplicate keys",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`toMap(keyMapper, valueMapper)` throws `IllegalStateException` (\"Duplicate key\") if two elements produce the same key. Add a **merge function** to decide what to do with two values for one key."
+            },
+            {
+              "type": "code",
+              "code": "Map<Integer, String> m = Stream.of(\"ox\", \"cat\", \"dog\")\n    .collect(Collectors.toMap(\n        String::length,\n        s -> s,\n        (a, b) -> a + \"+\" + b,\n        TreeMap::new));\nSystem.out.println(m);",
+              "caption": "Prints {2=ox, 3=cat+dog}",
+              "verify": {
+                "expect": "stdout",
+                "value": "{2=ox, 3=cat+dog}\n"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "The fourth argument is a map supplier. `TreeMap::new` sorts keys; the default map type is not specified."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l08-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Map<Integer, String> m = Stream.of(\"hi\", \"yo\", \"hey\")\n    .collect(Collectors.toMap(\n        String::length, s -> s));\nSystem.out.println(m);",
+          "options": [
+            "{2=yo, 3=hey}",
+            "{2=hi, 3=hey}",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 3,
+          "explanation": "\"hi\" and \"yo\" both have length 2, so both map to key 2. Without a merge function, `toMap` throws `IllegalStateException: Duplicate key`.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "IllegalStateException"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l08-e05",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code so it prints <a-b-c>.",
+          "code": "String s = Stream.of(\"a\", \"b\", \"c\")\n    .___(Collectors.___(\"-\", \"<\", \">\"));\nSystem.out.println(s);",
+          "bank": [
+            "collect",
+            "joining",
+            "reduce",
+            "toList",
+            "concat",
+            "forEach"
+          ],
+          "answers": [
+            "collect",
+            "joining"
+          ],
+          "explanation": "A Collector is passed to the terminal operation `collect`. `joining(delimiter, prefix, suffix)` builds the String.",
+          "objective": "6.2",
+          "verify": {
+            "expect": "stdout",
+            "value": "<a-b-c>\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l08-e06",
+          "kind": "multiChoice",
+          "prompt": "Which two expressions print `6` when passed to `System.out.println`? Choose two.",
+          "options": [
+            "Stream.of(1, 2, 3).reduce(0, Integer::sum)",
+            "Stream.of(1, 2, 3).reduce(Integer::sum)",
+            "Stream.of(1, 2, 3).collect(Collectors.summingInt(x -> x))",
+            "Stream.of(1, 2, 3).count()",
+            "Stream.of(1, 2, 3).reduce(1, Integer::sum)"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "With identity 0 the sum is 6, and `summingInt` also gives 6. Without an identity the result is `Optional[6]`. `count()` is 3. With identity 1 the result is 1 + 6 = 7.",
+          "objective": "6.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "6\nOptional[6]\n6\n3\n7\n",
+            "source": "System.out.println(Stream.of(1, 2, 3).reduce(0, Integer::sum));\nSystem.out.println(Stream.of(1, 2, 3).reduce(Integer::sum));\nSystem.out.println(Stream.of(1, 2, 3).collect(Collectors.summingInt(x -> x)));\nSystem.out.println(Stream.of(1, 2, 3).count());\nSystem.out.println(Stream.of(1, 2, 3).reduce(1, Integer::sum));"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l08-e07",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Map<Character, Integer> m = Stream.of(\n        \"apple\", \"avocado\", \"banana\")\n    .collect(Collectors.toMap(\n        s -> s.charAt(0),\n        String::length,\n        Integer::sum,\n        TreeMap::new));\nSystem.out.println(m);",
+          "options": [
+            "{a=12, b=6}",
+            "{a=5, b=6}",
+            "{a=7, b=6}",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "\"apple\" (5) and \"avocado\" (7) share key 'a'. The merge function `Integer::sum` adds their values: 12. No exception, because a merge function is given.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "{a=12, b=6}\n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u07-l09",
+      "title": "Grouping and partitioning",
+      "summary": "groupingBy, partitioningBy, downstream collectors and teeing.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "groupingBy",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`Collectors.groupingBy(classifier)` builds a `Map<K, List<T>>`: the classifier's result is the key, and each key maps to the list of elements that produced it."
+            },
+            {
+              "type": "code",
+              "code": "List<String> w = List.of(\n    \"ant\", \"bee\", \"crow\", \"dove\", \"eagle\");\nMap<Integer, List<String>> byLen = w.stream()\n    .collect(Collectors.groupingBy(\n        String::length,\n        TreeMap::new,\n        Collectors.toList()));\nSystem.out.println(byLen);",
+              "caption": "Prints {3=[ant, bee], 4=[crow, dove], 5=[eagle]}",
+              "verify": {
+                "expect": "stdout",
+                "value": "{3=[ant, bee], 4=[crow, dove], 5=[eagle]}\n"
+              }
+            },
+            {
+              "type": "table",
+              "header": [
+                "Form",
+                "Arguments"
+              ],
+              "rows": [
+                [
+                  "1 argument",
+                  "classifier"
+                ],
+                [
+                  "2 arguments",
+                  "classifier, **downstream** collector"
+                ],
+                [
+                  "3 arguments",
+                  "classifier, **map factory**, downstream"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Argument order",
+              "text": "The map factory is only accepted in the 3-argument form, in the **middle**. `groupingBy(f, TreeMap::new)` doesn't compile: the second argument must be a Collector."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Downstream collectors",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "The downstream collector decides what each group's value becomes, instead of a List."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`counting()`: number of elements in the group (Long).",
+                "`toSet()`: a Set instead of a List.",
+                "`mapping(f, downstream)`: transform each element, then collect.",
+                "`summingInt(f)`, `averagingInt(f)`, `joining()`..."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "Map<Integer, Set<Character>> firsts = Stream.of(\n        \"ant\", \"ape\", \"bee\", \"crow\")\n    .collect(Collectors.groupingBy(\n        String::length,\n        TreeMap::new,\n        Collectors.mapping(\n            s -> s.charAt(0),\n            Collectors.toSet())));\nSystem.out.println(firsts);",
+              "caption": "Prints {3=[a, b], 4=[c]}",
+              "verify": {
+                "expect": "stdout",
+                "value": "{3=[a, b], 4=[c]}\n"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "`summarizingInt(f)` (and the `Long`/`Double` versions) gives each group an `IntSummaryStatistics` with `getCount()`, `getSum()`, `getMin()`, `getMax()` and `getAverage()` in one pass."
+            },
+            {
+              "type": "code",
+              "code": "var stats = Stream.of(3, 8, 5, 10, 7)\n    .collect(Collectors.groupingBy(\n        n -> n % 2 == 0 ? \"even\" : \"odd\",\n        Collectors.summarizingInt(n -> n)));\nIntSummaryStatistics odd = stats.get(\"odd\");\nSystem.out.println(odd.getCount() + \" \" + odd.getSum() + \" \"\n    + odd.getMin() + \" \" + odd.getMax() + \" \" + odd.getAverage());",
+              "caption": "Prints 3 15 3 7 5.0",
+              "verify": {
+                "expect": "stdout",
+                "value": "3 15 3 7 5.0\n"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "`filtering(p, downstream)` filters **inside** each group, so a group whose elements all fail still appears, with an empty value. A `filter` **before** `groupingBy` removes those elements first, so their group never exists."
+            },
+            {
+              "type": "code",
+              "code": "List<Integer> nums = List.of(3, 8, 5, 10, 7);\nFunction<Integer, String> parity = n -> n % 2 == 0 ? \"even\" : \"odd\";\nMap<String, List<Integer>> before = nums.stream()\n    .filter(n -> n > 7)\n    .collect(Collectors.groupingBy(parity, TreeMap::new,\n        Collectors.toList()));\nMap<String, List<Integer>> inside = nums.stream()\n    .collect(Collectors.groupingBy(parity, TreeMap::new,\n        Collectors.filtering(n -> n > 7, Collectors.toList())));\nSystem.out.println(before);\nSystem.out.println(inside);",
+              "caption": "Prints {even=[8, 10]}, then {even=[8, 10], odd=[]}",
+              "verify": {
+                "expect": "stdout",
+                "value": "{even=[8, 10]}\n{even=[8, 10], odd=[]}\n"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "`flatMapping(x -> stream, downstream)` turns each element into a stream and collects all of them into the group's value, flattened."
+            },
+            {
+              "type": "code",
+              "code": "var letters = Stream.of(\"ab\", \"cd\", \"abc\")\n    .collect(Collectors.groupingBy(\n        String::length,\n        TreeMap::new,\n        Collectors.flatMapping(\n            s -> s.chars().mapToObj(c -> (char) c),\n            Collectors.toCollection(TreeSet::new))));\nSystem.out.println(letters);",
+              "caption": "Prints {2=[a, b, c, d], 3=[a, b, c]}",
+              "verify": {
+                "expect": "stdout",
+                "value": "{2=[a, b, c, d], 3=[a, b, c]}\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l09-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Map<Integer, Long> m = Stream.of(\n        \"a\", \"bb\", \"cc\", \"d\", \"eee\")\n    .collect(Collectors.groupingBy(\n        String::length,\n        TreeMap::new,\n        Collectors.counting()));\nSystem.out.println(m);",
+          "options": [
+            "{1=2, 2=2, 3=1}",
+            "{1=[a, d], 2=[bb, cc], 3=[eee]}",
+            "{2=1, 2=2, 1=3}",
+            "{1=2, 2=2, 3=1, 4=0}"
+          ],
+          "answer": 0,
+          "explanation": "Grouping by length with `counting()` downstream gives the number of words of each length. `TreeMap::new` sorts the keys. No key is created for lengths that don't occur.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "{1=2, 2=2, 3=1}\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l09-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Map<Integer, String> m = Stream.of(\n        \"kiwi\", \"fig\", \"pear\", \"yam\")\n    .collect(Collectors.groupingBy(\n        String::length,\n        TreeMap::new,\n        Collectors.mapping(\n            s -> s.substring(0, 1),\n            Collectors.joining())));\nSystem.out.println(m);",
+          "options": [
+            "{3=fy, 4=kp}",
+            "{3=[f, y], 4=[k, p]}",
+            "{3=[fig, yam], 4=[kiwi, pear]}",
+            "{4=kp, 3=fy}"
+          ],
+          "answer": 0,
+          "explanation": "`mapping` turns each word into its first letter, and `joining()` glues the letters of each group into one String. The TreeMap orders keys 3, 4.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "{3=fy, 4=kp}\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l09-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var m = Stream.of(\"a\", \"bb\")\n    .collect(Collectors.groupingBy(\n        String::length, TreeMap::new));\nSystem.out.println(m);",
+          "options": [
+            "{1=[a], 2=[bb]}",
+            "{1=a, 2=bb}",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 2,
+          "explanation": "The two-argument `groupingBy` expects `(classifier, downstream collector)`. `TreeMap::new` is not a Collector. The map factory is only allowed as the middle argument of the three-argument form.",
+          "objective": "6.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "compileError"
+          }
+        },
+        {
+          "type": "page",
+          "title": "partitioningBy",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`partitioningBy(predicate)` splits elements into a `Map<Boolean, List<T>>`. It **always** has both keys, `false` and `true`, even when one side is empty. It prints `false` first."
+            },
+            {
+              "type": "code",
+              "code": "Map<Boolean, List<Integer>> p = Stream.of(1, 2, 3, 4, 5)\n    .collect(Collectors.partitioningBy(x -> x > 3));\nSystem.out.println(p);",
+              "caption": "Prints {false=[1, 2, 3], true=[4, 5]}",
+              "verify": {
+                "expect": "stdout",
+                "value": "{false=[1, 2, 3], true=[4, 5]}\n"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "Like `groupingBy`, it accepts a downstream collector as a second argument. It does **not** accept a map factory."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l09-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Map<Boolean, Long> p = Stream.of(2, 4, 6)\n    .collect(Collectors.partitioningBy(\n        x -> x % 2 == 0,\n        Collectors.counting()));\nSystem.out.println(p);",
+          "options": [
+            "{false=0, true=3}",
+            "{true=3}",
+            "{false=null, true=3}",
+            "{true=3, false=0}"
+          ],
+          "answer": 0,
+          "explanation": "All numbers are even, but `partitioningBy` still creates the `false` key. With `counting()` downstream, the empty side is 0.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "{false=0, true=3}\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l09-e05",
+          "kind": "trueFalse",
+          "prompt": "`groupingBy` only creates keys for groups that have at least one element, but `partitioningBy` always has both a `true` and a `false` key.",
+          "answer": true,
+          "explanation": "`groupingBy` adds a key the first time an element produces it. `partitioningBy` starts with both Boolean keys, so an empty side maps to an empty List (or 0 with `counting()`).",
+          "objective": "6.2"
+        },
+        {
+          "type": "page",
+          "title": "teeing",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`Collectors.teeing(c1, c2, merger)` (Java 12+) sends every element to **two** collectors and then combines both results with the merger function."
+            },
+            {
+              "type": "code",
+              "code": "String r = Stream.of(3, 9, 4)\n    .collect(Collectors.teeing(\n        Collectors.counting(),\n        Collectors.summingInt(x -> x),\n        (n, sum) -> n + \" items, sum \" + sum));\nSystem.out.println(r);",
+              "caption": "Prints 3 items, sum 16",
+              "verify": {
+                "expect": "stdout",
+                "value": "3 items, sum 16\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l09-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var r = Stream.of(5, 2, 8)\n    .collect(Collectors.teeing(\n        Collectors.minBy(Integer::compare),\n        Collectors.maxBy(Integer::compare),\n        (lo, hi) -> hi.get() - lo.get()));\nSystem.out.println(r);",
+          "options": [
+            "6",
+            "Optional[6]",
+            "-6",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`minBy` and `maxBy` each produce an `Optional<Integer>` (2 and 8). The merger unwraps them with `get()` and returns 8 - 2 = 6.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "6\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l09-e07",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code so it prints {false=[a, c], true=[]}.",
+          "code": "Map<Boolean, Set<String>> m = Stream.of(\"a\", \"c\", \"a\")\n    .collect(Collectors.___(\n        s -> s.length() > 1,\n        Collectors.___()));\nSystem.out.println(m);",
+          "bank": [
+            "partitioningBy",
+            "toSet",
+            "groupingBy",
+            "toList",
+            "counting",
+            "joining"
+          ],
+          "answers": [
+            "partitioningBy",
+            "toSet"
+          ],
+          "explanation": "Only `partitioningBy` creates the empty `true` group; `groupingBy` would print just `{false=[a, c]}`. `toSet()` removes the duplicate \"a\" (a List would keep it) and matches the declared `Set<String>`.",
+          "objective": "6.2",
+          "verify": {
+            "expect": "stdout",
+            "value": "{false=[a, c], true=[]}\n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u07-l10",
+      "title": "Parallel streams",
+      "summary": "parallel(), ordering, findAny and safe reductions.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Going parallel",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A **parallel stream** splits its work across several threads (the common ForkJoinPool). Create one with `collection.parallelStream()` or `stream.parallel()`."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`sum()`, `count()`, `collect(...)` and `toList()` give the **same result** as sequential, and `toList()`/`collect` keep encounter order.",
+                "`forEach` runs elements in **any order** on any thread.",
+                "`forEachOrdered` keeps encounter order (and gives up some speed).",
+                "`findAny()` may return any element; `findFirst()` always returns the first.",
+                "`parallel()` and `sequential()` set a flag for the **whole** pipeline; the last call wins. `isParallel()` tells you which."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "int sum = IntStream.rangeClosed(1, 100)\n    .parallel()\n    .sum();\nSystem.out.println(sum);",
+              "caption": "Always prints 5050",
+              "verify": {
+                "expect": "stdout",
+                "value": "5050\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l10-e01",
+          "kind": "multiChoice",
+          "prompt": "Which two statements always print 12345? Choose two.",
+          "options": [
+            "IntStream.rangeClosed(1, 5).parallel().forEach(System.out::print);",
+            "IntStream.rangeClosed(1, 5).parallel().forEachOrdered(System.out::print);",
+            "IntStream.rangeClosed(1, 5).forEach(System.out::print);",
+            "List.of(1, 2, 3, 4, 5).parallelStream().forEach(System.out::print);"
+          ],
+          "answers": [
+            1,
+            2
+          ],
+          "explanation": "A sequential stream processes elements in order. On a parallel stream, only `forEachOrdered` guarantees encounter order; plain `forEach` can print in any order, such as 34125.",
+          "objective": "6.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "12345\n12345\n",
+            "source": "IntStream.rangeClosed(1, 5).parallel().forEachOrdered(System.out::print);\nSystem.out.println();\nIntStream.rangeClosed(1, 5).forEach(System.out::print);\nSystem.out.println();"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l10-e02",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int sum = IntStream.rangeClosed(1, 100)\n    .parallel()\n    .sum();\nList<Integer> list = Stream.of(3, 1, 2)\n    .parallel()\n    .map(x -> x * 10)\n    .toList();\nSystem.out.println(sum + \" \" + list);",
+          "options": [
+            "5050 [30, 10, 20]",
+            "5050 [10, 20, 30]",
+            "5050, then the list in an unpredictable order",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`sum()` is the same in parallel. `toList()` keeps **encounter order** even on a parallel stream, so the list matches the source order: 30, 10, 20. Only side-effect operations like `forEach` lose the order.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "5050 [30, 10, 20]\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Safe reductions",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "In parallel, `reduce` runs the accumulator on several chunks, each starting from the **identity**, then combines the partial results. So:"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "The identity must be **neutral**: `0` for sum, `1` for product, `\"\"` for concatenation. `reduce(10, Integer::sum)` adds 10 once per chunk.",
+                "The accumulator must be **associative**: `(a + b) + c == a + (b + c)`. Subtraction is not, so `reduce(0, (a, b) -> a - b)` gives unpredictable results in parallel."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "int ok = Stream.of(1, 2, 3).parallel()\n    .reduce(0, Integer::sum);\nSystem.out.println(ok);",
+              "caption": "Always 6",
+              "verify": {
+                "expect": "stdout",
+                "value": "6\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "If a question shows a parallel `reduce` with a non-neutral identity, the answer is \"the result is unpredictable\" or \"can vary\", never one fixed number."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l10-e03",
+          "kind": "trueFalse",
+          "prompt": "`Stream.of(1, 2, 3).parallel().reduce(10, Integer::sum)` is guaranteed to return 16.",
+          "answer": false,
+          "explanation": "10 is not a neutral identity for addition. In parallel each chunk starts from 10, so the result can be 26 or 36 depending on how the stream is split. Sequentially it would be 16.",
+          "objective": "6.2"
+        },
+        {
+          "type": "page",
+          "title": "Stateful lambdas",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "A lambda that changes shared state from a parallel stream causes bugs. `ArrayList` is not thread-safe."
+            },
+            {
+              "type": "code",
+              "code": "List<Integer> bad = new ArrayList<>();\nIntStream.range(0, 1000).parallel()\n    .forEach(bad::add); // may lose items or throw\n\nList<Integer> good = IntStream.range(0, 1000)\n    .parallel().boxed().toList(); // safe"
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Let the stream build the result",
+              "text": "Use `collect` or `toList()` instead of adding to an outside list. The stream handles thread safety and order for you."
+            },
+            {
+              "type": "paragraph",
+              "text": "Order-dependent operations (`findFirst`, `limit`, `skip`, `sorted`, `forEachOrdered`) still work in parallel, but may be slower."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l10-e04",
+          "kind": "singleChoice",
+          "prompt": "Which statement about `a` and `b` is true?",
+          "code": "Optional<Integer> a = Stream.of(1, 2, 3)\n    .parallel().findFirst();\nOptional<Integer> b = Stream.of(1, 2, 3)\n    .parallel().findAny();",
+          "options": [
+            "a is always Optional[1]; b can hold any of the three values",
+            "Both are always Optional[1]",
+            "Both can hold any of the three values",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`findFirst()` respects encounter order even in parallel, so `a` is always `Optional[1]`. `findAny()` is free to return whichever element a thread finds first.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "Optional[1]\n",
+            "source": "Optional<Integer> a = Stream.of(1, 2, 3)\n    .parallel().findFirst();\nOptional<Integer> b = Stream.of(1, 2, 3)\n    .parallel().findAny();\nSystem.out.println(a);",
+            "optionCheck": false
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l10-e05",
+          "kind": "multiChoice",
+          "prompt": "Which two statements are true? Choose two.",
+          "options": [
+            "If `parallel()` and `sequential()` are both called on one pipeline, the last call decides the mode for the whole pipeline.",
+            "`Collection.parallelStream()` returns a stream that may run in parallel.",
+            "`forEach` on a parallel stream processes elements in encounter order.",
+            "A parallel stream is always faster than a sequential one.",
+            "Parallel `reduce` gives the correct result with any identity value."
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "Parallel mode is a single flag for the pipeline; the last `parallel()`/`sequential()` call wins. `parallelStream()` returns a possibly parallel stream. `forEach` gives no order guarantee, parallelism adds overhead that can make small tasks slower, and the identity must be neutral.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "false true\n",
+            "source": "System.out.println(Stream.of(1).parallel().sequential().isParallel()\n    + \" \" + List.of(1).parallelStream().isParallel());",
+            "optionCheck": false
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l10-e06",
+          "kind": "tapLine",
+          "prompt": "Tap the line whose output can differ between runs.",
+          "code": "List<Integer> n = List.of(1, 2, 3, 4);\nSystem.out.println(n.parallelStream().count());\nn.parallelStream().forEach(System.out::print);\nSystem.out.println();\nn.parallelStream().forEachOrdered(System.out::print);\nSystem.out.println();\nSystem.out.println(n.parallelStream()\n    .reduce(0, Integer::sum));",
+          "answer": 3,
+          "explanation": "`count()`, `forEachOrdered` and a reduce with neutral identity 0 always give the same output. Parallel `forEach` prints in whatever order the threads happen to run.",
+          "objective": "6.2"
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l10-e07",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code so the stream runs in parallel and always prints 246.",
+          "code": "List.of(1, 2, 3).___()\n    .map(x -> x * 2)\n    .___(System.out::print);",
+          "bank": [
+            "parallelStream",
+            "forEachOrdered",
+            "forEach",
+            "parallel",
+            "sequential",
+            "findAny"
+          ],
+          "answers": [
+            "parallelStream",
+            "forEachOrdered"
+          ],
+          "explanation": "`List` has `parallelStream()` (it has no `parallel()` method; that's on Stream). `forEachOrdered` guarantees encounter order; `forEach` might print 426.",
+          "objective": "6.2",
+          "verify": {
+            "expect": "stdout",
+            "value": "246"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u07-l11",
+      "title": "Unit 7 checkpoint",
+      "summary": "12 exam-style questions on lambdas and streams.",
+      "minutes": 10,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Checkpoint",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "12 exam-style questions covering the whole unit. Trace the code step by step: exam questions hide one detail that changes the answer."
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "Exam habit",
+              "text": "Check first for compile traps: wrong functional method names (`apply` vs `test`), mixed lambda parameters, captured variables that are reassigned, `Optional` assigned to a plain type. Then check runtime traps: reused streams, duplicate `toMap` keys, unmodifiable `toList()`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l11-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "UnaryOperator<String> a = s -> s + \"a\";\nUnaryOperator<String> b = s -> s + \"b\";\nSystem.out.println(\n    a.andThen(b).compose(b).apply(\"x\"));",
+          "options": [
+            "xbab",
+            "xabb",
+            "xbba",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`compose(b)` runs b first: \"xb\". Then `a.andThen(b)` runs a (\"xba\") and b (\"xbab\").",
+          "objective": "6.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "xbab\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l11-e02",
+          "kind": "multiChoice",
+          "prompt": "Given `BiFunction<Integer, Integer, Integer> f = ...;` which two lambdas compile? Choose two.",
+          "options": [
+            "(var a, b) -> a + b",
+            "(a, b) -> { return a + b; }",
+            "(Integer a, Integer b) -> a * b",
+            "a, b -> a - b",
+            "(a, b) -> { a + b; }"
+          ],
+          "answers": [
+            1,
+            2
+          ],
+          "explanation": "Parameter types are all-or-none, so `(var a, b)` fails. Two parameters need parentheses. A block body that must return a value needs `return`; `{ a + b; }` isn't even a valid statement.",
+          "objective": "6.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "5 6\n",
+            "source": "BiFunction<Integer, Integer, Integer> f = (a, b) -> { return a + b; };\nBiFunction<Integer, Integer, Integer> g = (Integer a, Integer b) -> a * b;\nSystem.out.println(f.apply(2, 3) + \" \" + g.apply(2, 3));"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l11-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "List<String> names = new ArrayList<>();\nString prefix = \"Dr. \";\nnames.add(\"Lee\");\nnames.forEach(n -> System.out.println(prefix + n));\nnames.add(\"Kim\");\nprefix = \"Mr. \";",
+          "options": [
+            "Dr. Lee",
+            "Mr. Lee",
+            "Compilation fails",
+            "Dr. Lee\nDr. Kim"
+          ],
+          "answer": 2,
+          "explanation": "`prefix` is reassigned on line 6, so it is not effectively final and the lambda on line 4 can't use it. Calling `names.add` is fine: it changes the list, not the variable.",
+          "objective": "6.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 4
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l11-e04",
+          "kind": "singleChoice",
+          "prompt": "Which can replace the lambda in `Comparator<String> c = (s1, s2) -> s1.compareToIgnoreCase(s2);`?",
+          "options": [
+            "String::compareToIgnoreCase",
+            "s1::compareToIgnoreCase",
+            "String.compareToIgnoreCase",
+            "String::compareToIgnoreCase()"
+          ],
+          "answer": 0,
+          "explanation": "An unbound reference `String::compareToIgnoreCase` uses the first parameter as the receiver and the second as the argument. `s1` isn't in scope, `.` is not `::`, and a method reference never has parentheses.",
+          "objective": "6.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "[A, b]\n",
+            "source": "List<String> l = new ArrayList<>(List.of(\"b\", \"A\"));\nComparator<String> c = String::compareToIgnoreCase;\nl.sort(c);\nSystem.out.println(l);",
+            "optionCheck": false
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l11-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Stream.of(\"one\", \"two\", \"three\", \"four\")\n    .filter(s -> {\n        System.out.print(s.length());\n        return s.length() > 3;\n    })\n    .findFirst()\n    .ifPresent(System.out::print);",
+          "options": [
+            "335three",
+            "3354three",
+            "three",
+            "335"
+          ],
+          "answer": 0,
+          "explanation": "Elements go through the pipeline one at a time and `findFirst` short-circuits. one (3), two (3), three (5) passes; \"four\" is never tested. Then `ifPresent` prints three.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "335three"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l11-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Optional<String> o = Optional.ofNullable(null);\nString r = o.map(String::toUpperCase)\n    .filter(s -> s.length() > 2)\n    .orElseGet(() -> \"none\");\nSystem.out.println(r);",
+          "options": [
+            "none",
+            "null",
+            "An exception is thrown at runtime",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "`ofNullable(null)` gives an empty Optional. `map` and `filter` on an empty Optional just return empty, without calling their lambdas, and `orElseGet` supplies \"none\".",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "none\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l11-e07",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "double d = IntStream.rangeClosed(1, 4)\n    .filter(i -> i % 2 == 0)\n    .average()\n    .orElse(0);\nSystem.out.println(d);",
+          "options": [
+            "3.0",
+            "3",
+            "OptionalDouble[3.0]",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "The even numbers in 1..4 are 2 and 4. `average()` returns an `OptionalDouble`; `orElse(0)` unwraps it to the double 3.0.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "3.0\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l11-e08",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "var m = Stream.of(\"aa\", \"b\", \"cc\", \"d\")\n    .collect(Collectors.partitioningBy(\n        s -> s.length() == 2,\n        Collectors.mapping(\n            String::toUpperCase,\n            Collectors.joining(\",\"))));\nSystem.out.println(m.get(true) + m.get(false));",
+          "options": [
+            "AA,CCB,D",
+            "AA,CC B,D",
+            "[AA, CC][B, D]",
+            "B,DAA,CC"
+          ],
+          "answer": 0,
+          "explanation": "The `true` side has the 2-letter words, uppercased and joined with commas: \"AA,CC\". The `false` side is \"B,D\". They are printed true first, then false, with no separator.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "AA,CCB,D\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l11-e09",
+          "kind": "multiChoice",
+          "prompt": "Given `List<Integer> nums = List.of(1, 2);` which two lines compile? Choose two.",
+          "options": [
+            "int a = nums.stream().reduce(0, Integer::sum);",
+            "int b = nums.stream().reduce(Integer::sum);",
+            "Optional<Integer> c = nums.stream().reduce(Integer::sum);",
+            "long d = nums.stream().sum();",
+            "Integer e = nums.stream().max();"
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "With an identity, `reduce` returns the element type (auto-unboxed to int). Without one it returns an `Optional`. `Stream<Integer>` has no `sum()`, and `max` on a Stream needs a Comparator and returns an Optional.",
+          "objective": "6.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "3 Optional[3]\n",
+            "source": "List<Integer> nums = List.of(1, 2);\nint a = nums.stream().reduce(0, Integer::sum);\nOptional<Integer> c = nums.stream().reduce(Integer::sum);\nSystem.out.println(a + \" \" + c);"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l11-e10",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Map<Character, Long> m = Stream.of(\n        \"bob\", \"amy\", \"ben\", \"al\")\n    .collect(Collectors.groupingBy(\n        s -> s.charAt(0),\n        TreeMap::new,\n        Collectors.counting()));\nSystem.out.println(m);",
+          "options": [
+            "{a=2, b=2}",
+            "{b=2, a=2}",
+            "{a=[amy, al], b=[bob, ben]}",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "Grouping by first letter with `counting()` gives 2 names per letter. `TreeMap::new` sorts the keys, so a comes before b.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "{a=2, b=2}\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l11-e11",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "Stream<String> s = Stream.of(\"x\", \"y\");\nSupplier<Long> count = s::count;\nSystem.out.println(count.get());\nSystem.out.println(count.get());",
+          "options": [
+            "2\n2",
+            "2, then an exception is thrown at runtime",
+            "Compilation fails",
+            "An exception is thrown before anything is printed"
+          ],
+          "answer": 1,
+          "explanation": "`s::count` is a bound reference: every call runs `count()` on the same stream `s`. The first call prints 2; the second reuses a consumed stream and throws `IllegalStateException`.",
+          "objective": "6.2",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "IllegalStateException",
+            "stdout": "2\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u07-l11-e12",
+          "kind": "multiChoice",
+          "prompt": "Which two lines print the same output on every run? Choose two.",
+          "options": [
+            "System.out.println(IntStream.range(0, 5).parallel().sum());",
+            "System.out.println(Stream.of(\"a\", \"b\", \"c\").parallel().collect(Collectors.joining()));",
+            "System.out.println(Stream.of(1, 2, 3).parallel().findAny().get());",
+            "System.out.println(Stream.of(1, 2, 3).parallel().reduce(5, Integer::sum));",
+            "Stream.of(1, 2, 3).parallel().forEach(System.out::print);"
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "explanation": "`sum()` and `joining()` are safe reductions and `collect` keeps encounter order, so they always print 10 and abc. `findAny` may pick any element, 5 is not a neutral identity, and parallel `forEach` has no fixed order.",
+          "objective": "6.2",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "10\nabc\n",
+            "source": "System.out.println(IntStream.range(0, 5).parallel().sum());\nSystem.out.println(Stream.of(\"a\", \"b\", \"c\").parallel().collect(Collectors.joining()));"
+          }
+        }
+      ]
+    }
+  ]
+}

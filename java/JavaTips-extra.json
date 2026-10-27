@@ -1,0 +1,842 @@
+[
+ {
+  "objective": "1.1",
+  "kind": "trap",
+  "title": "Compound assignment casts",
+  "text": "`byte b = 10; b += 5;` compiles because `+=` casts back to `byte`. `b = b + 5;` does **not** compile: `b + 5` is an `int`."
+ },
+ {
+  "objective": "1.1",
+  "kind": "trap",
+  "title": "Integer cache",
+  "text": "`Integer a = 127, b = 127;` then `a == b` is `true` (cached -128..127). With `128` it is `false`. Compare wrappers with `equals`."
+ },
+ {
+  "objective": "1.1",
+  "kind": "tip",
+  "title": "Math.round return type",
+  "text": "`Math.round(double)` returns `long`, `Math.round(float)` returns `int`. `Math.round(-2.5)` is `-2` (rounds half up)."
+ },
+ {
+  "objective": "1.2",
+  "kind": "trap",
+  "title": "Strings are immutable",
+  "text": "`s.concat(\"x\");` or `s.toUpperCase();` without assigning the result changes nothing."
+ },
+ {
+  "objective": "1.2",
+  "kind": "trap",
+  "title": "StringBuilder equals",
+  "text": "`StringBuilder` does not override `equals`, so two builders with the same text are not equal. Compare `sb.toString()` or use `compareTo` (Java 11+)."
+ },
+ {
+  "objective": "1.2",
+  "kind": "tip",
+  "title": "strip vs trim",
+  "text": "`strip()` removes all Unicode whitespace; `trim()` only removes chars ≤ `\\u0020`. Also `stripLeading()`, `stripTrailing()`, `isBlank()`."
+ },
+ {
+  "objective": "1.2",
+  "kind": "trap",
+  "title": "substring end is exclusive",
+  "text": "`\"hello\".substring(1, 3)` is `\"el\"`. `\"hello\".substring(5)` is `\"\"`, but `substring(6)` throws `StringIndexOutOfBoundsException`."
+ },
+ {
+  "objective": "1.2",
+  "kind": "exam",
+  "title": "Text block indentation",
+  "text": "The least-indented line (including the closing `\"\"\"`) sets the margin that is stripped. Trailing spaces are removed; `\\s` keeps a space, `\\` at line end joins lines."
+ },
+ {
+  "objective": "1.2",
+  "kind": "trap",
+  "title": "Text block must start on a new line",
+  "text": "`\"\"\"abc\"\"\"` does not compile: the content must start on the line after the opening `\"\"\"`."
+ },
+ {
+  "objective": "1.2",
+  "kind": "tip",
+  "title": "String pool",
+  "text": "Literals are pooled: `\"a\" == \"a\"` is `true`, `new String(\"a\") == \"a\"` is `false`. `intern()` returns the pooled instance."
+ },
+ {
+  "objective": "1.2",
+  "kind": "trap",
+  "title": "String + evaluation order",
+  "text": "`1 + 2 + \"3\"` is `\"33\"`, `\"1\" + 2 + 3` is `\"123\"`, and `'a' + 'b'` is the `int` `195`."
+ },
+ {
+  "objective": "1.2",
+  "kind": "trap",
+  "title": "StringBuilder methods mutate",
+  "text": "`sb.append(\"a\").reverse()` changes `sb` itself. `delete(start, end)` excludes `end`; `insert(i, x)` shifts the rest right."
+ },
+ {
+  "objective": "1.3",
+  "kind": "trap",
+  "title": "Date-time is immutable",
+  "text": "`date.plusDays(1);` without assigning does nothing. Every `plus`/`minus`/`with` returns a new object."
+ },
+ {
+  "objective": "1.3",
+  "kind": "trap",
+  "title": "Invalid dates fail at runtime",
+  "text": "`LocalDate.of(2024, 2, 30)` compiles but throws `DateTimeException`. Months are 1–12 (or `Month.FEBRUARY`)."
+ },
+ {
+  "objective": "1.3",
+  "kind": "tip",
+  "title": "Period vs Duration",
+  "text": "`Period` is years/months/days for dates; `Duration` is hours/minutes/seconds for times. Adding a `Period` to a `LocalTime` throws `UnsupportedTemporalTypeException`."
+ },
+ {
+  "objective": "2.1",
+  "kind": "trap",
+  "title": "Switch expressions must be exhaustive",
+  "text": "A `switch` **expression** must cover every value: all enum constants, all permitted sealed subtypes, or a `default`. Otherwise it does not compile."
+ },
+ {
+  "objective": "2.1",
+  "kind": "trap",
+  "title": "yield, not return",
+  "text": "In a switch expression, a `{ }` block after `->` must end with `yield value;`. `return` cannot be used to give the expression a value."
+ },
+ {
+  "objective": "2.1",
+  "kind": "trap",
+  "title": "Unreachable after break",
+  "text": "A statement directly after `break;`, `continue;`, `return;` or `throw` in the same block is unreachable and does not compile."
+ },
+ {
+  "objective": "2.1",
+  "kind": "tip",
+  "title": "Labeled break and continue",
+  "text": "`outer: for (...) { for (...) { break outer; } }` leaves both loops. `continue outer;` jumps to the next iteration of the outer loop."
+ },
+ {
+  "objective": "2.1",
+  "kind": "trap",
+  "title": "do-while runs once",
+  "text": "The body of `do { } while (cond);` runs at least once, and the `;` after `while (cond)` is required."
+ },
+ {
+  "objective": "3.1",
+  "kind": "exam",
+  "title": "Eligible for GC",
+  "text": "An object is eligible once no live reference can reach it. `System.gc()` is only a suggestion, and `finalize()` is deprecated and may never run."
+ },
+ {
+  "objective": "3.1",
+  "kind": "trap",
+  "title": "Islands of isolation",
+  "text": "Two objects that only reference each other but nothing live references them are both eligible for garbage collection."
+ },
+ {
+  "objective": "3.1",
+  "kind": "trap",
+  "title": "Creating inner class objects",
+  "text": "An inner class needs an outer instance: `Outer.Inner in = outer.new Inner();`. A static nested class does not: `new Outer.Nested()`."
+ },
+ {
+  "objective": "3.1",
+  "kind": "tip",
+  "title": "Local classes capture effectively final",
+  "text": "Local and anonymous classes (like lambdas) can only use local variables that are final or effectively final."
+ },
+ {
+  "objective": "3.2",
+  "kind": "trap",
+  "title": "Default constructor only if none",
+  "text": "The compiler adds a no-arg constructor only when the class declares **no** constructor. A subclass relying on implicit `super()` then fails if the parent only has `Parent(int)`."
+ },
+ {
+  "objective": "3.2",
+  "kind": "trap",
+  "title": "this() or super() comes first",
+  "text": "A constructor can start with `this(...)` or `super(...)`, not both, and it must be the first statement."
+ },
+ {
+  "objective": "3.2",
+  "kind": "exam",
+  "title": "Initialization order",
+  "text": "Superclass first. Static fields and static blocks run once, top to bottom, when the class loads. Then per object: instance fields and instance blocks in order, then the constructor body."
+ },
+ {
+  "objective": "3.2",
+  "kind": "trap",
+  "title": "Compact record constructor",
+  "text": "A compact constructor has no parameter list. It can validate or reassign the **parameters**; the fields are assigned after it. Assigning `this.x` inside it does not compile."
+ },
+ {
+  "objective": "3.2",
+  "kind": "tip",
+  "title": "Records are final",
+  "text": "Records are implicitly final with `private final` fields. They can implement interfaces and add static fields or methods, but cannot extend a class or add instance fields."
+ },
+ {
+  "objective": "3.3",
+  "kind": "exam",
+  "title": "Overload resolution order",
+  "text": "The compiler tries, in order: exact match, widening, boxing, then varargs. The first phase that finds a method wins."
+ },
+ {
+  "objective": "3.3",
+  "kind": "trap",
+  "title": "Widening beats boxing",
+  "text": "With `m(long)` and `m(Integer)`, the call `m(5)` picks `m(long)`: widening is tried before boxing."
+ },
+ {
+  "objective": "3.3",
+  "kind": "trap",
+  "title": "No widening after boxing",
+  "text": "`m(Long x)` cannot take `m(5)`: an `int` is never boxed to `Integer` and then widened to `Long`. It does not compile."
+ },
+ {
+  "objective": "3.3",
+  "kind": "trap",
+  "title": "Boxing then widening to Object",
+  "text": "`m(Object o)` accepts `m(5)`: `int` boxes to `Integer`, which is an `Object`."
+ },
+ {
+  "objective": "3.3",
+  "kind": "trap",
+  "title": "Return type does not overload",
+  "text": "Two methods that differ only in return type do not compile. Overloads must differ in parameter types, count or order."
+ },
+ {
+  "objective": "3.3",
+  "kind": "trap",
+  "title": "Varargs must be last",
+  "text": "Only one varargs parameter is allowed and it must be last. `void m(int... a, String s)` does not compile."
+ },
+ {
+  "objective": "3.3",
+  "kind": "tip",
+  "title": "Empty varargs",
+  "text": "`m()` can call `m(int... a)`; `a` is an empty array, not `null`."
+ },
+ {
+  "objective": "3.3",
+  "kind": "trap",
+  "title": "int[] and int... clash",
+  "text": "`m(int[] a)` and `m(int... a)` have the same signature, so declaring both does not compile."
+ },
+ {
+  "objective": "3.3",
+  "kind": "trap",
+  "title": "Most specific with null",
+  "text": "With `m(Object)` and `m(String)`, `m(null)` picks `m(String)`. With `m(String)` and `m(StringBuilder)`, `m(null)` is ambiguous and does not compile."
+ },
+ {
+  "objective": "3.3",
+  "kind": "tip",
+  "title": "Overloads are chosen at compile time",
+  "text": "The overload is picked from the declared (static) type of the argument. Overrides are picked at runtime from the object's actual type."
+ },
+ {
+  "objective": "3.3",
+  "kind": "trap",
+  "title": "char widens to int",
+  "text": "With only `m(int)` and `m(Object)`, `m('a')` calls `m(int)`: widening a `char` beats boxing it to `Character`."
+ },
+ {
+  "objective": "3.3",
+  "kind": "trap",
+  "title": "Erasure clash",
+  "text": "`m(List<String>)` and `m(List<Integer>)` both erase to `m(List)`, so they do not compile together."
+ },
+ {
+  "objective": "3.3",
+  "kind": "trap",
+  "title": "Static and instance with same signature",
+  "text": "A class cannot have a static method and an instance method with the same name and parameters."
+ },
+ {
+  "objective": "3.4",
+  "kind": "trap",
+  "title": "var needs an initializer",
+  "text": "`var x;` and `var x = null;` do not compile: the type must be inferable from a non-null initializer."
+ },
+ {
+  "objective": "3.4",
+  "kind": "trap",
+  "title": "var is for locals only",
+  "text": "`var` works for local variables, enhanced-for variables and try-with-resources, but not for fields, method parameters or return types."
+ },
+ {
+  "objective": "3.4",
+  "kind": "trap",
+  "title": "var and array initializers",
+  "text": "`var a = {1, 2};` does not compile. `var a = new int[]{1, 2};` does."
+ },
+ {
+  "objective": "3.4",
+  "kind": "tip",
+  "title": "var is a reserved type name",
+  "text": "`int var = 3;` compiles because `var` is not a keyword, but you cannot name a class or interface `var`."
+ },
+ {
+  "objective": "3.4",
+  "kind": "trap",
+  "title": "var type is fixed",
+  "text": "`var x = 1; x = 2.5;` does not compile: `x` was inferred as `int`."
+ },
+ {
+  "objective": "3.4",
+  "kind": "trap",
+  "title": "No multiple declarators with var",
+  "text": "`var a = 1, b = 2;` does not compile. `int a = 1, b = 2;` does."
+ },
+ {
+  "objective": "3.4",
+  "kind": "trap",
+  "title": "Block scope",
+  "text": "A variable declared inside an `if` or loop block is gone after the block. A local cannot redeclare another local in scope, but it can shadow a field."
+ },
+ {
+  "objective": "3.4",
+  "kind": "exam",
+  "title": "Immutable class recipe",
+  "text": "Make the class final (or constructors private), fields `private final`, no setters, and defensively copy mutable inputs and anything you return."
+ },
+ {
+  "objective": "3.4",
+  "kind": "trap",
+  "title": "final is not immutable",
+  "text": "`final List<String> l = new ArrayList<>(); l.add(\"x\");` compiles. `final` only stops reassigning the reference."
+ },
+ {
+  "objective": "3.4",
+  "kind": "tip",
+  "title": "Access levels",
+  "text": "`private` < package-private (no modifier) < `protected` < `public`. `protected` adds subclasses in other packages, but only through inheritance."
+ },
+ {
+  "objective": "3.5",
+  "kind": "trap",
+  "title": "Static methods hide",
+  "text": "A static method with the same signature in a subclass hides the parent's. Which one runs depends on the reference type, not the object."
+ },
+ {
+  "objective": "3.5",
+  "kind": "trap",
+  "title": "Fields are not polymorphic",
+  "text": "`Parent p = new Child(); p.name` reads `Parent`'s field even if `Child` declares its own `name`."
+ },
+ {
+  "objective": "3.6",
+  "kind": "tip",
+  "title": "What interfaces can contain",
+  "text": "Abstract methods, `default` methods, `static` methods, and `private` / `private static` helper methods (Java 9+)."
+ },
+ {
+  "objective": "3.6",
+  "kind": "trap",
+  "title": "Interface fields are constants",
+  "text": "Interface fields are implicitly `public static final` and must be initialized where declared."
+ },
+ {
+  "objective": "3.6",
+  "kind": "trap",
+  "title": "Static interface methods are not inherited",
+  "text": "Call them as `MyInterface.m()`. Calling through an implementing class or an instance does not compile."
+ },
+ {
+  "objective": "3.6",
+  "kind": "trap",
+  "title": "Default method conflict",
+  "text": "If a class gets the same default method from two interfaces, it must override it. It can call one with `A.super.m()`."
+ },
+ {
+  "objective": "3.6",
+  "kind": "trap",
+  "title": "Class wins over interface",
+  "text": "A method inherited from a superclass beats an interface default method with the same signature."
+ },
+ {
+  "objective": "3.6",
+  "kind": "exam",
+  "title": "Functional interface rule",
+  "text": "Exactly one abstract method. Public `Object` methods like `equals` or `toString` declared abstract do not count. `@FunctionalInterface` is optional but makes the compiler check."
+ },
+ {
+  "objective": "3.6",
+  "kind": "tip",
+  "title": "Core functional interfaces",
+  "text": "`Supplier<T>.get()`, `Consumer<T>.accept(t)`, `Predicate<T>.test(t)`, `Function<T,R>.apply(t)`, `UnaryOperator<T>`, `BinaryOperator<T>`, plus `Bi...` versions."
+ },
+ {
+  "objective": "3.6",
+  "kind": "trap",
+  "title": "Primitive functional names",
+  "text": "`IntFunction<R>` takes an `int` and returns `R`. `ToIntFunction<T>` takes `T` and returns `int` via `applyAsInt`. `IntSupplier` uses `getAsInt()`."
+ },
+ {
+  "objective": "3.6",
+  "kind": "trap",
+  "title": "Lambda parameter names",
+  "text": "A lambda parameter cannot reuse the name of a local variable in the enclosing scope, and captured locals must be effectively final."
+ },
+ {
+  "objective": "3.6",
+  "kind": "trap",
+  "title": "var in lambda parameters",
+  "text": "`(var x, var y) -> x + y` is fine, but mixing `var` with explicit types or untyped parameters does not compile."
+ },
+ {
+  "objective": "3.6",
+  "kind": "tip",
+  "title": "Four method reference kinds",
+  "text": "Static `Math::abs`, bound instance `str::length`, unbound instance `String::length`, and constructor `ArrayList::new`."
+ },
+ {
+  "objective": "3.6",
+  "kind": "trap",
+  "title": "Implementations must be public",
+  "text": "Interface methods are implicitly public, so an implementing method without `public` reduces visibility and does not compile."
+ },
+ {
+  "objective": "3.7",
+  "kind": "tip",
+  "title": "What an enum is",
+  "text": "Constants are implicitly `public static final`. An enum implicitly extends `java.lang.Enum`, so it cannot extend another class."
+ },
+ {
+  "objective": "3.7",
+  "kind": "trap",
+  "title": "Enum constructors are private",
+  "text": "Enum constructors are implicitly private. `new Color()` does not compile anywhere."
+ },
+ {
+  "objective": "3.7",
+  "kind": "trap",
+  "title": "Semicolon after constants",
+  "text": "When an enum has fields, constructors or methods, the constant list must end with `;`."
+ },
+ {
+  "objective": "3.7",
+  "kind": "tip",
+  "title": "values, valueOf, ordinal",
+  "text": "`values()` returns a new array in declaration order. `valueOf(\"RED\")` is case-sensitive and throws `IllegalArgumentException` for unknown names. `ordinal()` starts at 0."
+ },
+ {
+  "objective": "3.7",
+  "kind": "trap",
+  "title": "Case labels for enums",
+  "text": "Use `case RED`. Java 21 also allows the qualified `case Color.RED`. The selector itself can be `null` only with a `case null` label."
+ },
+ {
+  "objective": "3.7",
+  "kind": "trap",
+  "title": "compareTo uses ordinal",
+  "text": "Enums implement `Comparable` by declaration order, not by name, and are also `Serializable`."
+ },
+ {
+  "objective": "3.7",
+  "kind": "tip",
+  "title": "Constant-specific bodies",
+  "text": "A constant can have its own body overriding methods. If the enum declares an `abstract` method, every constant must implement it."
+ },
+ {
+  "objective": "3.7",
+  "kind": "tip",
+  "title": "Compare enums with ==",
+  "text": "Each constant is a singleton, so `==` is safe and null-safe. `equals` is final in `Enum`."
+ },
+ {
+  "objective": "3.7",
+  "kind": "tip",
+  "title": "Exhaustive enum switch",
+  "text": "A switch expression on an enum needs no `default` if it lists every constant."
+ },
+ {
+  "objective": "3.7",
+  "kind": "tip",
+  "title": "EnumMap and EnumSet",
+  "text": "Fast, ordered collections keyed by enum constants, e.g. `EnumSet.of(MON, TUE)` or `new EnumMap<>(Day.class)`."
+ },
+ {
+  "objective": "3.7",
+  "kind": "trap",
+  "title": "Enums can implement interfaces",
+  "text": "An enum can implement interfaces, but no class can extend an enum."
+ },
+ {
+  "objective": "3.7",
+  "kind": "trap",
+  "title": "Static fields in enum constructors",
+  "text": "An enum constructor cannot read the enum's non-constant static fields: they are not initialized yet, so it does not compile."
+ },
+ {
+  "objective": "3.7",
+  "kind": "trap",
+  "title": "name() vs toString()",
+  "text": "`name()` is final and returns the declared name. `toString()` returns the same by default but can be overridden."
+ },
+ {
+  "objective": "3.7",
+  "kind": "tip",
+  "title": "Nested enums are static",
+  "text": "An enum declared inside a class is implicitly static, so no outer instance is needed."
+ },
+ {
+  "objective": "6.1",
+  "kind": "trap",
+  "title": "Streams are lazy",
+  "text": "Without a terminal operation, intermediate operations like `map` or `peek` never run."
+ },
+ {
+  "objective": "6.1",
+  "kind": "trap",
+  "title": "A stream is single-use",
+  "text": "Using a stream after a terminal operation throws `IllegalStateException`."
+ },
+ {
+  "objective": "6.1",
+  "kind": "tip",
+  "title": "Optional basics",
+  "text": "`orElse(x)` always evaluates `x`; `orElseGet(supplier)` only when empty. `get()` on an empty Optional throws `NoSuchElementException`."
+ },
+ {
+  "objective": "6.1",
+  "kind": "trap",
+  "title": "Infinite streams",
+  "text": "`Stream.iterate` and `Stream.generate` never end without `limit` or a short-circuiting operation. `sorted()` or `count()` on them hangs."
+ },
+ {
+  "objective": "6.1",
+  "kind": "trap",
+  "title": "map vs flatMap",
+  "text": "`flatMap` turns `Stream<List<T>>` into `Stream<T>`. `mapToInt` gives an `IntStream`; `boxed()` turns it back into `Stream<Integer>`."
+ },
+ {
+  "objective": "6.1",
+  "kind": "tip",
+  "title": "IntStream ranges",
+  "text": "`IntStream.range(1, 5)` excludes 5; `rangeClosed(1, 5)` includes it. `average()` returns `OptionalDouble`; `sum()` returns `int`."
+ },
+ {
+  "objective": "7.2",
+  "kind": "tip",
+  "title": "javac and java module flags",
+  "text": "`javac -d out --module-path mods ...`, then `java -p mods -m my.module/com.app.Main`. `-p` is `--module-path`, `-m` is `--module`."
+ },
+ {
+  "objective": "7.2",
+  "kind": "tip",
+  "title": "Creating a jar",
+  "text": "`jar --create --file app.jar --main-class com.app.Main -C out .` (short: `jar -cfe app.jar com.app.Main -C out .`)."
+ },
+ {
+  "objective": "7.2",
+  "kind": "tip",
+  "title": "jdeps",
+  "text": "`jdeps app.jar` lists dependencies; `-s` gives a summary; `--jdk-internals` finds use of internal JDK APIs."
+ },
+ {
+  "objective": "7.2",
+  "kind": "tip",
+  "title": "jlink",
+  "text": "`jlink --module-path mods --add-modules my.module --output image` builds a custom runtime. Every module included must be a named module."
+ },
+ {
+  "objective": "7.2",
+  "kind": "exam",
+  "title": "Unnamed module",
+  "text": "Jars on the class path form the unnamed module. It can read every module, but named modules cannot `requires` it."
+ },
+ {
+  "objective": "7.2",
+  "kind": "exam",
+  "title": "Automatic modules",
+  "text": "A plain jar on the module path becomes an automatic module named from `Automatic-Module-Name` or the file name. It exports all packages and reads all modules."
+ },
+ {
+  "objective": "7.2",
+  "kind": "tip",
+  "title": "Migration strategies",
+  "text": "Bottom-up: modularize the lowest dependencies first. Top-down: put everything on the module path as automatic modules, then convert from the top."
+ },
+ {
+  "objective": "7.2",
+  "kind": "tip",
+  "title": "Single-file launch",
+  "text": "`java Hello.java` compiles and runs a single source file in memory, no `javac` step."
+ },
+ {
+  "objective": "8.2",
+  "kind": "trap",
+  "title": "count++ is not atomic",
+  "text": "`count++` from several threads loses updates. Use `AtomicInteger.incrementAndGet()` or a `synchronized` block."
+ },
+ {
+  "objective": "8.2",
+  "kind": "tip",
+  "title": "What synchronized locks",
+  "text": "A synchronized instance method locks `this`; a synchronized static method locks the `Class` object."
+ },
+ {
+  "objective": "8.2",
+  "kind": "trap",
+  "title": "Unlock in finally",
+  "text": "Call `lock.unlock()` in `finally`. `tryLock()` returns a `boolean`. Unlocking a lock you don't hold throws `IllegalMonitorStateException`."
+ },
+ {
+  "objective": "8.2",
+  "kind": "exam",
+  "title": "Liveness problems",
+  "text": "Deadlock: threads wait on each other forever. Starvation: a thread never gets the resource. Livelock: threads keep reacting to each other but make no progress."
+ },
+ {
+  "objective": "8.2",
+  "kind": "tip",
+  "title": "volatile",
+  "text": "`volatile` guarantees visibility of writes across threads, not atomicity of compound actions like `x++`."
+ },
+ {
+  "objective": "8.2",
+  "kind": "trap",
+  "title": "Iterating a synchronized list",
+  "text": "With `Collections.synchronizedList(list)`, you must still wrap iteration in `synchronized (list) { ... }`."
+ },
+ {
+  "objective": "8.3",
+  "kind": "trap",
+  "title": "ConcurrentModificationException",
+  "text": "Removing from an `ArrayList` inside a for-each throws `ConcurrentModificationException`. `CopyOnWriteArrayList` doesn't: its iterator is a snapshot."
+ },
+ {
+  "objective": "8.3",
+  "kind": "tip",
+  "title": "ConcurrentHashMap",
+  "text": "No `null` keys or values. `putIfAbsent`, `computeIfAbsent` and `merge` are atomic."
+ },
+ {
+  "objective": "8.3",
+  "kind": "tip",
+  "title": "CopyOnWriteArrayList",
+  "text": "Every write copies the array, and iterators never see later changes. Good for read-mostly lists."
+ },
+ {
+  "objective": "8.3",
+  "kind": "tip",
+  "title": "BlockingQueue",
+  "text": "`put`/`take` block until possible; `offer`/`poll` with a timeout wait up to it. Common: `LinkedBlockingQueue`, `ArrayBlockingQueue`."
+ },
+ {
+  "objective": "8.3",
+  "kind": "trap",
+  "title": "forEach on parallel streams",
+  "text": "`forEach` on a parallel stream has no order; `forEachOrdered` keeps encounter order."
+ },
+ {
+  "objective": "8.3",
+  "kind": "trap",
+  "title": "findAny in parallel",
+  "text": "On a parallel stream, `findAny()` can return any element. Use `findFirst()` when order matters."
+ },
+ {
+  "objective": "8.3",
+  "kind": "trap",
+  "title": "Parallel reduce rules",
+  "text": "For `reduce(identity, op)` in parallel, the identity must be a true identity and `op` associative, or results differ between runs."
+ },
+ {
+  "objective": "8.3",
+  "kind": "tip",
+  "title": "Sorted concurrent collections",
+  "text": "`ConcurrentSkipListMap` and `ConcurrentSkipListSet` are the thread-safe, sorted versions of `TreeMap` and `TreeSet`."
+ },
+ {
+  "objective": "8.3",
+  "kind": "trap",
+  "title": "Shared state in parallel streams",
+  "text": "Adding to a shared `ArrayList` from `parallel().forEach` is not thread-safe. Use `collect(...)` instead."
+ },
+ {
+  "objective": "9.1",
+  "kind": "tip",
+  "title": "Byte vs character streams",
+  "text": "`InputStream`/`OutputStream` work with bytes; `Reader`/`Writer` with characters."
+ },
+ {
+  "objective": "9.1",
+  "kind": "trap",
+  "title": "read() returns an int",
+  "text": "`read()` returns `-1` at end of stream, which is why it returns `int`, not `byte` or `char`."
+ },
+ {
+  "objective": "9.1",
+  "kind": "tip",
+  "title": "Close order in try-with-resources",
+  "text": "Resources close in reverse order of declaration, after the try block. Exceptions from `close()` become suppressed if the body already threw."
+ },
+ {
+  "objective": "9.1",
+  "kind": "trap",
+  "title": "Console can be null",
+  "text": "`System.console()` returns `null` when there is no console, for example in an IDE."
+ },
+ {
+  "objective": "9.1",
+  "kind": "tip",
+  "title": "readLine",
+  "text": "`BufferedReader.readLine()` returns `null` at end of file and drops the line terminator."
+ },
+ {
+  "objective": "9.1",
+  "kind": "trap",
+  "title": "FileWriter overwrites",
+  "text": "`new FileWriter(file)` truncates the file; `new FileWriter(file, true)` appends."
+ },
+ {
+  "objective": "9.2",
+  "kind": "tip",
+  "title": "Serializable is a marker",
+  "text": "A class must implement `Serializable`, or `writeObject` throws `NotSerializableException` at runtime."
+ },
+ {
+  "objective": "9.2",
+  "kind": "trap",
+  "title": "transient and static are skipped",
+  "text": "Neither is serialized. After deserialization, `transient` fields hold their default value (`0`, `null`, `false`)."
+ },
+ {
+  "objective": "9.2",
+  "kind": "trap",
+  "title": "No constructor runs",
+  "text": "Deserializing runs no constructor of the serializable class. Only the no-arg constructor of the first non-serializable superclass runs, and it must exist."
+ },
+ {
+  "objective": "9.2",
+  "kind": "tip",
+  "title": "serialVersionUID",
+  "text": "If the stream's `serialVersionUID` doesn't match the class, reading throws `InvalidClassException`."
+ },
+ {
+  "objective": "9.2",
+  "kind": "trap",
+  "title": "Every field must be serializable",
+  "text": "A non-transient field holding a non-serializable object makes `writeObject` throw `NotSerializableException`."
+ },
+ {
+  "objective": "9.2",
+  "kind": "tip",
+  "title": "readObject needs a cast",
+  "text": "`ObjectInputStream.readObject()` returns `Object` and can throw `ClassNotFoundException` as well as `IOException`."
+ },
+ {
+  "objective": "9.2",
+  "kind": "tip",
+  "title": "Records deserialize through the constructor",
+  "text": "Unlike normal classes, a record is rebuilt via its canonical constructor, so its validation runs."
+ },
+ {
+  "objective": "9.2",
+  "kind": "trap",
+  "title": "Initializers don't run",
+  "text": "Field initializers and instance blocks of a serializable class do not run on deserialization."
+ },
+ {
+  "objective": "9.2",
+  "kind": "tip",
+  "title": "Custom serialization hooks",
+  "text": "Declare `private void writeObject(ObjectOutputStream)` and `private void readObject(ObjectInputStream)` to customize."
+ },
+ {
+  "objective": "9.2",
+  "kind": "trap",
+  "title": "Static fields aren't restored",
+  "text": "Static fields keep whatever value the current JVM has; they are not read from the stream."
+ },
+ {
+  "objective": "9.3",
+  "kind": "tip",
+  "title": "Path.of and Paths.get",
+  "text": "Both create a `Path`; `Path.of` is the newer (Java 11) form. Creating a `Path` never touches the file system."
+ },
+ {
+  "objective": "9.3",
+  "kind": "trap",
+  "title": "resolve with an absolute path",
+  "text": "`p.resolve(other)` returns `other` unchanged when `other` is absolute."
+ },
+ {
+  "objective": "9.3",
+  "kind": "trap",
+  "title": "relativize needs matching types",
+  "text": "`relativize` needs both paths absolute or both relative, otherwise `IllegalArgumentException`."
+ },
+ {
+  "objective": "9.3",
+  "kind": "tip",
+  "title": "normalize vs toRealPath",
+  "text": "`normalize()` removes `.` and `..` without checking the disk. `toRealPath()` checks the disk and throws if the file doesn't exist."
+ },
+ {
+  "objective": "9.3",
+  "kind": "trap",
+  "title": "Files.delete",
+  "text": "`Files.delete` throws `NoSuchFileException` if missing and `DirectoryNotEmptyException` for a non-empty folder. `deleteIfExists` returns a `boolean`."
+ },
+ {
+  "objective": "9.3",
+  "kind": "tip",
+  "title": "Lazy file streams",
+  "text": "`Files.lines`, `Files.list` and `Files.walk` return lazy streams that should be closed (try-with-resources). `walk` includes the start path."
+ },
+ {
+  "objective": "9.3",
+  "kind": "trap",
+  "title": "Files.copy won't overwrite",
+  "text": "`Files.copy` throws `FileAlreadyExistsException` unless you pass `StandardCopyOption.REPLACE_EXISTING`."
+ },
+ {
+  "objective": "9.3",
+  "kind": "trap",
+  "title": "Path names exclude the root",
+  "text": "For `/a/b/c`, `getNameCount()` is 3 and `subpath(0, 1)` is `a` (relative, no root)."
+ },
+ {
+  "objective": "10.1",
+  "kind": "tip",
+  "title": "Creating a Locale",
+  "text": "`Locale.of(\"en\", \"US\")` (Java 19+), `new Locale.Builder().setLanguage(\"en\").setRegion(\"US\").build()`, or constants like `Locale.US`. Language is lowercase, country uppercase."
+ },
+ {
+  "objective": "10.1",
+  "kind": "tip",
+  "title": "NumberFormat kinds",
+  "text": "`getCurrencyInstance`, `getPercentInstance`, `getIntegerInstance`, and `getCompactNumberInstance(locale, Style.SHORT)`, which formats `1_000_000` as `1M`."
+ },
+ {
+  "objective": "10.1",
+  "kind": "tip",
+  "title": "ResourceBundle lookup",
+  "text": "It tries the requested locale, then its language only, then the default locale, then the base bundle with no locale."
+ },
+ {
+  "objective": "10.1",
+  "kind": "trap",
+  "title": "Missing bundle key",
+  "text": "`bundle.getString(\"x\")` throws `MissingResourceException` if no bundle in the chain has the key."
+ },
+ {
+  "objective": "10.1",
+  "kind": "tip",
+  "title": "DateTimeFormatter letters",
+  "text": "`MM` is month, `mm` minute, `HH` 24-hour, `hh` 12-hour, `a` AM/PM. `ofLocalizedDate(FormatStyle.SHORT)` uses the locale's style."
+ },
+ {
+  "objective": "10.1",
+  "kind": "trap",
+  "title": "Pattern doesn't fit the type",
+  "text": "Formatting a `LocalDate` with a pattern containing `HH` or `mm` throws `UnsupportedTemporalTypeException`."
+ },
+ {
+  "objective": "10.1",
+  "kind": "tip",
+  "title": "MessageFormat",
+  "text": "`MessageFormat.format(\"Hi {0}, you have {1} mails\", name, n)` fills numbered placeholders."
+ }
+]

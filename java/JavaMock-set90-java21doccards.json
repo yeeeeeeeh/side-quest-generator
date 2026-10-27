@@ -1,0 +1,946 @@
+{
+  "setId": "m90",
+  "title": "Community quiz (java21docCards)",
+  "credit": "Questions from java21docCards by Anasss (MIT License; Copyright (c) 2022 just-the-docs)",
+  "questions": [
+    {
+      "id": "m90-q01",
+      "kind": "singleChoice",
+      "prompt": "Which method calls will execute in this inheritance scenario?",
+      "code": "class Parent {\n    public void show() { System.out.print(\"Parent \"); }\n}\nclass Child extends Parent {\n    public void show() { System.out.print(\"Child \"); }\n    public static void main(String[] args) {\n        Parent dad = new Child();\n        dad.show();\n        new Child().show();\n        new Parent().show();\n    }\n}",
+      "options": [
+        "Parent Parent Parent",
+        "Child Child Parent",
+        "Child Parent Child",
+        "Parent Child Parent",
+        "None of the above"
+      ],
+      "answer": 1,
+      "explanation": "Overridden methods in subclasses are executed according to the runtime type of the object.",
+      "objective": "3.5",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "Child Child Parent \n"
+      }
+    },
+    {
+      "id": "m90-q02",
+      "kind": "singleChoice",
+      "prompt": "What is the output of this family membership code?",
+      "code": "var isMother = false;\nvar isFather = false;\nif (isFather = isMother != isFather) {\n    System.out.println(\"You are part of the family!\");\n} else {\n    System.out.println(\"You are not part of the family!\");\n}",
+      "options": [
+        "You are part of the family!",
+        "You are not part of the family!",
+        "Compilation error",
+        "Runtime exception",
+        "Unreachable code error"
+      ],
+      "answer": 1,
+      "explanation": "The expression 'isFather = isMother != isFather' is evaluated as 'isFather = (isMother != isFather)'. Since isMother is false and isFather is false, (false != false) evaluates to false. However, this false value is then assigned to isFather, and the assignment expression returns the assigned value (false). The if condition gets false, so it goes to else and prints 'You are not part of the family!'.",
+      "objective": "1.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "You are not part of the family!\n"
+      }
+    },
+    {
+      "id": "m90-q03",
+      "kind": "singleChoice",
+      "prompt": "Which statement about record classes is correct?",
+      "options": [
+        "Records are mutable by default",
+        "Records cannot define methods",
+        "Record fields are final by default",
+        "Records can extend other classes"
+      ],
+      "answer": 2,
+      "explanation": "Records are implicitly `final`, and each component becomes a `private final` field. Records can declare methods (instance and static) but cannot extend another class (they implicitly extend `java.lang.Record`); they can implement interfaces.",
+      "objective": "3.2",
+      "examStyle": true,
+      "codeOptions": false
+    },
+    {
+      "id": "m90-q04",
+      "kind": "singleChoice",
+      "prompt": "How are static and instance initialization blocks executed in this inheritance scenario?",
+      "code": "class Parent {\n    static { System.out.print(\"Parent static \"); }\n    { System.out.print(\"Parent instance \"); }\n}\nclass Child extends Parent {\n    static { System.out.print(\"Child static \"); }\n    { System.out.print(\"Child instance \"); }\n    public static void main(String[] args) { new Child(); }\n}",
+      "options": [
+        "Parent static Child static Child instance Parent instance",
+        "Parent static Child static Parent instance Child instance",
+        "Child static Parent static Child instance Parent instance",
+        "Parent instance Child instance Parent static Child static"
+      ],
+      "answer": 1,
+      "explanation": "Static blocks execute first (parent then child), followed by instance blocks (parent then child).",
+      "objective": "3.2",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "Parent static Child static Parent instance Child instance \n"
+      }
+    },
+    {
+      "id": "m90-q05",
+      "kind": "singleChoice",
+      "prompt": "Which sealed class declaration is valid? Assume `final class Child extends Family {}` is declared in its own file in the same package and `Family` has no other subclasses.",
+      "options": [
+        "public sealed class Family permit Unknown { }",
+        "public sealed class Family permits Child { }",
+        "public sealed class Family extends Object { }",
+        "public sealed class Family { } // subclasses are in a different package"
+      ],
+      "answer": 1,
+      "explanation": "A sealed class names its permitted subclasses with `permits` (note the keyword is `permits`, not `permit`, so the first option does not compile). The `permits` clause may be omitted only when the subclasses are declared in the same source file. Here `Child` is in another file, so `permits Child` is required: the second option is valid. Without `permits` (third and fourth options) `Child` is not allowed to extend `Family`, and a sealed class with no permitted subclasses is itself a compile error (*sealed class must have subclasses*). Extending `Object` explicitly changes nothing.",
+      "objective": "3.5",
+      "examStyle": true,
+      "codeOptions": false,
+      "verify": {
+        "expect": "stdout",
+        "optionCheck": false,
+        "value": "sealed\n",
+        "source": "sealed class Family permits Child { }\nfinal class Child extends Family {}\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(Family.class.isSealed() ? \"sealed\" : \"open\");\n    }\n}"
+      }
+    },
+    {
+      "id": "m90-q06",
+      "kind": "singleChoice",
+      "prompt": "Which value does this switch expression evaluate to?",
+      "code": "String role = switch (\"Grandma\") {\n    case \"Dad\", \"Father\" -> \"Parent\";\n    case \"Mom\", \"Mother\" -> \"Parent\";\n    case \"Son\", \"Daughter\" -> \"Child\";\n    case \"Grandpa\", \"Grandma\" -> { yield \"Grandparent\".toUpperCase(); }\n    default -> \"Unknown\";\n};\nSystem.out.println(role);",
+      "options": [
+        "Parent",
+        "Unknown",
+        "Grandparent",
+        "GRANDPARENT"
+      ],
+      "answer": 3,
+      "explanation": "Yield block returns \"Grandparent\" converted to uppercase.",
+      "objective": "2.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "GRANDPARENT\n"
+      }
+    },
+    {
+      "id": "m90-q07",
+      "kind": "singleChoice",
+      "prompt": "Which private method is invoked in this inheritance scenario?",
+      "code": "class Parent {\n    private void secret() { System.out.print(\"Parent secret \"); }\n    public void reveal() { secret(); }\n}\nclass Child extends Parent {\n    private void secret() { System.out.print(\"Child secret \"); }\n    public static void main(String[] args) {\n        new Parent().reveal();\n    }\n}",
+      "options": [
+        "Compilation error",
+        "Parent secret Child secret",
+        "Child secret",
+        "Parent secret"
+      ],
+      "answer": 3,
+      "explanation": "Private methods are not overridden. Parent.reveal() calls Parent.secret().",
+      "objective": "3.5",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "Parent secret \n"
+      }
+    },
+    {
+      "id": "m90-q08",
+      "kind": "singleChoice",
+      "prompt": "Which strings are selected after mapping and sorting this stream?",
+      "code": "import java.util.*;\nimport java.util.stream.*;\nclass Family {\n  public static void main(String[] args) {\n    var members = List.of(\"Dad\",\"Mom\",\"Son\",\"Daughter\");\n    var result = members.stream()\n      .map(String::toUpperCase)\n      .sorted((a,b) -> b.compareTo(a))\n      .limit(2)\n      .collect(Collectors.joining(\", \"));\n    System.out.println(result);\n  }\n}",
+      "options": [
+        "SON, MOM",
+        "DAD, MOM",
+        "SON, DAUGHTER",
+        "DAD, DAUGHTER"
+      ],
+      "answer": 0,
+      "explanation": "After mapping to uppercase and sorting descending, the first two elements are SON and MOM.",
+      "objective": "6.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "SON, MOM\n"
+      }
+    },
+    {
+      "id": "m90-q09",
+      "kind": "singleChoice",
+      "prompt": "What happens when this override declaration is executed?",
+      "code": "class Parent {\n  void cook() throws Exception { throw new Exception(\"Parent\"); }\n}\nclass Child extends Parent {\n  @Override void cook() throws java.io.IOException { throw new java.io.IOException(\"Child\"); }\n  public static void main(String[] args) throws Exception {\n    new Child().cook();\n  }\n}",
+      "options": [
+        "Compilation error: must catch IOException",
+        "Compiles and throws IOException with message 'Child'",
+        "Prints Parent",
+        "Compilation error: IOException not allowed"
+      ],
+      "answer": 1,
+      "explanation": "Child's cook() is a valid override that narrows the exception type from Exception to IOException (its subclass). When executed, it throws an IOException with message 'Child'. The main method declares 'throws Exception' which covers IOException.",
+      "objective": "4.1",
+      "examStyle": true,
+      "codeOptions": false,
+      "verify": {
+        "expect": "exception",
+        "value": "java.io.IOException: Child"
+      }
+    },
+    {
+      "id": "m90-q10",
+      "kind": "singleChoice",
+      "prompt": "Which output results from these generic method calls?",
+      "code": "import java.util.*;\nclass Family<T> {\n    public static <U> List<U> create(U a, U b) {\n        return List.of(a, b);\n    }\n\n    public static void main(String[] args) {\n        var parents = create(\"Dad\", \"Mom\");\n        var ages = create(45, 42);\n        System.out.println(parents.get(0) + \" \" + ages.get(1));\n    }\n}",
+      "options": [
+        "Dad Mom",
+        "Dad 42",
+        "Compilation error",
+        "Mom 45"
+      ],
+      "answer": 1,
+      "explanation": "Generic method infers types separately. Output: Dad 42.",
+      "objective": "5.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "Dad 42\n"
+      }
+    },
+    {
+      "id": "m90-q11",
+      "kind": "singleChoice",
+      "prompt": "Which instanceof checks compile and evaluate to true?",
+      "code": "sealed class Parent permits Child {}\nfinal class Child extends Parent {}\nclass Family {\n    public static void main(String[] args) {\n        Parent p = new Child();\n        System.out.println(p instanceof Parent);  // line 1\n        System.out.println(p instanceof Child);   // line 2\n        System.out.println(p instanceof Object);  // line 3\n    }\n}",
+      "options": [
+        "line 1 only",
+        "line 2 only",
+        "line 1 and 2",
+        "line 1, 2 and 3",
+        "Compilation error"
+      ],
+      "answer": 3,
+      "explanation": "Since p references a Child object: 'p instanceof Parent' is true (Child extends Parent), 'p instanceof Child' is true (actual type), and 'p instanceof Object' is true (everything extends Object). All three lines compile and evaluate to true. Note: instanceof with incompatible types like String would cause compilation error, but Object, Parent, and Child are all compatible with the reference type Parent.",
+      "objective": "3.5",
+      "examStyle": true,
+      "codeOptions": false,
+      "verify": {
+        "expect": "stdout",
+        "value": "true\ntrue\ntrue\n",
+        "optionCheck": false
+      }
+    },
+    {
+      "id": "m90-q12",
+      "kind": "singleChoice",
+      "prompt": "What does the following code return?",
+      "code": "import java.util.*;\nclass Family {\n  public static void main(String[] args){\n    Optional<String> dad = Optional.ofNullable(null);\n    System.out.println(dad.orElse(\"Unknown\"));\n  }\n}",
+      "options": [
+        "Compilation error",
+        "Unknown",
+        "Throws NullPointerException",
+        "null"
+      ],
+      "answer": 1,
+      "explanation": "ofNullable(null) creates empty Optional. orElse supplies fallback.",
+      "objective": "6.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "Unknown\n"
+      }
+    },
+    {
+      "id": "m90-q13",
+      "kind": "singleChoice",
+      "prompt": "How many characters are in this text block?",
+      "code": "class Family {\n    public static void main(String[] args) {\n        String s = \"\"\"\nDad\nMom\n\"\"\";\n        System.out.println(s.length());\n    }\n}",
+      "options": [
+        "7",
+        "8",
+        "9",
+        "10"
+      ],
+      "answer": 1,
+      "explanation": "The closing `\"\"\"` is on its own line, so the text block ends with a newline: `\"Dad\\nMom\\n\"` → length 8.",
+      "objective": "1.2",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "8\n"
+      }
+    },
+    {
+      "id": "m90-q14",
+      "kind": "singleChoice",
+      "prompt": "Which branch executes in this pattern matching switch?",
+      "code": "class Family {\n    static void who(Object o) {\n        switch(o) {\n            case String s -> System.out.println(\"String: \" + s);\n            case Integer i -> System.out.println(\"Int: \" + i);\n            default -> System.out.println(\"Other\");\n        }\n    }\n    public static void main(String[] args) {\n        who(\"Dad\");\n    }\n}",
+      "options": [
+        "Compilation error",
+        "Other",
+        "Int: Dad",
+        "String: Dad"
+      ],
+      "answer": 3,
+      "explanation": "Pattern matching for switch matches the String branch.",
+      "objective": "3.5",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "String: Dad\n"
+      }
+    },
+    {
+      "id": "m90-q15",
+      "kind": "singleChoice",
+      "prompt": "Europe/Paris moves clocks forward 1 hour for spring DST on 30 March 2025 (The clock jumps from 02:00 AM to 03:00 AM). What is the Duration in hours when adding 3 hours to 01:30 across this transition?",
+      "code": "import java.time.*;\nclass Family {\n    public static void main(String[] args) {\n        ZonedDateTime z1 = ZonedDateTime.of(2025, 3, 30, 1, 30, 0, 0, ZoneId.of(\"Europe/Paris\"));\n        ZonedDateTime z2 = z1.plusHours(3);\n        Duration d = Duration.between(z1, z2);\n        System.out.println(d.toHours());\n    }\n}",
+      "options": [
+        "2",
+        "3",
+        "-2",
+        "-3",
+        "Throws exception"
+      ],
+      "answer": 1,
+      "explanation": "Corrected from the source: the source keyed `2`. `ZonedDateTime.plusHours` works on the *instant* time-line (like `plus(Duration.ofHours(3))`), so it adds 3 real hours: 01:30 CET (UTC+1) + 3 h = 05:30 CEST (UTC+2). The wall clock moves 4 hours because 02:00–03:00 is skipped, but `Duration.between` measures the elapsed time between the two instants → `3`. Only date-based amounts (`plusDays`, `plus(Period…)`) operate on the local time-line and keep the clock time.",
+      "objective": "1.3",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "3\n"
+      }
+    },
+    {
+      "id": "m90-q16",
+      "kind": "singleChoice",
+      "prompt": "Which key does firstKey() return for a TreeMap with these entries?",
+      "code": "import java.util.*;\nclass Family {\n    public static void main(String[] args) {\n        var map = new TreeMap<String,Integer>();\n        map.put(\"Mom\", 1);\n        map.put(\"Dad\", 2);\n        map.put(\"Son\", 3);\n        System.out.println(map.firstKey());\n    }\n}",
+      "options": [
+        "Son",
+        "Dad",
+        "null",
+        "Mom",
+        "None of the above"
+      ],
+      "answer": 1,
+      "explanation": "TreeMap orders keys naturally. firstKey() returns the smallest key: Dad.",
+      "objective": "5.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "Dad\n"
+      }
+    },
+    {
+      "id": "m90-q17",
+      "kind": "singleChoice",
+      "prompt": "Which order of constructor execution occurs in this inheritance example?",
+      "code": "class Parent {\n    Parent() { System.out.print(\"P \"); }\n}\nclass Child extends Parent {\n    Child() { System.out.print(\"C \"); }\n}\nclass Family {\n    public static void main(String[] args) {\n        new Child();\n    }\n}",
+      "options": [
+        "C P",
+        "P C",
+        "C only",
+        "Compilation error"
+      ],
+      "answer": 1,
+      "explanation": "Superclass constructor runs before subclass constructor.",
+      "objective": "3.2",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "P C \n"
+      }
+    },
+    {
+      "id": "m90-q18",
+      "kind": "singleChoice",
+      "prompt": "Which elements are processed by dropWhile in this stream?",
+      "code": "import java.util.*;\nclass Family {\n    public static void main(String[] args) {\n        List<String> list = List.of(\"Dad\",\"Mom\",\"Son\");\n        list.stream().dropWhile(s -> s.length() > 2).forEach(System.out::print);\n    }\n}",
+      "options": [
+        "Son",
+        "Nothing is printed",
+        "MomSon",
+        "DadMomSon"
+      ],
+      "answer": 1,
+      "explanation": "`dropWhile` discards elements from the start while the predicate is true. Every element has length 3 (> 2), so all of them are dropped and nothing is printed.",
+      "objective": "6.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "",
+        "optionCheck": false
+      }
+    },
+    {
+      "id": "m90-q19",
+      "kind": "singleChoice",
+      "prompt": "Which value is returned by Arrays.binarySearch when the key is absent?",
+      "code": "class Family {\n    public static void main(String[] args) {\n        int[] arr = {10,20,30};\n        int pos = java.util.Arrays.binarySearch(arr,25);\n        System.out.println(pos);\n    }\n}",
+      "options": [
+        "2",
+        "-3",
+        "-2",
+        "Compilation error"
+      ],
+      "answer": 1,
+      "explanation": "Not found → returns -(insertion point) - 1. 25 would be at index 2 → -(2)-1 = -3.",
+      "objective": "5.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "-3\n"
+      }
+    },
+    {
+      "id": "m90-q20",
+      "kind": "singleChoice",
+      "prompt": "What is the effect of reassignment inside a method on a StringBuilder?",
+      "code": "class Family {\n    static void test(StringBuilder sb) {\n        sb.append(\"Mom\");\n        sb = new StringBuilder(\"Dad\");\n    }\n    public static void main(String[] args) {\n        StringBuilder s = new StringBuilder(\"Son\");\n        test(s);\n        System.out.println(s);\n    }\n}",
+      "options": [
+        "Son",
+        "SonMom",
+        "Dad",
+        "Compilation error"
+      ],
+      "answer": 1,
+      "explanation": "Append modifies the original. Reassignment inside the method has no effect on the caller.",
+      "objective": "3.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "SonMom\n"
+      }
+    },
+    {
+      "id": "m90-q21",
+      "kind": "singleChoice",
+      "prompt": "How does equals behave with StringBuilder references?",
+      "code": "class Family {\n    public static void main(String[] args) {\n        Object o = new StringBuilder(\"Dad\");\n        System.out.println(o.equals(new StringBuilder(\"Dad\")));\n    }\n}",
+      "options": [
+        "true",
+        "false",
+        "Compilation error",
+        "Throws exception"
+      ],
+      "answer": 1,
+      "explanation": "StringBuilder does not override equals. Uses reference equality.",
+      "objective": "1.2",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "false\n"
+      }
+    },
+    {
+      "id": "m90-q22",
+      "kind": "singleChoice",
+      "prompt": "Consider a try-with-resources block that uses an AutoCloseable resource and also has a finally block. Which output is correct?",
+      "code": "class Resource implements AutoCloseable {\n    public void use() { System.out.print(\"Using\"); }\n    public void close() { System.out.print(\"Closed\"); }\n}\nclass Family {\n    public static void main(String[] args) {\n        Resource r = new Resource();\n        try (r) {\n            r.use();\n        } finally {\n            System.out.print(\"Finally\");\n        }\n    }\n}",
+      "options": [
+        "UsingFinallyClosed",
+        "FinallyUsingClosed",
+        "UsingClosedFinally",
+        "UsingClosed",
+        "FinallyClosedUsing",
+        "None of the above"
+      ],
+      "answer": 2,
+      "explanation": "Even when the resource is declared outside the try (Java 9+ feature), try-with-resources still calls close() after the try block completes. Then the finally block executes. So the output order is 'Using' (try body) → 'Closed' (resource auto-close) → 'Finally' (finally block).",
+      "objective": "4.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "UsingClosedFinally\n"
+      }
+    },
+    {
+      "id": "m90-q23",
+      "kind": "multiChoice",
+      "prompt": "Given the following family hierarchy and variable declarations, which statements compile without error inside an instance method of `Family`? Choose two.",
+      "code": "import java.util.*;\nclass Grandparent {}\nclass Parent extends Grandparent {}\nclass Child extends Parent {}\nclass Family {\n    List<? super Grandparent> ancestors = null;\n    List<? extends Child> descendants = null;\n}",
+      "options": [
+        "ancestors.add(new Grandparent()); ancestors.add(new Parent()); ancestors.add(new Child());",
+        "descendants.add(new Child()); descendants.add(new Parent());",
+        "Grandparent g = ancestors.get(0);",
+        "Parent p = ancestors.get(0);",
+        "Child c = descendants.get(0);"
+      ],
+      "answers": [
+        0,
+        4
+      ],
+      "explanation": "Corrected from the source: the source accepted only the first option, but `Child c = descendants.get(0);` also compiles — reading from `List<? extends Child>` yields a `Child`. `List<? super Grandparent>` accepts `Grandparent` and any subclass for `add`, but its `get` returns only `Object`, so assigning the result to `Grandparent` or `Parent` fails without a cast. Nothing (except `null`) can be added to `List<? extends Child>`.",
+      "objective": "5.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "3 true\n",
+        "source": "import java.util.*;\nclass Grandparent {}\nclass Parent extends Grandparent {}\nclass Child extends Parent {}\npublic class Family {\n    List<? super Grandparent> ancestors = new ArrayList<Object>();\n    List<? extends Child> descendants = List.of(new Child());\n    void test() {\n        ancestors.add(new Grandparent()); ancestors.add(new Parent()); ancestors.add(new Child());\n        Child c = descendants.get(0);\n        System.out.println(ancestors.size() + \" \" + (c != null));\n    }\n    public static void main(String[] args) { new Family().test(); }\n}"
+      }
+    },
+    {
+      "id": "m90-q24",
+      "kind": "singleChoice",
+      "prompt": "Which sequence prints in a for-loop with initialization side-effect?",
+      "code": "class Family {\n    public static void main(String[] args) {\n        int i = 0;\n        for(System.out.print(\"Dad\"); i < 2; i++) {\n            System.out.print(\"Son\");\n        }\n    }\n}",
+      "options": [
+        "DadSon",
+        "DadSonSon",
+        "SonDadSon",
+        "Compilation error"
+      ],
+      "answer": 1,
+      "explanation": "Init prints Dad once. Loop runs twice printing Son Son.",
+      "objective": "2.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "DadSonSon\n"
+      }
+    },
+    {
+      "id": "m90-q25",
+      "kind": "singleChoice",
+      "prompt": "What will this code print?",
+      "code": "class Family {\n    public static void main(String[] args) {\n        String s = null;\n        System.out.println(s instanceof String);\n    }\n}",
+      "options": [
+        "true",
+        "false",
+        "Compilation error",
+        "Throws exception",
+        "Nothing is printed"
+      ],
+      "answer": 1,
+      "explanation": "instanceof returns false when the reference is null.",
+      "objective": "1.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "false\n"
+      }
+    },
+    {
+      "id": "m90-q26",
+      "kind": "singleChoice",
+      "prompt": "Inside a static method in Java 21, which of the following can be used to access an instance field?",
+      "code": "class Family {\n    private String role = \"Parent\";\n    static void test() {\n        // ???\n    }\n}",
+      "options": [
+        "Cannot access instance fields directly",
+        "Access via creating an instance: new Family().role",
+        "Access via 'this.role'",
+        "Access via static import"
+      ],
+      "answer": 1,
+      "explanation": "Static methods cannot access instance fields directly. To access an instance field, you need a reference to an object, e.g., 'new Family().role'. 'this' cannot be used in a static context, and static import does not help.",
+      "objective": "3.2",
+      "examStyle": true,
+      "codeOptions": false,
+      "verify": {
+        "expect": "stdout",
+        "value": "Parent\n",
+        "optionCheck": false,
+        "source": "class Family {\n    private String role = \"Parent\";\n    static void test() {\n        System.out.println(new Family().role);\n    }\n    public static void main(String[] args) { test(); }\n}"
+      }
+    },
+    {
+      "id": "m90-q27",
+      "kind": "singleChoice",
+      "prompt": "Which expression, placed at `/* ??? */`, compiles and returns the least key of the TreeMap?",
+      "code": "import java.util.*;\nclass Family {\n    public static void main(String[] args) {\n        var map = new TreeMap<String,Integer>();\n        map.put(\"Dad\", 1);\n        map.put(\"Mom\", 2);\n        map.put(\"Son\", 3);\n        /* ??? */\n    }\n}",
+      "options": [
+        "map.firstKey()",
+        "map.getKey(0)",
+        "map.firstEntryKey()",
+        "map.head()"
+      ],
+      "answer": 0,
+      "explanation": "TreeMap.firstKey() returns the least key according to natural order.",
+      "objective": "5.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "Dad\n",
+        "optionCheck": false,
+        "source": "import java.util.*;\nclass Family {\n    public static void main(String[] args) {\n        var map = new TreeMap<String,Integer>();\n        map.put(\"Dad\", 1);\n        map.put(\"Mom\", 2);\n        map.put(\"Son\", 3);\n        System.out.println(map.firstKey());\n    }\n}"
+      }
+    },
+    {
+      "id": "m90-q28",
+      "kind": "singleChoice",
+      "prompt": "In a bottom-up migration to the Java module system, what is the recommended first step?",
+      "options": [
+        "Move all existing JARs to the module path",
+        "Convert all JARs to automatic modules at once",
+        "Start by converting the module with the most dependencies",
+        "Add a module-info.class to every JAR before running the application",
+        "Start by converting the module with the fewest dependencies into a named module"
+      ],
+      "answer": 4,
+      "explanation": "In bottom-up migration, you begin by converting the module with the fewest dependencies into a named module. Other JARs stay on the classpath initially. This avoids breaking the build and allows gradual migration.",
+      "objective": "7.2",
+      "examStyle": true,
+      "codeOptions": false
+    },
+    {
+      "id": "m90-q29",
+      "kind": "singleChoice",
+      "prompt": "Which substring is extracted from this short text block?",
+      "code": "public class Family {\n    public static void main(String[] args) {\n        String familyMessage = \"\"\"\nHello! \nSon\n\"\"\";\n        String part = familyMessage.substring(7, 9);\n        System.out.println(part);\n    }\n}",
+      "options": [
+        "So",
+        "on",
+        "A newline followed by S",
+        "Son"
+      ],
+      "answer": 0,
+      "explanation": "Explanation corrected from the source: incidental trailing whitespace on each text-block line is stripped, so the space after `Hello!` disappears and the string is `\"Hello!\\nSon\\n\"`. Index 6 is the newline, so `substring(7, 9)` returns the characters at indexes 7 and 8: `So`. (Had the space been kept, the result would have been `\"\\nS\"`.)",
+      "objective": "1.2",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "So\n"
+      }
+    },
+    {
+      "id": "m90-q30",
+      "kind": "singleChoice",
+      "prompt": "What is the output of this ExecutorService code?",
+      "code": "import java.util.concurrent.*;\npublic class Test {\n    public static void main(String[] args) throws Exception {\n        ExecutorService service = Executors.newFixedThreadPool(1);\n        Runnable r = () -> System.out.print(\"Runnable executed\");\n        Callable<String> c = () -> \"Callable executed\";\n\n        Future<?> f1 = service.submit(r);\n        Future<String> f2 = service.submit(c);\n\n        System.out.print(f1.get());\n        System.out.print(f2.get());\n        service.shutdown();\n    }\n}",
+      "options": [
+        "Runnable executedCallable executed",
+        "Runnable executednullCallable executed",
+        "nullCallable executed",
+        "Compilation error",
+        "Runtime exception"
+      ],
+      "answer": 1,
+      "explanation": "submit(Runnable) returns a Future<?> whose get() returns null upon successful completion. submit(Callable<T>) returns a Future<T> whose get() returns the callable result. The output is: 'Runnable executed' (from the Runnable), then 'null' (from f1.get()), then 'Callable executed' (from f2.get()) - all printed consecutively without newlines since print() is used.",
+      "objective": "8.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "Runnable executednullCallable executed\n"
+      }
+    },
+    {
+      "id": "m90-q31",
+      "kind": "singleChoice",
+      "prompt": "What is the output of this ReentrantLock code?",
+      "code": "import java.util.concurrent.*;\nimport java.util.concurrent.locks.*;\n\npublic class FamilyGathering {\n    private Lock dinnerLock = new ReentrantLock();\n\n    public void joinDinner() {\n        dinnerLock.lock();           // f1\n        if (dinnerLock.tryLock()) {  // f2\n            System.out.print(\"Eating dinner!\");\n        }\n        dinnerLock.unlock();\n    }\n\n    public static void main(String[] args) {\n        try (var service = Executors.newFixedThreadPool(2)) {\n            FamilyGathering family = new FamilyGathering();\n            for (int i = 0; i < 2; i++)\n                service.submit(() -> family.joinDinner());\n        }\n        System.out.print(\"Family dinner complete\");\n    }\n}",
+      "options": [
+        "Eating dinner!Family dinner complete",
+        "Eating dinner!Eating dinner!Family dinner complete",
+        "Family dinner complete",
+        "Program hangs and prints only: Eating dinner!",
+        "Compilation error",
+        "Runtime exception"
+      ],
+      "answer": 3,
+      "explanation": "The first task calls `lock()` (hold count 1) and then `tryLock()`, which succeeds because `ReentrantLock` is reentrant (hold count 2), so `Eating dinner!` prints once. It then calls `unlock()` only once, so the lock stays held (count 1) by that pool thread. The second task, on the other pool thread, blocks forever in `lock()`. The try-with-resources `close()` of the `ExecutorService` waits for all tasks to finish, so the program hangs and never prints `Family dinner complete`.",
+      "objective": "8.2",
+      "examStyle": true,
+      "codeOptions": true
+    },
+    {
+      "id": "m90-q32",
+      "kind": "singleChoice",
+      "prompt": "What is the output of this family reunion code?",
+      "code": "public class FamilyReunion {\n    public static void main(String[] args) {\n        int grandparents = 2;\n        int parents = 4;\n        int children = 0;\n\n        for (int cousin = 0; cousin < grandparents; cousin++) {\n            children += ++parents;\n            System.out.print(children + \" \");\n        }\n\n        while (children-- > 8) {\n            int uncles = children;\n            children -= uncles++;\n            System.out.print(children + \" \");\n        }\n\n        System.out.print(\"Total: \" + (grandparents + parents + children));\n    }\n}",
+      "options": [
+        "5 11 0 Total: 7",
+        "4 10 0 Total: 6",
+        "5 11 5 Total: 12",
+        "5 10 0 Total: 8",
+        "4 11 0 Total: 7",
+        "None of the above"
+      ],
+      "answer": 0,
+      "explanation": "For loop runs twice: First iteration: ++parents makes parents=5, children=0+5=5, prints '5'. Second iteration: ++parents makes parents=6, children=5+6=11, prints '11'. While loop: children-- > 8 checks 11>8 (true), then decrements children to 10. Inside loop: uncles=10, children=10-10=0, uncles++ doesn't affect children, prints '0'. Next check: 0>8 is false, loop exits. Final: grandparents=2, parents=6, children=-1 (from the failed while condition). Total: 2+6+(-1)=7.",
+      "objective": "2.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "5 11 0 Total: 7 \n"
+      }
+    },
+    {
+      "id": "m90-q33",
+      "kind": "singleChoice",
+      "prompt": "What is the output of this family enum hierarchy code?",
+      "code": "enum FamilyRole implements Comparable<FamilyRole> {\n    GRANDPARENT(\"Elder\") {\n        @Override\n        public String getGreeting() { return \"Hello dear\"; }\n    },\n    PARENT(\"Adult\") {\n        @Override\n        public String getGreeting() { return \"Hi there\"; }\n    },\n    CHILD(\"Young\");\n\n    private final String ageGroup;\n\n    FamilyRole(String ageGroup) {\n        this.ageGroup = ageGroup;\n    }\n\n    public String getGreeting() {\n        return \"Hey\";\n    }\n\n    public static void main(String[] args) {\n        FamilyRole[] roles = FamilyRole.values();\n        FamilyRole found = FamilyRole.valueOf(\"CHILD\");\n\n        System.out.print(roles[1].getGreeting() + \" \");\n        System.out.print(found.ordinal() + \" \");\n        System.out.print(GRANDPARENT.compareTo(CHILD) + \" \");\n        System.out.print(roles.length);\n    }\n}",
+      "options": [
+        "Hey 2 -2 3",
+        "Hi there 2 2 3",
+        "Hey 1 -1 3",
+        "Hi there 2 -2 3",
+        "Compilation error"
+      ],
+      "answer": 3,
+      "explanation": "roles[1] is PARENT which overrides getGreeting() to return 'Hi there'. found is CHILD with ordinal 2. GRANDPARENT.compareTo(CHILD) compares ordinals: 0 - 2 = -2. values() returns array of length 3.",
+      "objective": "3.7",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "Hi there 2 -2 3\n"
+      }
+    },
+    {
+      "id": "m90-q34",
+      "kind": "singleChoice",
+      "prompt": "What is the structure of the Map returned by this family grouping operation?",
+      "code": "import java.util.*;\nimport java.util.stream.*;\n\nclass FamilyMember {\n    String name;\n    int age;\n    boolean isMarried;\n\n    FamilyMember(String name, int age, boolean isMarried) {\n        this.name = name; this.age = age; this.isMarried = isMarried;\n    }\n\n    public String toString() { return name; }\n}\n\nclass Family {\n    public static void main(String[] args) {\n        List<FamilyMember> members = List.of(\n            new FamilyMember(\"Dad\", 45, true),\n            new FamilyMember(\"Mom\", 42, true),\n            new FamilyMember(\"Uncle\", 38, false),\n            new FamilyMember(\"Son\", 16, false)\n        );\n\n        Map<Boolean, Map<Boolean, List<FamilyMember>>> result = members.stream()\n            .collect(Collectors.partitioningBy(m -> m.age >= 40,\n                     Collectors.groupingBy(m -> m.isMarried)));\n\n        System.out.println(result.get(true).get(true).size());\n    }\n}",
+      "options": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "Throws NullPointerException"
+      ],
+      "answer": 1,
+      "explanation": "partitioningBy creates 2 groups: age>=40 (true/false). Each partition is then grouped by isMarried status. result.get(true) gets the age>=40 partition containing [Dad, Mom]. Then .get(true) gets the married subgroup from that partition, which contains [Dad, Mom]. So size() returns 2. Note: Uncle is 38, so he's in the false partition.",
+      "objective": "6.2",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "2\n"
+      }
+    },
+    {
+      "id": "m90-q35",
+      "kind": "singleChoice",
+      "prompt": "A family photo management application needs to organize photos by family member directories. Which combination of Path operations will correctly resolve a relative path against an absolute base path?",
+      "options": [
+        "Path.of(\"/home/family\").resolve(\"../photos/dad.jpg\") results in \"/home/photos/dad.jpg\"",
+        "Path.of(\"/home/family\").resolve(\"/photos/dad.jpg\") results in \"/home/family/photos/dad.jpg\"",
+        "Path.of(\"/home/family\").normalize().resolve(\"mom/../dad.jpg\") results in \"/home/family/dad.jpg\"",
+        "Path.of(\"/home/family\").resolveSibling(\"photos\").resolve(\"dad.jpg\") results in \"/home/photos/dad.jpg\"",
+        "All of the above are correct"
+      ],
+      "answer": 3,
+      "explanation": "Only the fourth statement is true. `resolveSibling(\"photos\")` replaces the last element (`family`) → `/home/photos`, then `resolve(\"dad.jpg\")` appends → `/home/photos/dad.jpg`. First option: `resolve` just appends and does not normalize → `/home/family/../photos/dad.jpg`. Second: resolving an absolute path returns that path unchanged → `/photos/dad.jpg`. Third: `normalize()` is applied to the base before `resolve`, so the `..` in the argument stays → `/home/family/mom/../dad.jpg`. Hence \"All of the above\" is wrong too.",
+      "objective": "9.3",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "optionCheck": false,
+        "value": "/home/family/../photos/dad.jpg\n/photos/dad.jpg\n/home/family/mom/../dad.jpg\n/home/photos/dad.jpg\n",
+        "source": "var base = Path.of(\"/home/family\");\nSystem.out.println(base.resolve(\"../photos/dad.jpg\"));\nSystem.out.println(base.resolve(\"/photos/dad.jpg\"));\nSystem.out.println(base.normalize().resolve(\"mom/../dad.jpg\"));\nSystem.out.println(base.resolveSibling(\"photos\").resolve(\"dad.jpg\"));"
+      }
+    },
+    {
+      "id": "m90-q36",
+      "kind": "singleChoice",
+      "prompt": "What is the output of this family filtering operation using predicate composition?",
+      "code": "import java.util.*;\nimport java.util.function.*;\nimport java.util.stream.*;\n\nclass FamilyMember {\n    String name;\n    int age;\n    boolean isParent;\n\n    FamilyMember(String name, int age, boolean isParent) {\n        this.name = name; this.age = age; this.isParent = isParent;\n    }\n\n    public String toString() { return name; }\n}\n\nclass Family {\n    public static void main(String[] args) {\n        List<FamilyMember> members = List.of(\n            new FamilyMember(\"Grandpa\", 70, true),\n            new FamilyMember(\"Dad\", 45, true),\n            new FamilyMember(\"Mom\", 42, true),\n            new FamilyMember(\"Uncle\", 35, false),\n            new FamilyMember(\"Son\", 16, false)\n        );\n\n        Predicate<FamilyMember> isAdult = m -> m.age >= 18;\n        Function<FamilyMember, String> getRole = m -> m.isParent ? \"Parent\" : \"NonParent\";\n\n        long count = members.stream()\n            .filter(isAdult.negate())\n            .map(getRole)\n            .filter(role -> role.equals(\"NonParent\"))\n            .count();\n\n        System.out.println(count);\n    }\n}",
+      "options": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "5"
+      ],
+      "answer": 1,
+      "explanation": "isAdult.negate() filters for members under 18, which gives us only [Son]. The map(getRole) transforms Son to 'NonParent' since Son.isParent is false. The final filter keeps only 'NonParent' strings, so count() returns 1.",
+      "objective": "3.6",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "1\n"
+      }
+    },
+    {
+      "id": "m90-q37",
+      "kind": "singleChoice",
+      "prompt": "A family genealogy application supports multiple languages and regions. Given the following ResourceBundle files on the classpath, which file is selected when loading the bundle with `new Locale(\"fr\", \"CA\")`?",
+      "code": "Available ResourceBundle files:\n- FamilyMessages.properties\n- FamilyMessages_en.properties\n- FamilyMessages_fr.properties\n- FamilyMessages_en_US.properties\n- FamilyMessages_fr_FR.properties\n\nCode:\nLocale locale = new Locale(\"fr\", \"CA\");\nResourceBundle bundle = ResourceBundle.getBundle(\"FamilyMessages\", locale);",
+      "options": [
+        "FamilyMessages_CA.properties",
+        "FamilyMessages.properties",
+        "FamilyMessages_en.properties",
+        "FamilyMessages_fr_FR.properties",
+        "FamilyMessages_fr.properties"
+      ],
+      "answer": 4,
+      "explanation": "ResourceBundle follows a specific search hierarchy: most specific to least specific. For Locale('fr', 'CA'), it searches for: 1) FamilyMessages_fr_CA.properties (not found), 2) FamilyMessages_fr.properties (found and selected), 3) FamilyMessages.properties (not needed). The search stops at the first match found. FamilyMessages_fr.properties is selected because it matches the language code 'fr' even though the country code 'CA' doesn't have a specific file.",
+      "objective": "10.1",
+      "examStyle": true,
+      "codeOptions": true
+    },
+    {
+      "id": "m90-q38",
+      "kind": "singleChoice",
+      "prompt": "What is the output of this family vacation planning code?",
+      "code": "import java.util.*;\nimport java.util.function.*;\n\nclass FamilyVacation {\n    private String destination = \"Paris\";\n    private static String season = \"Summer\";\n\n    public void planTrip() {\n        String budget = \"5000\";\n        int familySize = 4;\n\n        List<Supplier<String>> plans = new ArrayList<>();\n\n        for (int day = 1; day <= 2; day++) {\n            String activity = \"Day\" + day;\n            int localDay = day;\n\n            plans.add(() -> activity + \":\" + localDay);  // Line A\n        }\n\n        budget = \"6000\";\n        this.destination = \"Rome\";\n        season = \"Winter\";\n        familySize++;\n\n        Supplier<String> tripInfo = () -> {\n            String budget = \"7000\";  // Line B\n            return destination + \"-\" + season + \"-\" + budget + \"-\" + familySize;\n        };\n\n        plans.add(tripInfo);\n        plans.add(this::getDestination);  // Line C\n\n        destination = \"London\";\n\n        plans.forEach(p -> System.out.print(p.get() + \" \"));\n    }\n\n    private String getDestination() {\n        return destination;\n    }\n\n    public static void main(String[] args) {\n        new FamilyVacation().planTrip();\n    }\n}",
+      "options": [
+        "Day1:1 Day2:2 Rome-Winter-7000-4 Rome",
+        "Day2:2 Day2:2 London-Winter-7000-5 London",
+        "Day1:1 Day2:2 London-Winter-6000-5 London",
+        "Compilation error at Line A: activity is not effectively final",
+        "Compilation error at Line B: variable budget is already defined",
+        "Day2:2 Day2:2 Rome-Winter-7000-5 Rome"
+      ],
+      "answer": 4,
+      "explanation": "Corrected from the source (which keyed `Day2:2 Day2:2 London-Winter-7000-5 London`). The code does not compile. At Line B the lambda body declares a local `budget`, but a lambda body does not introduce a new scope for shadowing: it cannot redeclare a local variable of the enclosing method → *variable budget is already defined*. The same lambda also reads `familySize`, which is incremented later and is therefore not effectively final → a second error.\n\nLine A is fine: `activity` and `localDay` are declared inside the loop body, so each iteration gets a fresh, effectively final variable. Fields (`destination`, `season`) may be used freely in lambdas and are read when the lambda runs; `this::getDestination` likewise reads the field at call time.",
+      "objective": "6.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "compileError",
+        "line": 27
+      }
+    },
+    {
+      "id": "m90-q39",
+      "kind": "singleChoice",
+      "prompt": "Which of the following statements is invalid Java syntax for creating an array of Integers?",
+      "options": [
+        "Integer[] arr = {1, 2, 3};",
+        "Integer[] arr = new Integer[3];",
+        "var[] arr = {1, 2, 3};",
+        "Integer[] arr = new Integer[]{1, 2, 3};",
+        "Integer arr[] = {1, 2, 3};"
+      ],
+      "answer": 2,
+      "explanation": "`var` cannot be combined with array brackets (`var[]` is illegal), and `var` also cannot be used with an array initializer alone (`var arr = {1, 2, 3};` fails too). All the other declarations are valid ways to create an `Integer` array; `Integer arr[]` is the legal C-style form.",
+      "objective": "3.4",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "compileError",
+        "optionCheck": false,
+        "source": "var[] arr = {1, 2, 3};"
+      }
+    },
+    {
+      "id": "m90-q40",
+      "kind": "singleChoice",
+      "prompt": "Which statement about virtual threads in Java is correct?",
+      "options": [
+        "Virtual threads are managed by the operating system and use native OS threads.",
+        "Virtual threads allow high concurrency with minimal resource usage by being managed by the JVM.",
+        "Virtual threads cannot be used with traditional synchronization mechanisms like 'synchronized'.",
+        "Virtual threads were introduced in Java 17 as part of Project Loom."
+      ],
+      "answer": 1,
+      "explanation": "Virtual threads (final in Java 21, JEP 444) are lightweight threads scheduled by the JVM: many virtual threads are mounted on a small pool of platform *carrier* threads, so very many concurrent blocking tasks are cheap. They work with `synchronized` and the other existing concurrency APIs (in Java 21 blocking inside `synchronized` pins the carrier, but it is allowed). They were previewed in Java 19 and 20, not introduced in Java 17.",
+      "objective": "8.1",
+      "examStyle": true,
+      "codeOptions": false
+    },
+    {
+      "id": "m90-q41",
+      "kind": "singleChoice",
+      "prompt": "What is the purpose of the compact canonical constructor in the following family record declaration?",
+      "code": "public record FamilyMember(\n    String name,\n    String role,\n    Map<String, Object> details\n) {\n    public FamilyMember {\n        if (name == null) {\n            throw new IllegalArgumentException(\"name must not be null\");\n        }\n        details = details != null ? Map.copyOf(details) : Map.of();\n    }\n}",
+      "options": [
+        "It allows validation or transformation of record fields before assignment.",
+        "It prevents the record from being instantiated.",
+        "It is required for every record in Java.",
+        "It makes all fields mutable.",
+        "It allows checked exceptions to be thrown during field assignment."
+      ],
+      "answer": 0,
+      "explanation": "A compact canonical constructor omits the parameter list; its code runs before the component fields are assigned, so it can validate arguments or reassign the parameters (here a defensive copy of `details`). It is optional, does not make fields mutable and does not prevent instantiation. Like any constructor it may throw unchecked exceptions; a compact (canonical) constructor cannot declare checked exceptions in a `throws` clause.",
+      "objective": "3.2",
+      "examStyle": true,
+      "codeOptions": false,
+      "verify": {
+        "expect": "stdout",
+        "value": "{}\n",
+        "optionCheck": false,
+        "source": "import java.util.*;\nrecord FamilyMember(\n    String name,\n    String role,\n    Map<String, Object> details\n) {\n    public FamilyMember {\n        if (name == null) {\n            throw new IllegalArgumentException(\"name must not be null\");\n        }\n        details = details != null ? Map.copyOf(details) : Map.of();\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(new FamilyMember(\"Ann\", \"Mom\", null).details());\n    }\n}"
+      }
+    },
+    {
+      "id": "m90-q42",
+      "kind": "singleChoice",
+      "prompt": "What is the output of this family age comparison system?",
+      "code": "class FamilyAges {\n    public static void main(String[] args) {\n        Integer dadAge = 127;\n        Integer momAge = 127;\n        Integer sonAge = 128;\n        Integer daughterAge = 128;\n\n        System.out.print((dadAge == momAge) + \" \");\n        System.out.print((sonAge == daughterAge) + \" \");\n        System.out.print(dadAge.equals(momAge) + \" \");\n        System.out.print(sonAge.equals(daughterAge) + \" \");\n    }\n}",
+      "options": [
+        "false false true true",
+        "true true true true",
+        "true false true true",
+        "false true false true",
+        "true false false true"
+      ],
+      "answer": 2,
+      "explanation": "Integer caching applies to values -128 to 127. dadAge and momAge both reference the same cached Integer object for 127, so == returns true. sonAge and daughterAge are different objects for 128 (outside cache range), so == returns false. However, equals() compares values, not references, so both equals() calls return true regardless of caching.",
+      "objective": "1.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "true false true true \n"
+      }
+    },
+    {
+      "id": "m90-q43",
+      "kind": "singleChoice",
+      "prompt": "What is the output of this family genealogy processing code?",
+      "code": "import java.util.*;\nimport java.util.stream.*;\nclass Family {\n    public static void main(String[] args) {\n        List<String> genealogy = List.of(\"Abraham-Sara\", \"Adam\");\n\n        String result = genealogy.stream()\n            .flatMap(data -> Arrays.stream(data.split(\"-\")))\n            .filter(part -> part.length() >= 4)\n            .map(part -> part.length() == 4 ? part.substring(1) : part.substring(1, 3))\n            .reduce(\"\", (a, b) -> a + b.toUpperCase());\n\n        System.out.println(result);\n    }\n}",
+      "options": [
+        "BRARADAM",
+        "BRAHAMSARA",
+        "ABRASA",
+        "ABARSADAM",
+        "BRARDA",
+        "ABSADAM"
+      ],
+      "answer": 0,
+      "explanation": "flatMap splits by '-' and flattens: ['Abraham','Sara','Adam']. filter(length >= 4) keeps all: ['Abraham','Sara','Adam']. map applies substring rules: Abraham(7chars)->substring(1,3)->'br', Sara(4chars)->substring(1)->'ara', Adam(4chars)->substring(1)->'dam'. reduce concatenates with toUpperCase: 'BR'+'ARA'+'DAM' = 'BRARADAM'.",
+      "objective": "6.1",
+      "examStyle": true,
+      "codeOptions": true,
+      "verify": {
+        "expect": "stdout",
+        "value": "BRARADAM\n"
+      }
+    },
+    {
+      "id": "m90-q44",
+      "kind": "singleChoice",
+      "prompt": "What are the states of the threads after the main thread calls dad.interrupt()?",
+      "code": "class FamilyMember extends Thread {\n    private String name;\n    private static final Object kitchen = new Object();\n\n    FamilyMember(String name) { this.name = name; }\n\n    public void run() {\n        System.out.println(name + \" wants to cook\");\n        synchronized(kitchen) {\n            System.out.println(name + \" is cooking\");\n            try {\n                Thread.sleep(5000); // cook for 5 seconds\n            } catch(InterruptedException e) {\n                System.out.println(name + \" interrupted while cooking\");\n            }\n            System.out.println(name + \" finished cooking\");\n        }\n    }\n}\n\npublic class FamilyDinner {\n    public static void main(String[] args) throws Exception {\n        FamilyMember mom = new FamilyMember(\"Mom\");\n        FamilyMember dad = new FamilyMember(\"Dad\");\n\n        mom.start();\n        Thread.sleep(100); // ensure mom gets kitchen first\n        dad.start();\n        Thread.sleep(100); // ensure dad is blocked\n        dad.interrupt();\n\n        // What are the thread states here?\n    }\n}",
+      "options": [
+        "Mom: TIMED_WAITING, Dad: RUNNABLE, Main: RUNNABLE",
+        "Mom: TIMED_WAITING, Dad: BLOCKED, Main: RUNNABLE",
+        "Mom: RUNNABLE, Dad: TERMINATED, Main: RUNNABLE",
+        "Mom: BLOCKED, Dad: RUNNABLE, Main: TIMED_WAITING",
+        "Mom: TIMED_WAITING, Dad: WAITING, Main: RUNNABLE"
+      ],
+      "answer": 1,
+      "explanation": "Mom acquired the kitchen lock and is sleeping (TIMED_WAITING). Dad is blocked waiting for the kitchen lock (BLOCKED). Interrupting a BLOCKED thread does NOT throw InterruptedException - Dad remains BLOCKED until he can acquire the lock, then he can check interrupt status. Main thread continues executing (RUNNABLE). Key point: interrupt() only throws InterruptedException for threads in WAITING or TIMED_WAITING states, not BLOCKED.",
+      "objective": "8.1",
+      "examStyle": true,
+      "codeOptions": false
+    }
+  ]
+}

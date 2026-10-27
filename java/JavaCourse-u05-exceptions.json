@@ -1,0 +1,2040 @@
+{
+  "unitId": "u05",
+  "lessons": [
+    {
+      "id": "u05-l01",
+      "title": "The exception hierarchy",
+      "summary": "Throwable, Error, checked vs unchecked, and who throws what.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "When things go wrong",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "When Java hits a problem it can't continue from, it **throws** an exception: an object describing what went wrong. If nobody **catches** it, the program stops and prints a stack trace."
+            },
+            {
+              "type": "code",
+              "code": "int[] a = new int[2];\na[5] = 1;   // ArrayIndexOutOfBoundsException\nSystem.out.println(\"never printed\");",
+              "caption": "The JVM throws, nobody catches, main ends.",
+              "verify": {
+                "expect": "exception",
+                "value": "ArrayIndexOutOfBoundsException",
+                "stdout": ""
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "`try/except` in Python becomes `try/catch` in Java. The big difference: for **checked** exceptions, the Java **compiler** forces you to deal with them. Python never checks this."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "The family tree",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Every exception class extends `Throwable`. Two branches matter:"
+            },
+            {
+              "type": "code",
+              "code": "Throwable\n├─ Error              unchecked\n│  └─ StackOverflowError, OutOfMemoryError\n└─ Exception          checked\n   ├─ IOException, SQLException ...\n   └─ RuntimeException  unchecked\n      └─ NullPointerException ..."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Type",
+                "Checked?",
+                "Meaning"
+              ],
+              "rows": [
+                [
+                  "`Error`",
+                  "No",
+                  "JVM is in trouble; don't catch"
+                ],
+                [
+                  "`RuntimeException`",
+                  "No",
+                  "usually a bug in the code"
+                ],
+                [
+                  "other `Exception`",
+                  "Yes",
+                  "expected problems (files, network)"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "RuntimeException is an Exception",
+              "text": "`RuntimeException` **extends** `Exception`, yet it's unchecked. `catch (Exception e)` catches runtime exceptions too. `Error` is **not** an `Exception`, so `catch (Exception e)` does not catch a `StackOverflowError`."
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Beyond the core objectives: assert",
+              "text": "`assert count > 0 : \"empty\";` checks a condition only when the JVM runs with `-ea` (enable assertions). If it's false, it throws an `AssertionError` (an `Error`) with the message. Without `-ea` the statement is skipped entirely."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l01-e01",
+          "kind": "singleChoice",
+          "prompt": "Which of these is a checked exception?",
+          "options": [
+            "NullPointerException",
+            "IOException",
+            "ArithmeticException",
+            "StackOverflowError"
+          ],
+          "answer": 1,
+          "explanation": "`IOException` extends `Exception` but not `RuntimeException`, so it's checked. NPE and `ArithmeticException` are runtime exceptions; `StackOverflowError` is an `Error`. Both of those groups are unchecked.",
+          "objective": "4.1",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l01-e02",
+          "kind": "multiChoice",
+          "prompt": "Which two are unchecked exceptions? Choose two.",
+          "options": [
+            "IOException",
+            "IllegalArgumentException",
+            "Exception",
+            "FileNotFoundException",
+            "ClassCastException"
+          ],
+          "answers": [
+            1,
+            4
+          ],
+          "explanation": "`IllegalArgumentException` and `ClassCastException` extend `RuntimeException`, so they're unchecked. `Exception` itself is checked, and so are `IOException` and its subclass `FileNotFoundException`.",
+          "objective": "4.1",
+          "examStyle": true
+        },
+        {
+          "type": "page",
+          "title": "Handle or declare",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "For a **checked** exception, the compiler insists on one of two things wherever it can be thrown:"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "**Handle** it: wrap the call in `try/catch`.",
+                "**Declare** it: add `throws IOException` to your method, passing the duty to your caller."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "static void load() throws IOException { }\n\nstatic void a() throws IOException {\n    load();          // declared: OK\n}\nstatic void b() {\n    try { load(); }  // handled: OK\n    catch (IOException e) { }\n}\nstatic void c() {\n    load();          // does not compile\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Unchecked exceptions (runtime exceptions and errors) are free: you may catch or declare them, but you don't have to."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l01-e03",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "class Repo {\n    static void load() throws IOException { }\n    static void a() throws Exception {\n        load();\n    }\n    static void b() {\n        load();\n    }\n    static void c() {\n        try { load(); }\n        catch (IOException e) { }\n    }\n}",
+          "answer": 7,
+          "explanation": "`b()` calls `load()`, which declares the checked `IOException`, but `b()` neither catches it nor declares it. `a()` is fine: `throws Exception` covers `IOException` because it's a superclass.",
+          "objective": "4.1",
+          "verify": {
+            "expect": "compileError",
+            "line": 7
+          }
+        },
+        {
+          "type": "page",
+          "title": "Who throws what?",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Know these by heart. Some are thrown by the **JVM** itself, others by **code** (yours or the Java API) with `throw`."
+            },
+            {
+              "type": "table",
+              "header": [
+                "Exception",
+                "Typical cause",
+                "Thrown by"
+              ],
+              "rows": [
+                [
+                  "`ArithmeticException`",
+                  "int `/ 0` or `% 0`",
+                  "JVM"
+                ],
+                [
+                  "`ArrayIndexOutOfBoundsException`",
+                  "bad array index",
+                  "JVM"
+                ],
+                [
+                  "`NullPointerException`",
+                  "using a `null` reference",
+                  "JVM"
+                ],
+                [
+                  "`ClassCastException`",
+                  "bad downcast",
+                  "JVM"
+                ],
+                [
+                  "`StackOverflowError`",
+                  "endless recursion",
+                  "JVM"
+                ],
+                [
+                  "`NumberFormatException`",
+                  "`Integer.parseInt(\"abc\")`",
+                  "code (API)"
+                ],
+                [
+                  "`IllegalArgumentException`",
+                  "bad method argument",
+                  "code"
+                ],
+                [
+                  "`IllegalStateException`",
+                  "call at the wrong time",
+                  "code"
+                ],
+                [
+                  "`IOException`",
+                  "file or network problem",
+                  "code (API)"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Family links",
+              "text": "`NumberFormatException` extends `IllegalArgumentException`. `FileNotFoundException` extends `IOException`. Both facts show up in catch-order questions."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Only ints divide by zero badly",
+              "text": "`10 / 0` throws `ArithmeticException`, but `10.0 / 0` is `Infinity`. Floating-point math never throws."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "UncheckedIOException isn't an IOException",
+              "text": "`UncheckedIOException` wraps an `IOException` but extends `RuntimeException`. The two types are unrelated, so `catch (IOException | UncheckedIOException e)` is legal."
+            },
+            {
+              "type": "code",
+              "code": "try {\n    Files.readString(Path.of(\"missing.txt\"));\n} catch (IOException | UncheckedIOException e) {\n    System.out.println(\"caught\");\n}",
+              "verify": {
+                "expect": "stdout",
+                "value": "caught"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l01-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "String s = \"12a\";\nint n = Integer.parseInt(s);\nSystem.out.println(n);",
+          "options": [
+            "12",
+            "0",
+            "A NumberFormatException is thrown",
+            "Compilation fails"
+          ],
+          "answer": 2,
+          "explanation": "`\"12a\"` is not a valid int, so `Integer.parseInt` throws `NumberFormatException` (an unchecked `IllegalArgumentException`). It compiles fine because the exception is unchecked.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "NumberFormatException",
+            "stdout": ""
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l01-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "Object o = \"hi\";\nInteger i = (Integer) o;\nSystem.out.println(i);",
+          "options": [
+            "hi",
+            "ClassCastException at runtime",
+            "NullPointerException at runtime",
+            "Compilation fails"
+          ],
+          "answer": 1,
+          "explanation": "The cast compiles because `Object` could hold an `Integer`. At runtime the object is a `String`, so the JVM throws `ClassCastException`.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "ClassCastException",
+            "stdout": ""
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l01-e06",
+          "kind": "trueFalse",
+          "prompt": "`System.out.println(10.0 / 0);` throws an ArithmeticException.",
+          "answer": false,
+          "explanation": "Floating-point division by zero gives `Infinity` and prints `Infinity`. Only integer division (and `%`) by zero throws `ArithmeticException`.",
+          "objective": "4.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "Infinity\n",
+            "source": "System.out.println(10.0 / 0);"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l01-e07",
+          "kind": "singleChoice",
+          "prompt": "Which statement is true?",
+          "options": [
+            "Error is a checked exception and must be declared.",
+            "Error and Exception both extend Throwable.",
+            "Error extends RuntimeException.",
+            "A catch block can't catch an Error."
+          ],
+          "answer": 1,
+          "explanation": "`Throwable` has two direct branches: `Error` and `Exception`. `Error` is unchecked but not a `RuntimeException`. You *can* catch an `Error` (`catch (Error e)` or `catch (Throwable t)`), you just usually shouldn't.",
+          "objective": "4.1",
+          "examStyle": true
+        }
+      ]
+    },
+    {
+      "id": "u05-l02",
+      "title": "try, catch and finally",
+      "summary": "Which blocks run, in which order, and who wins a return.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "The three blocks",
+          "blocks": [
+            {
+              "type": "code",
+              "code": "try {\n    System.out.print(\"A\");\n    int x = 1 / 0;\n    System.out.print(\"B\");\n} catch (ArithmeticException e) {\n    System.out.print(\"C\");\n} finally {\n    System.out.print(\"D\");\n}\nSystem.out.println(\"E\");",
+              "caption": "Prints ACDE",
+              "verify": {
+                "expect": "stdout",
+                "value": "ACDE\n"
+              }
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "`try` runs until a statement throws. The rest of `try` is **skipped** (no `B`).",
+                "The **first** `catch` whose type matches runs.",
+                "`finally` runs **always**: after a normal `try`, after a `catch`, even when nothing catches.",
+                "A `try` needs at least one `catch` or a `finally`. Braces are required."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Same idea as `try/except/finally`. Java has no `else:` block, and `catch` must name a type: there's no bare `except:`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l02-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "try {\n    System.out.print(\"1\");\n    String s = null;\n    s.length();\n} catch (ArithmeticException e) {\n    System.out.print(\"2\");\n} finally {\n    System.out.print(\"3\");\n}\nSystem.out.print(\"4\");",
+          "options": [
+            "134",
+            "13, then a NullPointerException is thrown",
+            "1234",
+            "123"
+          ],
+          "answer": 1,
+          "explanation": "`s.length()` throws an NPE. The only catch is for `ArithmeticException`, so it doesn't match. `finally` still prints `3`, then the NPE leaves `main`, so `4` is never printed.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "NullPointerException",
+            "stdout": "13"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Catch order: specific first",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Catch blocks are checked top to bottom. If a superclass comes first, a later subclass catch can never run. Java treats that as **unreachable code**, a compile error."
+            },
+            {
+              "type": "code",
+              "code": "try {\n    new FileReader(\"x.txt\");\n} catch (IOException e) {\n    System.out.println(\"io\");\n} catch (FileNotFoundException e) { // error\n    System.out.println(\"missing\");\n}"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Unreachable catch",
+              "text": "Superclass before subclass = **does not compile**. Unrelated types (like `ArithmeticException` and `NullPointerException`) can be in any order."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l02-e02",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "try {\n    Integer.parseInt(\"x\");\n} catch (IllegalArgumentException e) {\n    System.out.println(\"IAE\");\n} catch (NumberFormatException e) {\n    System.out.println(\"NFE\");\n} catch (RuntimeException e) {\n    System.out.println(\"RE\");\n}",
+          "answer": 5,
+          "explanation": "`NumberFormatException` is a subclass of `IllegalArgumentException`, which is already caught on line 3, so the catch on line 5 is unreachable. `RuntimeException` after them is fine: it's broader.",
+          "objective": "4.1",
+          "verify": {
+            "expect": "compileError",
+            "line": 5
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l02-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "try {\n    Integer.parseInt(\"x\");\n} catch (NumberFormatException e) {\n    System.out.print(\"NFE \");\n} catch (IllegalArgumentException e) {\n    System.out.print(\"IAE \");\n} finally {\n    System.out.print(\"F\");\n}",
+          "options": [
+            "NFE F",
+            "NFE IAE F",
+            "IAE F",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "Subclass first is legal. Only the **first** matching catch runs (`NFE`), then `finally` (`F`). A thrown exception is never handled by two catch blocks.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "NFE F"
+          }
+        },
+        {
+          "type": "page",
+          "title": "finally and return",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`finally` runs even when `try` or `catch` executes `return`. The return value is computed first, then `finally` runs, then the method returns."
+            },
+            {
+              "type": "code",
+              "code": "static int f() {\n    int x = 1;\n    try {\n        return x;  // saves the value 1\n    } finally {\n        x = 99;    // too late: returns 1\n    }\n}\nstatic int g() {\n    try {\n        return 1;\n    } finally {\n        return 2;  // wins: g() returns 2\n    }\n}"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "return in finally wins",
+              "text": "A `return` inside `finally` replaces the earlier return value, and even swallows a thrown exception. Legal, terrible style, popular on the exam."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l02-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "public class Test {\n    static int calc() {\n        int x = 10;\n        try {\n            x = 20;\n            return x;\n        } finally {\n            x = 30;\n            System.out.print(x + \" \");\n        }\n    }\n    public static void main(String[] args) {\n        System.out.println(calc());\n    }\n}",
+          "options": [
+            "30 20",
+            "30 30",
+            "20",
+            "20 30"
+          ],
+          "answer": 0,
+          "explanation": "`return x;` saves the value 20. `finally` then sets `x` to 30 and prints `30 `. Changing a local primitive in `finally` doesn't change the saved return value, so `main` prints `20`.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "30 20\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l02-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "public class Test {\n    static String m() {\n        try {\n            throw new RuntimeException();\n        } catch (RuntimeException e) {\n            return \"catch\";\n        } finally {\n            return \"finally\";\n        }\n    }\n    public static void main(String[] args) {\n        System.out.println(m());\n    }\n}",
+          "options": [
+            "catch",
+            "finally",
+            "catchfinally",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 1,
+          "explanation": "The catch block prepares to return `\"catch\"`, but `finally` runs before the method returns and its `return \"finally\"` replaces it.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "finally\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "When finally doesn't run",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "`System.exit(...)` stops the JVM at once. `finally` does **not** run.",
+                "If the JVM crashes or the machine loses power, nothing runs.",
+                "If `finally` itself throws, that exception **replaces** the one in flight. The original is lost."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "try {\n    System.out.print(\"A\");\n    System.exit(0);\n} finally {\n    System.out.print(\"B\");  // never runs\n}",
+              "caption": "Prints only A",
+              "verify": {
+                "expect": "stdout",
+                "value": "A"
+              }
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l02-e06",
+          "kind": "trueFalse",
+          "prompt": "A finally block runs even if the try block calls System.exit(0).",
+          "answer": false,
+          "explanation": "`System.exit` terminates the JVM immediately, so the `finally` block is skipped. It's the classic exception to \"finally always runs\".",
+          "objective": "4.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "A",
+            "source": "try {\n    System.out.print(\"A\");\n    System.exit(0);\n} finally {\n    System.out.print(\"B\");\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l02-e07",
+          "kind": "fillBlanks",
+          "prompt": "Complete the code with the right keywords.",
+          "code": "___ {\n    risky();\n} ___ (IOException e) {\n    log(e);\n} ___ {\n    cleanup();\n}",
+          "bank": [
+            "try",
+            "catch",
+            "finally",
+            "except",
+            "throws",
+            "final"
+          ],
+          "answers": [
+            "try",
+            "catch",
+            "finally"
+          ],
+          "explanation": "Java uses `try`, `catch` and `finally`. `except` is Python, `throws` belongs in a method declaration, and `final` is a modifier, not `finally`.",
+          "objective": "4.1"
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l02-e08",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "try {\n    System.out.print(\"a\");\n    throw new IllegalStateException();\n} catch (IllegalStateException e) {\n    System.out.print(\"b\");\n    throw new RuntimeException();\n} finally {\n    System.out.print(\"c\");\n}",
+          "options": [
+            "abc, then a RuntimeException is thrown",
+            "ab, then a RuntimeException is thrown",
+            "abc",
+            "ac"
+          ],
+          "answer": 0,
+          "explanation": "The `IllegalStateException` is caught (`b`). The catch block throws a new `RuntimeException`, which no catch in this statement handles, but `finally` still runs first (`c`). Then the exception leaves `main`.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "java.lang.RuntimeException",
+            "stdout": "abc"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u05-l03",
+      "title": "Multi-catch",
+      "summary": "Catch several types in one block with |, and its three rules.",
+      "minutes": 6,
+      "steps": [
+        {
+          "type": "page",
+          "title": "One block, several types",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "When different exceptions need the same handling, list them with `|`:"
+            },
+            {
+              "type": "code",
+              "code": "String[] inputs = {\"5\", \"x\", \"0\"};\nfor (String s : inputs) {\n    try {\n        int n = Integer.parseInt(s);\n        System.out.println(10 / n);\n    } catch (NumberFormatException\n             | ArithmeticException e) {\n        System.out.println(\"bad: \" + s);\n    }\n}",
+              "caption": "Prints 2, bad: x, bad: 0",
+              "verify": {
+                "expect": "stdout",
+                "value": "2\nbad: x\nbad: 0\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python writes `except (ValueError, ZeroDivisionError) as e:`. Java uses `|` between types and one variable name **at the end**."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Multi-catch rules",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "The types must **not** be related by inheritance: `FileNotFoundException | IOException` doesn't compile (just catch `IOException`).",
+                "Only **one** variable name, after the last type: `catch (A e | B e)` doesn't compile.",
+                "The variable is implicitly **final**: `e = ...;` doesn't compile.",
+                "Inside the block, `e` has the closest common supertype, so you can only call methods of that type."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Redundant types are errors",
+              "text": "In a multi-catch, a subclass next to its superclass is a **compile error**, not a harmless duplicate."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l03-e01",
+          "kind": "multiChoice",
+          "prompt": "The try block calls a method declared `throws IOException`. Which two catch clauses compile? Choose two.",
+          "options": [
+            "catch (IOException | FileNotFoundException e)",
+            "catch (IllegalStateException | NumberFormatException e)",
+            "catch (ArithmeticException e | NullPointerException e)",
+            "catch (RuntimeException | Exception e)",
+            "catch (ClassCastException | IOException e)"
+          ],
+          "answers": [
+            1,
+            4
+          ],
+          "explanation": "Options 2 and 5 list unrelated types (`NumberFormatException` extends `IllegalArgumentException`, not `IllegalStateException`). Options 1 and 4 pair a subclass with its superclass. Option 3 repeats the variable name, which isn't allowed.",
+          "objective": "4.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "",
+            "source": "\nclass Main {\n    static void io() throws IOException { }\n    public static void main(String[] args) {\n        try { io(); }\n        catch (IllegalStateException | NumberFormatException e) { }\n        catch (IOException e) { }\n        try { io(); }\n        catch (ClassCastException | IOException e) { }\n    }\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l03-e02",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "try {\n    Object o = \"x\";\n    Integer i = (Integer) o;\n} catch (ClassCastException\n         | NullPointerException e) {\n    System.out.println(e.getMessage());\n    e = new ClassCastException();\n}",
+          "answer": 7,
+          "explanation": "A multi-catch parameter is implicitly final, so assigning to `e` on line 7 is a compile error. The type list itself is fine: the two types are unrelated.",
+          "objective": "4.1",
+          "verify": {
+            "expect": "compileError",
+            "line": 7
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l03-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "try {\n    int[] a = new int[1];\n    a[1] = 5;\n} catch (ArithmeticException\n         | ArrayIndexOutOfBoundsException e) {\n    String n = e.getClass().getSimpleName();\n    System.out.println(n);\n}",
+          "options": [
+            "ArrayIndexOutOfBoundsException",
+            "ArithmeticException",
+            "RuntimeException",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "The multi-catch matches the actual exception, an `ArrayIndexOutOfBoundsException`. `getClass()` reports the runtime class of the object, not the declared type of `e`.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "ArrayIndexOutOfBoundsException\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Single vs multi",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Rule",
+                "`catch (A e)`",
+                "`catch (A | B e)`"
+              ],
+              "rows": [
+                [
+                  "Reassign `e`",
+                  "compiles (bad style)",
+                  "compile error"
+                ],
+                [
+                  "Type of `e`",
+                  "`A`",
+                  "common supertype"
+                ],
+                [
+                  "Related types",
+                  "n/a",
+                  "compile error"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "Expect to be asked whether `e = new ...;` compiles. Check whether the catch has one type (yes) or several (no)."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l03-e04",
+          "kind": "trueFalse",
+          "prompt": "In a single-type catch such as `catch (IOException e)`, the statement `e = new IOException();` compiles.",
+          "answer": true,
+          "explanation": "Only a **multi-catch** parameter is implicitly final. A single-type catch parameter can be reassigned. It's legal, just bad style.",
+          "objective": "4.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "",
+            "source": "try {\n    throw new IOException();\n} catch (IOException e) {\n    e = new IOException();\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l03-e05",
+          "kind": "singleChoice",
+          "prompt": "Which statement compiles inside this catch block?",
+          "code": "try {\n    run();\n} catch (NumberFormatException\n         | ArithmeticException e) {\n    // which statement?\n}",
+          "options": [
+            "e = null;",
+            "throw e;",
+            "NumberFormatException n = e;",
+            "int x = e.length();"
+          ],
+          "answer": 1,
+          "explanation": "Rethrowing `e` is fine: its type is the common supertype `RuntimeException`, which is unchecked. `e` is final, so `e = null` fails. `e` might be an `ArithmeticException`, so it can't be assigned to `NumberFormatException` without a cast. Exceptions have no `length()` method.",
+          "objective": "4.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "",
+            "optionCheck": false,
+            "source": "\nclass Main {\n    static void run() { }\n    public static void main(String[] args) {\n        try {\n            run();\n        } catch (NumberFormatException\n                 | ArithmeticException e) {\n            throw e;\n        }\n    }\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l03-e06",
+          "kind": "fillBlanks",
+          "prompt": "Complete the multi-catch.",
+          "code": "try {\n    run();\n} catch (IllegalStateException ___\n         IllegalArgumentException ___) {\n    System.out.println(e.getMessage());\n}",
+          "bank": [
+            "|",
+            "e",
+            "||",
+            ",",
+            "&"
+          ],
+          "answers": [
+            "|",
+            "e"
+          ],
+          "explanation": "Multi-catch uses a single `|` between types (not `||` or a comma) and one variable name after the last type.",
+          "objective": "4.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "",
+            "source": "\nclass Main {\n    static void run() { }\n    public static void main(String[] args) {\n        try {\n            run();\n        } catch (IllegalStateException |\n                 IllegalArgumentException e) {\n            System.out.println(e.getMessage());\n        }\n    }\n}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u05-l04",
+      "title": "throw, throws and chaining",
+      "summary": "Throwing, declaring, rethrowing and wrapping exceptions.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "throw vs throws",
+          "blocks": [
+            {
+              "type": "table",
+              "header": [
+                "Keyword",
+                "`throw`",
+                "`throws`"
+              ],
+              "rows": [
+                [
+                  "What",
+                  "a statement",
+                  "part of a method declaration"
+                ],
+                [
+                  "Followed by",
+                  "one exception **object**",
+                  "one or more **types**"
+                ],
+                [
+                  "Example",
+                  "`throw new IOException();`",
+                  "`void m() throws IOException`"
+                ]
+              ]
+            },
+            {
+              "type": "code",
+              "code": "void setAge(int age) {\n    if (age < 0)\n        throw new IllegalArgumentException(\n            \"age < 0\");\n    this.age = age;\n}\nvoid open() throws IOException,\n                   InterruptedException { }"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Unreachable after throw",
+              "text": "`throw` always ends the block. A statement right after it in the same block is unreachable: **compile error**. Also, `throw IOException;` doesn't compile: you need an object, `throw new IOException();`."
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "Python's `raise` is Java's `throw`. Python has no equivalent of `throws`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l04-e01",
+          "kind": "fillBlanks",
+          "prompt": "Complete the method.",
+          "code": "void load(String p) ___ IOException {\n    if (p.isEmpty())\n        ___ new IOException(\"empty\");\n}",
+          "bank": [
+            "throws",
+            "throw",
+            "thrown",
+            "raise",
+            "throwable"
+          ],
+          "answers": [
+            "throws",
+            "throw"
+          ],
+          "explanation": "The declaration uses `throws` (plural, lists types). The statement uses `throw` followed by an exception object. `raise` is Python.",
+          "objective": "4.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "",
+            "source": "class Main {\n    void load(String p) throws IOException {\n        if (p.isEmpty())\n            throw new IOException(\"empty\");\n    }\n    public static void main(String[] args) { }\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l04-e02",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "class Check {\n    static void check(int n) {\n        if (n < 0) {\n            throw new ArithmeticException();\n        }\n        throw new IllegalStateException();\n        System.out.println(\"ok\");\n    }\n}",
+          "answer": 7,
+          "explanation": "The `throw` on line 6 always runs, so line 7 can never be reached: unreachable statement. The `throw` inside the `if` on line 4 is fine because the `if` might be false.",
+          "objective": "4.1",
+          "verify": {
+            "expect": "compileError",
+            "line": 7
+          }
+        },
+        {
+          "type": "page",
+          "title": "Catching what can't be thrown",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "If a `try` block can't possibly throw a **checked** exception, catching it is a compile error. Unchecked types, `Exception` and `Throwable` are always allowed, because they also cover runtime exceptions."
+            },
+            {
+              "type": "code",
+              "code": "try {\n    System.out.println(\"hi\");\n} catch (IOException e) { // error\n}\n\ntry {\n    System.out.println(\"hi\");\n} catch (Exception e) {   // OK\n}"
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Subclasses count",
+              "text": "A method that `throws IOException` might throw a `FileNotFoundException`, so catching the subclass is allowed. But then `IOException` itself still needs handling."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l04-e03",
+          "kind": "multiChoice",
+          "prompt": "The try block contains only `System.out.println(\"x\");`. Which two exception types can its catch block name without a compile error? Choose two.",
+          "options": [
+            "IOException",
+            "Exception",
+            "FileNotFoundException",
+            "IllegalStateException",
+            "InterruptedException"
+          ],
+          "answers": [
+            1,
+            3
+          ],
+          "explanation": "`IllegalStateException` is unchecked, so it may always be caught. `Exception` is allowed because it includes runtime exceptions. The checked types (`IOException`, `FileNotFoundException`, `InterruptedException`) can't be thrown by `println`, so catching them doesn't compile.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "x\nx\n",
+            "source": "try {\n    System.out.println(\"x\");\n} catch (Exception e) { }\ntry {\n    System.out.println(\"x\");\n} catch (IllegalStateException e) { }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l04-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "public class Test {\n    static void m() throws IOException {\n        System.out.print(\"m\");\n    }\n    public static void main(String[] args) {\n        try {\n            m();\n        } catch (FileNotFoundException e) {\n            System.out.print(\" FNF\");\n        }\n    }\n}",
+          "options": [
+            "m",
+            "m FNF",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 2,
+          "explanation": "Catching `FileNotFoundException` is allowed (it could be thrown, being a subclass of `IOException`). But `m()` declares `IOException`, which is broader and still unhandled, so line 7 doesn't compile.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 7
+          }
+        },
+        {
+          "type": "page",
+          "title": "Rethrowing and chaining",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Often you catch a low-level exception and throw a more meaningful one. Pass the original as the **cause** so nothing is lost:"
+            },
+            {
+              "type": "code",
+              "code": "try {\n    try {\n        Integer.parseInt(\"x\");\n    } catch (NumberFormatException e) {\n        throw new IllegalStateException(\n            \"bad config\", e);\n    }\n} catch (IllegalStateException e) {\n    System.out.println(e.getMessage());\n    Throwable c = e.getCause();\n    String n = c.getClass().getSimpleName();\n    System.out.println(n);\n}",
+              "caption": "Prints bad config, then NumberFormatException",
+              "verify": {
+                "expect": "stdout",
+                "value": "bad config\nNumberFormatException\n"
+              }
+            },
+            {
+              "type": "table",
+              "header": [
+                "Method",
+                "Returns"
+              ],
+              "rows": [
+                [
+                  "`getMessage()`",
+                  "the message, or `null`"
+                ],
+                [
+                  "`toString()`",
+                  "`java.lang.IllegalStateException: bad config`"
+                ],
+                [
+                  "`getCause()`",
+                  "the wrapped exception, or `null`"
+                ],
+                [
+                  "`printStackTrace()`",
+                  "prints trace + `Caused by:` lines"
+                ]
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Beyond the core objectives: logging",
+              "text": "With `java.util.logging`, `logger.log(Level.WARNING, \"load failed\", e)` attaches the exception so its stack trace is printed. A record is published only if it passes **both** the Logger's level and the Handler's level. Order: `FINEST < FINER < FINE < CONFIG < INFO < WARNING < SEVERE`."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l04-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "try {\n    throw new IllegalArgumentException(\"no\");\n} catch (RuntimeException e) {\n    System.out.println(e);\n}",
+          "options": [
+            "no",
+            "java.lang.IllegalArgumentException: no",
+            "IllegalArgumentException",
+            "java.lang.RuntimeException: no"
+          ],
+          "answer": 1,
+          "explanation": "Printing an exception calls `toString()`: the **fully qualified runtime class**, a colon, and the message. The declared catch type (`RuntimeException`) doesn't matter.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "java.lang.IllegalArgumentException: no\n"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Precise rethrow",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "If you `catch (Exception e)` and just `throw e;`, the compiler remembers which checked exceptions the try block could actually throw. The method only needs to declare those, as long as `e` is never reassigned."
+            },
+            {
+              "type": "code",
+              "code": "void m() throws IOException {      // enough\n    try {\n        read();   // throws IOException\n    } catch (Exception e) {\n        log(e);\n        throw e;  // treated as IOException\n    }\n}"
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l04-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "public class Test {\n    static void read() throws IOException {\n        throw new IOException(\"disk\");\n    }\n    static void m() throws IOException {\n        try {\n            read();\n        } catch (Exception e) {\n            System.out.print(\"log \");\n            throw e;\n        }\n    }\n    public static void main(String[] args) {\n        try {\n            m();\n        } catch (IOException e) {\n            System.out.println(e.getMessage());\n        }\n    }\n}",
+          "options": [
+            "log disk",
+            "Compilation fails",
+            "log",
+            "disk"
+          ],
+          "answer": 0,
+          "explanation": "This is a precise rethrow: the try block can only throw `IOException` (checked) or unchecked exceptions, and `e` is effectively final, so `throws IOException` is enough. The `IOException` travels to `main`, which prints its message.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "log disk\n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u05-l05",
+      "title": "try-with-resources",
+      "summary": "Automatic closing, close order, scope and suppressed exceptions.",
+      "minutes": 8,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Closing automatically",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Files, sockets and database connections must be **closed**. Declare them in parentheses after `try` and Java closes them for you, even when an exception is thrown."
+            },
+            {
+              "type": "code",
+              "code": "try (var in = new BufferedReader(\n        new FileReader(\"a.txt\"))) {\n    System.out.println(in.readLine());\n} catch (IOException e) {\n    System.out.println(\"failed\");\n}"
+            },
+            {
+              "type": "table",
+              "header": [
+                "Interface",
+                "Package",
+                "`close()` throws"
+              ],
+              "rows": [
+                [
+                  "`AutoCloseable`",
+                  "`java.lang`",
+                  "`Exception`"
+                ],
+                [
+                  "`Closeable`",
+                  "`java.io`",
+                  "`IOException`"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "`Closeable` extends `AutoCloseable`. A resource must implement one of them, or the code doesn't compile."
+            },
+            {
+              "type": "callout",
+              "kind": "python",
+              "title": "Python vs Java",
+              "text": "This is Java's `with open('a.txt') as f:`. The resource variable is declared in the `try (...)` header."
+            }
+          ]
+        },
+        {
+          "type": "page",
+          "title": "Close order",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Resources are closed in **reverse** order of declaration, and **before** any `catch` or `finally` block runs."
+            },
+            {
+              "type": "code",
+              "code": "class Res implements AutoCloseable {\n    String n;\n    Res(String n) {\n        this.n = n;\n        System.out.println(\"open \" + n);\n    }\n    public void close() {\n        System.out.println(\"close \" + n);\n    }\n}\npublic class Demo {\n    public static void main(String[] args) {\n        try (Res a = new Res(\"A\");\n             Res b = new Res(\"B\")) {\n            System.out.println(\"body\");\n            throw new RuntimeException();\n        } catch (RuntimeException e) {\n            System.out.println(\"catch\");\n        } finally {\n            System.out.println(\"finally\");\n        }\n    }\n}",
+              "verify": {
+                "expect": "stdout",
+                "value": "open A\nopen B\nbody\nclose B\nclose A\ncatch\nfinally\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Already closed in catch",
+              "text": "By the time `catch` runs, the resources are already closed. That's why the resource variables aren't even in scope there."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l05-e01",
+          "kind": "orderLines",
+          "prompt": "Put the output of the program above in order.",
+          "lines": [
+            "open A",
+            "open B",
+            "body",
+            "close B",
+            "close A",
+            "catch",
+            "finally"
+          ],
+          "explanation": "Resources open in declaration order and close in **reverse** order (B before A). Closing happens right after the body, before `catch` and `finally`.",
+          "objective": "4.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "open A\nopen B\nbody\nclose B\nclose A\ncatch\nfinally\n",
+            "source": "class Res implements AutoCloseable {\n    String n;\n    Res(String n) {\n        this.n = n;\n        System.out.println(\"open \" + n);\n    }\n    public void close() {\n        System.out.println(\"close \" + n);\n    }\n}\npublic class Demo {\n    public static void main(String[] args) {\n        try (Res a = new Res(\"A\");\n             Res b = new Res(\"B\")) {\n            System.out.println(\"body\");\n            throw new RuntimeException();\n        } catch (RuntimeException e) {\n            System.out.println(\"catch\");\n        } finally {\n            System.out.println(\"finally\");\n        }\n    }\n}"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l05-e02",
+          "kind": "singleChoice",
+          "prompt": "The constructor of the second resource throws. What is the output?",
+          "code": "class R implements AutoCloseable {\n    String n;\n    R(String n, boolean fail) {\n        if (fail)\n            throw new IllegalStateException(n);\n        this.n = n;\n        System.out.print(\"open\" + n + \" \");\n    }\n    public void close() {\n        System.out.print(\"close\" + n + \" \");\n    }\n}\npublic class Test {\n    public static void main(String[] args) {\n        try (R a = new R(\"A\", false);\n             R b = new R(\"B\", true)) {\n            System.out.print(\"body \");\n        } catch (IllegalStateException e) {\n            System.out.print(\"catch\");\n        }\n    }\n}",
+          "options": [
+            "openA closeA catch",
+            "openA catch",
+            "openA body closeA catch",
+            "openA catch closeA"
+          ],
+          "answer": 0,
+          "explanation": "`A` opens. Creating `B` throws, so the body never runs. Only resources that were successfully created are closed, so `A` is closed, then the catch runs.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "openA closeA catch"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Resource rules",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "The resource variable's scope is the `try` block only, not `catch` or `finally`.",
+                "Resource variables declared in the header are implicitly `final`.",
+                "Since Java 9 you can use an existing variable, if it's `final` or effectively final: `try (in) { ... }`.",
+                "Unlike a plain `try`, try-with-resources needs **no** catch or finally.",
+                "Separate resources with `;`. A trailing `;` after the last one is allowed."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "var r = new StringReader(\"hi\");\ntry (r) {                 // Java 9+: OK\n    System.out.println((char) r.read());\n}"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "close() throws Exception",
+              "text": "If your class implements `AutoCloseable` and keeps `close() throws Exception`, every try-with-resources using it must handle or declare `Exception`, even with an empty body."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l05-e03",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "var r = new StringReader(\"hi\");\ntry (r) {\n    System.out.println((char) r.read());\n}\nr = new StringReader(\"bye\");",
+          "answer": 2,
+          "explanation": "Line 5 reassigns `r`, so `r` is not effectively final. A variable used as a resource in `try (r)` must be final or effectively final, so line 2 fails.",
+          "objective": "4.1",
+          "verify": {
+            "expect": "compileError",
+            "line": 2
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l05-e04",
+          "kind": "multiChoice",
+          "prompt": "Which two statements about try-with-resources are true? Choose two.",
+          "options": [
+            "Resources are closed in the reverse order of declaration.",
+            "Resources are closed after the catch block runs.",
+            "A try-with-resources statement must have a catch or finally block.",
+            "A resource variable can be used in the finally block.",
+            "A resource must implement AutoCloseable, directly or through Closeable."
+          ],
+          "answers": [
+            0,
+            4
+          ],
+          "explanation": "Closing happens in reverse order, **before** catch and finally. The resource is out of scope in catch and finally. Catch and finally are optional for try-with-resources. Resources must be `AutoCloseable`.",
+          "objective": "4.1",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l05-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "try (Scanner s = new Scanner(\"5\")) {\n    System.out.println(s.nextInt());\n}\nfinally {\n    s.close();\n}",
+          "options": [
+            "5",
+            "Compilation fails",
+            "An exception is thrown at runtime",
+            "5, then an exception is thrown"
+          ],
+          "answer": 1,
+          "explanation": "The scope of `s` is only the try block. Using it in `finally` on line 5 is a compile error. (It would be pointless anyway: the Scanner is already closed.)",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 5
+          }
+        },
+        {
+          "type": "page",
+          "title": "Suppressed exceptions",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "What if the body throws **and** `close()` throws? The body's exception is the **primary** one. The close exception is attached to it as **suppressed**, so `catch` sees the primary."
+            },
+            {
+              "type": "code",
+              "code": "class Bad implements AutoCloseable {\n    public void close() {\n        throw new RuntimeException(\"close\");\n    }\n}\npublic class Demo {\n    public static void main(String[] args) {\n        try (Bad b = new Bad()) {\n            throw new RuntimeException(\"body\");\n        } catch (RuntimeException e) {\n            System.out.println(e.getMessage());\n            Throwable s = e.getSuppressed()[0];\n            System.out.println(s.getMessage());\n        }\n    }\n}",
+              "caption": "Prints body, then close",
+              "verify": {
+                "expect": "stdout",
+                "value": "body\nclose\n"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Only close throws?",
+              "text": "If the body finishes normally and only `close()` throws, the close exception becomes the primary exception, with nothing suppressed."
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Plain finally loses exceptions",
+              "text": "Suppression is a try-with-resources feature. If a plain `finally` block throws, it simply replaces the first exception."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l05-e06",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class Bad implements AutoCloseable {\n    public void close() {\n        throw new RuntimeException(\"close\");\n    }\n}\npublic class Test {\n    public static void main(String[] args) {\n        try (Bad b = new Bad()) {\n            System.out.print(\"body \");\n        } catch (RuntimeException e) {\n            int n = e.getSuppressed().length;\n            String m = e.getMessage();\n            System.out.print(m + \" \" + n);\n        }\n    }\n}",
+          "options": [
+            "body close 0",
+            "body close 1",
+            "body 0",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "The body completes normally (`body `). Then `close()` throws, and that exception is the primary one, caught by the catch block. Nothing was suppressed, so `getSuppressed().length` is 0.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "body close 0"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l05-e07",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "class Door implements AutoCloseable {\n    public void close() throws Exception {\n        System.out.print(\"closed\");\n    }\n}\npublic class Test {\n    public static void main(String[] args) {\n        try (Door d = new Door()) {\n            System.out.print(\"in \");\n        }\n    }\n}",
+          "options": [
+            "in closed",
+            "in",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 2,
+          "explanation": "`Door.close()` declares `throws Exception`. The implicit `close()` call happens in `main`, which neither catches nor declares `Exception`, so line 8 doesn't compile. Fix it by declaring `close()` without `throws`, or by handling `Exception`.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 8
+          }
+        }
+      ]
+    },
+    {
+      "id": "u05-l06",
+      "title": "Custom exceptions",
+      "summary": "Write your own checked or unchecked exception classes.",
+      "minutes": 6,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Your own exception class",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Extend `Exception` for a **checked** exception, or `RuntimeException` for an **unchecked** one."
+            },
+            {
+              "type": "code",
+              "code": "class NoFundsException extends Exception {\n    NoFundsException() { }\n    NoFundsException(String msg) {\n        super(msg);\n    }\n    NoFundsException(String msg,\n                     Throwable cause) {\n        super(msg, cause);\n    }\n}"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "By convention, the name ends in `Exception`.",
+                "Constructors are **not** inherited. Write the ones you need and pass the arguments on with `super(...)`.",
+                "Usual constructors: `()`, `(String message)`, `(String message, Throwable cause)`, `(Throwable cause)`."
+              ]
+            },
+            {
+              "type": "callout",
+              "kind": "tip",
+              "title": "Checked or unchecked?",
+              "text": "Choose checked when the caller can reasonably recover (account has no funds). Choose unchecked for programming errors (invalid argument)."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l06-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "class AgeException extends Exception { }\npublic class Test {\n    static void check(int age) {\n        if (age < 0) throw new AgeException();\n    }\n    public static void main(String[] args) {\n        check(-1);\n        System.out.println(\"done\");\n    }\n}",
+          "options": [
+            "Compilation fails",
+            "An AgeException is thrown at runtime",
+            "Nothing is printed",
+            "done"
+          ],
+          "answer": 0,
+          "explanation": "`AgeException` extends `Exception`, so it's checked. `check` throws it on line 4 without declaring `throws AgeException`, so the code doesn't compile.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 4
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l06-e02",
+          "kind": "trueFalse",
+          "prompt": "A custom exception that extends RuntimeException must be declared with throws by methods that throw it.",
+          "answer": false,
+          "explanation": "Subclasses of `RuntimeException` are unchecked. Declaring them is optional: the compiler never requires it.",
+          "objective": "4.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "",
+            "source": "class MyEx extends RuntimeException { }\nclass Main {\n    static void m() { if (false) throw new MyEx(); }\n    public static void main(String[] args) { m(); }\n}"
+          }
+        },
+        {
+          "type": "page",
+          "title": "Messages and causes",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "`getMessage()` returns whatever you passed to `super(msg)`. With the no-arg constructor it returns `null`."
+            },
+            {
+              "type": "code",
+              "code": "class AppException extends RuntimeException {\n    AppException(String m, Throwable c) {\n        super(m, c);\n    }\n}\n// new AppException(\"x\")     does not compile:\n// there is no (String) constructor"
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "No free constructors",
+              "text": "If your class only defines `AppException(String, Throwable)`, then `new AppException(\"x\")` and `new AppException()` don't compile. Once you write any constructor, there's no default one."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l06-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class E1 extends Exception {\n    E1() { }\n    E1(String m) { super(m); }\n}\npublic class Test {\n    public static void main(String[] args) {\n        try {\n            throw new E1();\n        } catch (E1 e) {\n            System.out.println(e.getMessage());\n        }\n    }\n}",
+          "options": [
+            "E1",
+            "null",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 1,
+          "explanation": "The no-arg constructor doesn't pass a message to the superclass, so `getMessage()` returns `null`, and `println` prints `null`.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "null\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l06-e04",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "class MyEx extends RuntimeException {\n    MyEx(String msg) {\n        super(msg);\n    }\n}\nclass Test {\n    void a() { throw new MyEx(\"a\"); }\n    void b() { throw new MyEx(); }\n}",
+          "answer": 8,
+          "explanation": "`MyEx` only declares a `(String)` constructor. Constructors aren't inherited from `RuntimeException`, and no default constructor exists once you write one, so `new MyEx()` fails.",
+          "objective": "4.1",
+          "verify": {
+            "expect": "compileError",
+            "line": 8
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l06-e05",
+          "kind": "fillBlanks",
+          "prompt": "Complete the checked exception class.",
+          "code": "class ConfigException ___ Exception {\n    ConfigException(String m, Throwable c) {\n        ___(m, c);\n    }\n}",
+          "bank": [
+            "extends",
+            "super",
+            "implements",
+            "this",
+            "throws"
+          ],
+          "answers": [
+            "extends",
+            "super"
+          ],
+          "explanation": "Exception classes are classes, so you `extends` them (`implements` is for interfaces). `super(m, c)` passes the message and cause to `Exception`. `this(m, c)` would call the same constructor again, a compile error.",
+          "objective": "4.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "",
+            "source": "class ConfigException extends Exception {\n    ConfigException(String m, Throwable c) {\n        super(m, c);\n    }\n}\nclass Main { public static void main(String[] a) { } }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l06-e06",
+          "kind": "multiChoice",
+          "prompt": "Which two statements about custom exceptions are true? Choose two.",
+          "options": [
+            "A class that extends Exception, but not RuntimeException, is a checked exception.",
+            "A custom exception inherits all constructors of its superclass.",
+            "A custom exception must override getMessage().",
+            "Passing a cause to super(message, cause) makes it available through getCause().",
+            "A custom exception can't extend RuntimeException."
+          ],
+          "answers": [
+            0,
+            3
+          ],
+          "explanation": "Being checked depends only on the superclass. Constructors are never inherited. `getMessage()` already works without overriding. Extending `RuntimeException` is the normal way to make an unchecked custom exception.",
+          "objective": "4.1",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l06-e07",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class DataException extends Exception {\n    DataException(String m, Throwable c) {\n        super(m, c);\n    }\n}\npublic class Test {\n    static void load() throws DataException {\n        try {\n            String s = null;\n            s.length();\n        } catch (NullPointerException e) {\n            throw new DataException(\"load\", e);\n        }\n    }\n    public static void main(String[] args) {\n        try {\n            load();\n        } catch (DataException e) {\n            var c = e.getCause().getClass();\n            System.out.println(e.getMessage()\n                + \" \" + c.getSimpleName());\n        }\n    }\n}",
+          "options": [
+            "load NullPointerException",
+            "load DataException",
+            "null NullPointerException",
+            "Compilation fails"
+          ],
+          "answer": 0,
+          "explanation": "The NPE is caught and wrapped: `DataException` gets the message `load` and the NPE as its cause, so `getCause()` returns the `NullPointerException`.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "load NullPointerException\n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u05-l07",
+      "title": "Exceptions, overriding and constructors",
+      "summary": "What overriding methods and constructors may throw.",
+      "minutes": 7,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Overriding: no broader checked exceptions",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "An overriding method may **not** throw new or broader **checked** exceptions than the method it overrides. It **may**:"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "throw the same checked exceptions,",
+                "throw narrower ones (subclasses),",
+                "throw fewer, or none at all,",
+                "throw any unchecked exception."
+              ]
+            },
+            {
+              "type": "code",
+              "code": "class Animal {\n    void eat() throws IOException { }\n}\nclass Dog extends Animal {\n    void eat() throws FileNotFoundException { }\n}                                     // OK\nclass Cat extends Animal {\n    void eat() throws Exception { }   // error\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "Why? Code written for `Animal` only handles `IOException`. If a `Cat` could throw any `Exception`, that code would break."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l07-e01",
+          "kind": "multiChoice",
+          "prompt": "Given `class A { void run() throws IOException { } }`, which three methods compile in `class B extends A`? Choose three.",
+          "options": [
+            "void run() { }",
+            "void run() throws Exception { }",
+            "void run() throws EOFException { }",
+            "void run() throws RuntimeException { }",
+            "void run() throws InterruptedException { }",
+            "private void run() { }"
+          ],
+          "answers": [
+            0,
+            2,
+            3
+          ],
+          "explanation": "Throwing nothing, a subclass (`EOFException` extends `IOException`), or an unchecked exception is fine. `Exception` is broader, and `InterruptedException` is a new checked exception. `private` reduces access, which overriding never allows.",
+          "objective": "4.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "",
+            "source": "\nclass A { void run() throws IOException { } }\nclass B1 extends A { void run() { } }\nclass B2 extends A { void run() throws EOFException { } }\nclass B3 extends A { void run() throws RuntimeException { } }\nclass Main { public static void main(String[] a) { } }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l07-e02",
+          "kind": "tapLine",
+          "prompt": "Tap the line that does not compile.",
+          "code": "interface Loader {\n    void load() throws IOException;\n}\nclass FileLoader implements Loader {\n    public void load()\n        throws FileNotFoundException { }\n}\nclass NetLoader implements Loader {\n    public void load() throws Exception { }\n}",
+          "answer": 9,
+          "explanation": "Implementing an interface method follows the same rule as overriding. `FileNotFoundException` is narrower than `IOException`: fine. `Exception` on line 9 is broader: compile error.",
+          "objective": "4.1",
+          "verify": {
+            "expect": "compileError",
+            "line": 9
+          }
+        },
+        {
+          "type": "page",
+          "title": "The reference type decides",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "The compiler looks at the **declared** type of the reference, not the object, to decide which exceptions a call can throw."
+            },
+            {
+              "type": "code",
+              "code": "Animal a = new Dog();\na.eat();  // must handle IOException\nDog d = new Dog();\nd.eat();  // must handle FileNotFoundException"
+            },
+            {
+              "type": "callout",
+              "kind": "exam",
+              "title": "On the exam",
+              "text": "If a subclass removes the `throws` clause, calling through a **superclass** reference still requires handling the superclass's checked exceptions."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l07-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "class Base {\n    void go() throws IOException { }\n}\nclass Sub extends Base {\n    @Override void go() { }\n}\npublic class Test {\n    public static void main(String[] args) {\n        Base b = new Sub();\n        b.go();\n        System.out.println(\"ok\");\n    }\n}",
+          "options": [
+            "Compilation fails",
+            "It runs and prints ok",
+            "An IOException is thrown at runtime",
+            "It prints nothing"
+          ],
+          "answer": 0,
+          "explanation": "`Sub.go()` throws nothing, but `b` is declared as `Base`, whose `go()` declares `IOException`. `main` doesn't handle it, so line 10 doesn't compile.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 10
+          }
+        },
+        {
+          "type": "page",
+          "title": "Constructors and initializers",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Constructors work the **other way round**. A subclass constructor calls `super()`, and it can't catch an exception from that call (nothing may come before `super()`). So it must declare the same or **broader** exceptions."
+            },
+            {
+              "type": "code",
+              "code": "class Parent {\n    Parent() throws IOException { }\n}\nclass Child extends Parent {\n    Child() throws Exception { }  // OK\n}\nclass Kid extends Parent {\n    Kid() { }  // error: super() throws\n}"
+            },
+            {
+              "type": "paragraph",
+              "text": "An exception thrown while a class's **static** initialization runs is wrapped in an `ExceptionInInitializerError`."
+            },
+            {
+              "type": "code",
+              "code": "class Config {\n    static int value = Integer.parseInt(\"x\");\n}\npublic class Demo {\n    public static void main(String[] args) {\n        System.out.println(Config.value);\n    }\n}",
+              "caption": "ExceptionInInitializerError, caused by NumberFormatException",
+              "verify": {
+                "expect": "exception",
+                "value": "ExceptionInInitializerError"
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "The class is then marked as **failed**. Its initializer is never retried: every later use throws `NoClassDefFoundError`."
+            },
+            {
+              "type": "code",
+              "code": "class Settings {\n    static int port = Integer.parseInt(\"x\");\n}\npublic class Main {\n    public static void main(String[] a) {\n        for (int i = 0; i < 2; i++) {\n            try {\n                System.out.println(Settings.port);\n            } catch (Throwable t) {\n                System.out.println(t.getClass().getSimpleName());\n            }\n        }\n    }\n}",
+              "verify": {
+                "expect": "stdout",
+                "value": "ExceptionInInitializerError\nNoClassDefFoundError"
+              }
+            },
+            {
+              "type": "callout",
+              "kind": "trap",
+              "title": "Opposite rules",
+              "text": "Overriding methods: same or **narrower** checked exceptions. Subclass constructors: same or **broader**. A class with no constructor gets a default one that doesn't compile if the parent's no-arg constructor throws a checked exception."
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l07-e04",
+          "kind": "singleChoice",
+          "prompt": "Given `class Parent { Parent() throws IOException { } }`, which constructor compiles in `class Child extends Parent`?",
+          "options": [
+            "Child() { }",
+            "Child() throws FileNotFoundException { }",
+            "Child() throws Exception { }",
+            "Child() throws RuntimeException { }"
+          ],
+          "answer": 2,
+          "explanation": "`Child()` implicitly calls `super()`, which can throw `IOException`. The constructor can't catch it, so it must declare `IOException` or something broader, like `Exception`. Narrower or unchecked types don't cover it.",
+          "objective": "4.1",
+          "examStyle": true,
+          "codeOptions": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "",
+            "optionCheck": false,
+            "source": "class Parent { Parent() throws IOException { } }\nclass Child extends Parent { Child() throws Exception { } }\nclass Main { public static void main(String[] a) { } }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l07-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "class Config {\n    static int value = Integer.parseInt(\"x\");\n}\npublic class Test {\n    public static void main(String[] args) {\n        System.out.println(Config.value);\n    }\n}",
+          "options": [
+            "Compilation fails",
+            "0",
+            "An ExceptionInInitializerError is thrown at runtime",
+            "null"
+          ],
+          "answer": 2,
+          "explanation": "The static initializer of `Config` throws `NumberFormatException` when the class is first used. The JVM wraps it in an `ExceptionInInitializerError` (with the NFE as its cause).",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "ExceptionInInitializerError"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l07-e06",
+          "kind": "trueFalse",
+          "prompt": "An overriding method may declare `throws IllegalArgumentException` even if the overridden method declares no exceptions.",
+          "answer": true,
+          "explanation": "The overriding rule only restricts **checked** exceptions. `IllegalArgumentException` is unchecked, so it may be added freely.",
+          "objective": "4.1",
+          "verify": {
+            "expect": "stdout",
+            "value": "",
+            "source": "class A { void m() { } }\nclass B extends A { void m() throws IllegalArgumentException { } }\nclass Main { public static void main(String[] a) { } }"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u05-l08",
+      "title": "Unit 5 checkpoint",
+      "summary": "Exam-style questions on all of exceptions.",
+      "minutes": 10,
+      "steps": [
+        {
+          "type": "page",
+          "title": "Checkpoint",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Twelve exam-style questions covering the whole unit. Trace each program line by line, and check compile errors **before** you think about output."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "Checked exceptions: handled or declared?",
+                "Catch order and multi-catch: any subclass/superclass clash?",
+                "`finally`: always runs, and a `return` there wins.",
+                "try-with-resources: reverse close order, before catch, suppressed exceptions."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l08-e01",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "public class Test {\n    static String s = \"\";\n    static void m(int i) {\n        try {\n            if (i == 0)\n                throw new RuntimeException();\n            s += \"t\";\n        } catch (RuntimeException e) {\n            s += \"c\";\n            return;\n        } finally {\n            s += \"f\";\n        }\n        s += \"e\";\n    }\n    public static void main(String[] args) {\n        m(0);\n        m(1);\n        System.out.println(s);\n    }\n}",
+          "options": [
+            "cftfe",
+            "cfetfe",
+            "cftf",
+            "ctfe"
+          ],
+          "answer": 0,
+          "explanation": "`m(0)`: throws, catch adds `c`, `return` triggers `finally` (`f`), and `s += \"e\"` is skipped. `m(1)`: `t`, `f`, then `e`. Total: `cf` + `tfe`.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "cftfe\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l08-e02",
+          "kind": "multiChoice",
+          "prompt": "Which three are unchecked? Choose three.",
+          "options": [
+            "NullPointerException",
+            "IOException",
+            "NumberFormatException",
+            "StackOverflowError",
+            "FileNotFoundException",
+            "Exception"
+          ],
+          "answers": [
+            0,
+            2,
+            3
+          ],
+          "explanation": "`RuntimeException` subclasses (NPE, `NumberFormatException`) and `Error` subclasses (`StackOverflowError`) are unchecked. `Exception`, `IOException` and `FileNotFoundException` are checked.",
+          "objective": "4.1",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l08-e03",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "try {\n    Files.readString(Path.of(\"a.txt\"));\n} catch (NoSuchFileException | IOException e) {\n    System.out.println(\"missing\");\n}",
+          "options": [
+            "missing",
+            "Compilation fails",
+            "An exception is thrown at runtime",
+            "Nothing is printed"
+          ],
+          "answer": 1,
+          "explanation": "`NoSuchFileException` is a subclass of `IOException`. Types in a multi-catch must not be related by inheritance, so line 3 doesn't compile.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 3
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l08-e04",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class R implements AutoCloseable {\n    final int id;\n    R(int id) { this.id = id; }\n    public void close() {\n        System.out.print(\"c\" + id + \" \");\n    }\n}\npublic class Test {\n    public static void main(String[] args) {\n        try (R r1 = new R(1);\n             R r2 = new R(2)) {\n            System.out.print(\"t \");\n        } finally {\n            System.out.print(\"f\");\n        }\n    }\n}",
+          "options": [
+            "t c2 c1 f",
+            "t c1 c2 f",
+            "t f c2 c1",
+            "t f c1 c2"
+          ],
+          "answer": 0,
+          "explanation": "The body runs, then the resources close in reverse order (`r2`, then `r1`), and only then does `finally` run.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "t c2 c1 f"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l08-e05",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "public class Test {\n    static int m() {\n        try {\n            throw new RuntimeException();\n        } finally {\n            return 5;\n        }\n    }\n    public static void main(String[] args) {\n        System.out.println(m());\n    }\n}",
+          "options": [
+            "5",
+            "Compilation fails",
+            "An exception is thrown at runtime",
+            "0"
+          ],
+          "answer": 0,
+          "explanation": "The `RuntimeException` is in flight when `finally` runs, but `return 5` in `finally` discards it and returns normally. The method compiles: `finally` always completes with a return.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "5\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l08-e06",
+          "kind": "multiChoice",
+          "prompt": "Line 5 does not compile. Which two changes, each on its own, fix it? Choose two.",
+          "code": "class A {\n    void m() throws FileNotFoundException { }\n}\nclass B extends A {\n    void m() throws IOException { }\n}",
+          "options": [
+            "Remove `throws IOException` from line 5.",
+            "Change `IOException` on line 5 to `Exception`.",
+            "Change `FileNotFoundException` on line 2 to `IOException`.",
+            "Make `B.m()` public.",
+            "Change `IOException` on line 5 to `InterruptedException`."
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "An override can't throw a broader checked exception. Throwing nothing works, and so does widening the parent to `IOException` (then B throws the same). `Exception` is even broader. `InterruptedException` is a new checked exception. Access doesn't affect the rule.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "",
+            "source": "\nclass A {\n    void m() throws FileNotFoundException { }\n}\nclass B extends A {\n    void m() { }\n}\nclass A2 {\n    void m() throws IOException { }\n}\nclass B2 extends A2 {\n    void m() throws IOException { }\n}\nclass Main { public static void main(String[] a) { } }"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l08-e07",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "class R implements AutoCloseable {\n    public void close() throws Exception {\n        throw new Exception(\"C\");\n    }\n}\npublic class Test {\n    public static void main(String[] args) {\n        try (R r = new R()) {\n            throw new Exception(\"B\");\n        } catch (Exception e) {\n            System.out.println(e.getMessage()\n                + e.getSuppressed().length);\n        }\n    }\n}",
+          "options": [
+            "B1",
+            "C1",
+            "B0",
+            "C0"
+          ],
+          "answer": 0,
+          "explanation": "The body's exception `B` is primary. `close()` then throws `C`, which is added to `B` as a suppressed exception. The catch sees `B` with one suppressed exception.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "B1\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l08-e08",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "try {\n    int x = Integer.parseInt(\"7\");\n    System.out.println(x);\n} catch (IOException e) {\n    System.out.println(\"io\");\n}",
+          "options": [
+            "7",
+            "io",
+            "Compilation fails",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 2,
+          "explanation": "Nothing in the try block can throw the checked `IOException` (`parseInt` only throws an unchecked `NumberFormatException`). Catching a checked exception that can't be thrown is a compile error on line 4.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "compileError",
+            "line": 4
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l08-e09",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "try {\n    try {\n        throw new IllegalStateException(\"A\");\n    } finally {\n        throw new RuntimeException(\"B\");\n    }\n} catch (RuntimeException e) {\n    System.out.println(e.getMessage()\n        + e.getSuppressed().length);\n}",
+          "options": [
+            "A0",
+            "B0",
+            "B1",
+            "A1"
+          ],
+          "answer": 1,
+          "explanation": "The exception thrown in `finally` replaces exception `A`, which is lost. With a plain `finally` nothing is suppressed (that only happens with try-with-resources), so the count is 0.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "B0\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l08-e10",
+          "kind": "multiChoice",
+          "prompt": "Which two statements are true? Choose two.",
+          "options": [
+            "`throw` is followed by an exception object; `throws` by one or more exception types.",
+            "A method that declares `throws Exception` must contain code that can throw one.",
+            "A statement directly after `throw` in the same block does not compile.",
+            "A `throws` clause can only list checked exceptions.",
+            "Methods that can throw an Error must declare it."
+          ],
+          "answers": [
+            0,
+            2
+          ],
+          "explanation": "`throw` takes an object, `throws` lists types. Code after `throw` in the same block is unreachable. A method may declare exceptions it never throws, `throws` may list unchecked types, and errors never need declaring.",
+          "objective": "4.1",
+          "examStyle": true
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l08-e11",
+          "kind": "singleChoice",
+          "prompt": "What is the output?",
+          "code": "int[] data = {4, 0};\nint total = 0;\nfor (int d : data) {\n    try {\n        total += 8 / d;\n    } catch (ArithmeticException e) {\n        total += 100;\n    } finally {\n        total++;\n    }\n}\nSystem.out.println(total);",
+          "options": [
+            "104",
+            "103",
+            "3",
+            "An exception is thrown at runtime"
+          ],
+          "answer": 0,
+          "explanation": "`d = 4`: `8 / 4 = 2`, then `finally` adds 1 → 3. `d = 0`: `ArithmeticException`, catch adds 100 → 103, `finally` adds 1 → 104.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "stdout",
+            "value": "104\n"
+          }
+        },
+        {
+          "type": "exercise",
+          "id": "u05-l08-e12",
+          "kind": "singleChoice",
+          "prompt": "What is the result?",
+          "code": "public class Test {\n    static int depth(int n) {\n        return depth(n + 1);\n    }\n    public static void main(String[] args) {\n        try {\n            depth(0);\n        } catch (Exception e) {\n            System.out.println(\"caught\");\n        } finally {\n            System.out.println(\"done\");\n        }\n    }\n}",
+          "options": [
+            "caught\ndone",
+            "done, then a StackOverflowError is thrown",
+            "caught",
+            "Compilation fails"
+          ],
+          "answer": 1,
+          "explanation": "The endless recursion throws a `StackOverflowError`. It's an `Error`, not an `Exception`, so `catch (Exception e)` doesn't catch it. `finally` still prints `done`, then the error ends the program.",
+          "objective": "4.1",
+          "examStyle": true,
+          "verify": {
+            "expect": "exception",
+            "value": "StackOverflowError",
+            "stdout": "done\n"
+          }
+        }
+      ]
+    }
+  ]
+}

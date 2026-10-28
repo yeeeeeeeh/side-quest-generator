@@ -1649,3 +1649,8 @@ body
 /* Feedback boxes take ok/bad for their border only; their text stays readable. */
 .j-body .j-feedback, .j-body .j-revq { color: var(--text-light); }
 .j-body .j-feedback.ok > b { color: var(--success); } .j-body .j-feedback.bad > b { color: var(--danger); }
+/* Java: edit progress */
+.j-unitbtns { margin: 4px 0 6px; }
+.j-editbar { margin: 8px 0; padding: 10px 12px; background: rgba(245,158,11,0.08); border: 1px dashed var(--primary); border-radius: var(--radius-sm); }
+.j-editbar p { margin: 0 0 8px; font-size: 0.85rem; color: var(--text-light); }
+.j-path.editing .j-node.lock .j-dot, .j-path.editing .j-node.open .j-dot, .j-path.editing .j-node.cur .j-dot { color: #fff; background: #374151; box-shadow: 0 6px 0 #1F2937; animation: none; }

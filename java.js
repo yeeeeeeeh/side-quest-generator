@@ -100,6 +100,12 @@ function skipLesson(l) {
   if (lessonDone(l)) return;
   P.lessons[l.id] = { done: true, skipped: true, at: Date.now() }; P.lastLesson = l.id; save();
 }
+// Undoes a lesson's progress: a skipped one becomes not started; a played one too (its XP is kept).
+function resetLesson(l) {
+  delete P.lessons[l.id];
+  const p = pausedLesson(); if (p && p.l.id === l.id) { try { localStorage.removeItem(PAUSE_KEY); } catch (_) {} }
+  save();
+}
 // ---------- review (spaced repetition) ----------
 // Leitner boxes like the app: right moves an exercise up a box (due again in 1, 3, 7, 14 or 30 days), a miss moves
 // it down one box and brings it back tomorrow. Guesses count as misses.
@@ -263,6 +269,7 @@ let leaveGuard = null; // a view can ask before leaving (running exam)
 function go(view, ...args) { stack.push([view, args]); show(); }
 function back() {
   if (leaveGuard && !leaveGuard()) return;
+  editingProgress = false;
   leaveGuard = null; stack.pop(); show();
 }
 function show() {
@@ -342,29 +349,49 @@ function home(body) {
 // ---------- unit ----------
 // A path of lesson circles like Duolingo: done (gold), current (pulsing), locked (grey). The current lesson can be
 // skipped: it is marked done without XP and the next one unlocks.
+let editingProgress = false;
 function unit(body, u) {
   const offsets = [0, 34, 52, 34, 0, -34, -52, -34];
   const cur = u.lessons.findIndex((l, i) => lessonUnlocked(u, i) && !lessonDone(l));
-  const paused = pausedLesson();
+  const paused = pausedLesson(), edit = editingProgress;
   body.innerHTML = `<div class="j-kicker">Unit ${u.info.number}</div><h2 class="j-h">${esc(u.info.title)}</h2>
   <p class="j-sub">${esc(u.info.summary)}</p>
   <div class="j-chips">${u.info.objectives.map(id => `<span class="j-chip" title="${esc((C.objectives[id] || {}).title)}">Obj ${esc(id)}${objScore(id) != null ? " · " + pct(objScore(id)) : ""}</span>`).join("")}</div>
-  <button class="btn j-wide j-ghost" id="j-ess">⚡ Unit essentials<small>Objectives, exam points and traps on one page</small></button>
-  <div class="j-path">${u.lessons.map((l, i) => {
+  <div class="j-two j-unitbtns"><button class="btn j-ghost" id="j-ess">⚡ Essentials</button><button class="btn ${edit ? "btn-primary" : "j-ghost"}" id="j-edit">${edit ? "✓ Done editing" : "✎ Edit progress"}</button></div>
+  ${edit ? `<div class="j-editbar"><p>Tap a lesson to mark it skipped or undo it. Skipped lessons count as done, without XP.</p>
+    <div class="j-two"><button class="btn j-ghost" id="j-skipall">⤼ Skip whole unit</button><button class="btn j-ghost" id="j-resetall">↺ Reset unit</button></div></div>` : ""}
+  <div class="j-path${edit ? " editing" : ""}">${u.lessons.map((l, i) => {
     const st = P.lessons[l.id] || {}, open = lessonUnlocked(u, i), isCur = i === cur, dx = offsets[i % offsets.length];
     const cls = st.done ? (st.skipped ? "skip" : "done") : isCur ? "cur" : open ? "open" : "lock";
-    const icon = st.done ? (st.skipped ? "⤼" : st.best >= 1 ? "★" : "✓") : open ? (paused && paused.l.id === l.id ? "⏸" : "▶") : "🔒";
+    const icon = st.done ? (st.skipped ? "⤼" : st.best >= 1 ? "★" : "✓") : edit ? "○" : open ? (paused && paused.l.id === l.id ? "⏸" : "▶") : "🔒";
+    const state = st.done ? (st.skipped ? "skipped" : "played") : "not started";
     return `<div class="j-node ${cls}" style="--dx:${dx}px">
       <button class="j-dot" data-i="${i}" aria-label="${esc(l.title)}">${icon}</button>
-      <div class="j-nlabel"><b>${esc(l.title)}</b><small>${l.minutes} min${st.skipped ? " · skipped" : st.best != null ? ` · best ${pct(st.best)}` : ""}${paused && paused.l.id === l.id ? " · in progress" : ""}</small>
-      ${isCur && !(paused && paused.l.id === l.id) ? `<button class="j-skip" data-skip="${i}">Skip lesson</button>` : ""}</div></div>`;
+      <div class="j-nlabel"><b>${esc(l.title)}</b><small>${edit ? `${state} · tap to ${st.done ? "undo" : "skip"}` : `${l.minutes} min${st.skipped ? " · skipped" : st.best != null ? ` · best ${pct(st.best)}` : ""}${paused && paused.l.id === l.id ? " · in progress" : ""}`}</small>
+      ${!edit && isCur && !(paused && paused.l.id === l.id) ? `<button class="j-skip" data-skip="${i}">Skip lesson</button>` : ""}</div></div>`;
   }).join("")}</div>`;
   on(body, "[data-i]", "click", b => {
-    const i = +b.dataset.i;
-    if (!lessonUnlocked(u, i)) { alert("Finish or skip the lesson before this one to unlock it."); return; }
-    openLesson(u, u.lessons[i]);
+    const i = +b.dataset.i, l = u.lessons[i], st = P.lessons[l.id] || {};
+    if (edit) {
+      if (!st.done) skipLesson(l);
+      else if (st.skipped || confirm(`Reset "${l.title}"? It becomes not started (your XP is kept).`)) resetLesson(l);
+      return show();
+    }
+    if (!lessonUnlocked(u, i)) {
+      // Skip everything before it in this unit so it unlocks.
+      const before = u.lessons.slice(0, i).filter(x => !lessonDone(x));
+      if (!confirm(`Skip the ${before.length} lesson${before.length === 1 ? "" : "s"} before "${l.title}" so it unlocks? They're marked done without XP; you can still play them later.`)) return;
+      before.forEach(skipLesson); show(); return;
+    }
+    openLesson(u, l);
   });
   $("#j-ess").onclick = () => go(essentials, u);
+  $("#j-edit").onclick = () => { editingProgress = !editingProgress; show(); };
+  const sa = $("#j-skipall"); if (sa) sa.onclick = () => { u.lessons.forEach(skipLesson); show(); };
+  const ra = $("#j-resetall"); if (ra) ra.onclick = () => {
+    if (!confirm(`Reset all ${u.lessons.length} lessons of "${u.info.title}" to not started? Your XP is kept.`)) return;
+    u.lessons.forEach(resetLesson); show();
+  };
   on(body, "[data-skip]", "click", b => {
     const l = u.lessons[+b.dataset.skip];
     if (!confirm(`"${l.title}" will be marked done without XP and the next lesson unlocks. You can still play it later.`)) return;

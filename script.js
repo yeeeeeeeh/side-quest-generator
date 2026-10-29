@@ -313,6 +313,7 @@ const TAB_PANELS = {
   shop: { panel: "shop-panel", init: () => shopInit() },
   retire: { panel: "retire-panel", init: () => retireInit() },
   java: { panel: "java-panel", init: () => javaInit() },
+  visa: { panel: "visa-panel", init: () => visaInit() },
 };
 
 function showTab(tab) {

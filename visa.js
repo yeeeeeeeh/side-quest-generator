@@ -150,8 +150,42 @@ async function showMap() {
 function setView(v) {
   prefs.view = v; save();
   $("#visa-panel").classList.toggle("v-mapmode", v === "map");
+  $("#visa-panel").classList.toggle("v-statsmode", v === "stats");
+  if (v === "stats") stats();
   document.querySelectorAll("[data-view]").forEach(b => b.classList.toggle("on", b.dataset.view === v));
   if (v === "map") showMap();
+}
+
+// ---------- stats ----------
+// Like the app's Statistics: a level named for the number of countries visited (the app's 101 names and 7 tiers),
+// progress to the next 5-country milestone, visited per continent, and what's left by Taiwan-passport status.
+const TIERS = [[0, "🚶", "#9CA3AF"], [10, "🔭", "#10B981"], [25, "🎒", "#3B82F6"], [50, "✈️", "#A855F7"], [75, "🌍", "#F59E0B"], [100, "⭐", "#EF4444"], [150, "👑", "#FACC15"]];
+function stats() {
+  const scope = D.countries.filter(c => c.code !== "TW" && (prefs.territories || c.independent) && c.region !== "Antarctic");
+  const visited = scope.filter(isVisited), n = visited.length, total = scope.length;
+  const tier = TIERS.filter(([min]) => n >= min).pop();
+  const name = D.levels[n] || (n > 100 ? `World Legend · ${n}` : `Explorer · ${n}`);
+  const lower = Math.floor(n / 5) * 5, next = lower + 5;
+  const regions = REGIONS.filter(r => r !== "Antarctic").map(r => { const all = scope.filter(c => c.region === r); return [r, all.filter(isVisited).length, all.length]; });
+  const left = scope.filter(c => !isVisited(c)), byType = t => left.filter(c => typeOf(c) === t).length;
+  const easy = left.filter(c => c.ams && (typeOf(c) === "free" || typeOf(c) === "eta"));
+  const pctOf = (a, b) => b ? Math.round(a / b * 100) : 0;
+  $("#v-stats").innerHTML = `
+    <div class="v-level" style="--tier:${tier[2]}"><span class="v-tier">${tier[1]}</span>
+      <div class="v-lvtext"><b>${esc(name)}</b><small>${n} ${n === 1 ? "country" : "countries"} visited</small></div><span class="v-lv">Lv.${n}</span>
+      <div class="v-lvbar"><i style="width:${(n - lower) / 5 * 100}%"></i></div><small class="v-lvnext">${next - n} more to ${esc(D.levels[next] || `Lv.${next}`)}</small></div>
+    <div class="v-big"><div><b>${n}</b><span>visited</span></div><div><b>${total}</b><span>${prefs.territories ? "countries &amp; territories" : "countries"}</span></div><div><b>${pctOf(n, total)}%</b><span>of the world</span></div></div>
+    <h3 class="v-region">By continent</h3>
+    <div class="v-conts">${regions.map(([r, v, a]) => `<div class="v-cont"><span>${esc(r)}</span><div class="v-cbar"><i style="width:${pctOf(v, a)}%"></i></div><b>${v}/${a}</b></div>`).join("")}</div>
+    <h3 class="v-region">Still to visit, with a Taiwan passport</h3>
+    <div class="v-summary">${Object.entries(TYPES).map(([t, x]) => `<button class="v-stat v-${x.cls}" data-left="${t}"><b>${byType(t)}</b><span>${x.icon} ${x.short}</span></button>`).join("")}</div>
+    <h3 class="v-region">Easy next trips <small>${easy.length}</small></h3>
+    <p class="v-note">Not visited yet, visa-free or eTA, and a direct flight from Amsterdam.</p>
+    <div class="v-list">${easy.sort((a, b) => a.name.localeCompare(b.name)).map(c => `<button class="v-row" data-code="${c.code}"><span class="v-flag">${c.flag}</span><span class="v-name">${esc(c.name)}${c.zh ? ` <small>${esc(c.zh)}</small>` : ""}</span>
+      <span class="v-stay">${esc(c.ams.map(a => a.city).join(", "))}</span><span class="v-badge v-${TYPES[typeOf(c)].cls}">${TYPES[typeOf(c)].short}</span></button>`).join("") || '<p class="v-empty">None left. Time for a longer trip!</p>'}</div>
+    ${n ? "" : `<p class="v-foot">Mark countries as visited from their detail sheet (tap any country in the list or on the map).</p>`}`;
+  document.querySelectorAll("#v-stats [data-code]").forEach(b => b.onclick = () => detail(D.countries.find(c => c.code === b.dataset.code)));
+  document.querySelectorAll("#v-stats [data-left]").forEach(b => b.onclick = () => { prefs.type = b.dataset.left; prefs.hideVisited = true; save(); render(); setView("list"); });
 }
 
 // Skyscanner search from Amsterdam to a country for next month (same link as the app: /ams/<cc>/<yymm>/<yymm>/).
@@ -193,7 +227,7 @@ function detail(c) {
   sheet.onclick = e => { if (e.target === sheet) close(); };
   $("#v-visited").onchange = e => {
     prefs.visited = e.target.checked ? [...new Set([...prefs.visited, c.code])] : prefs.visited.filter(v => v !== c.code);
-    save(); render(); if (map) drawMap();
+    save(); render(); if (map) drawMap(); if (prefs.view === "stats") stats();
   };
 }
 
@@ -214,6 +248,6 @@ window.visaInit = async function () {
   }
   render();
   document.querySelectorAll("[data-view]").forEach(b => b.onclick = () => setView(b.dataset.view));
-  setView(prefs.view === "map" ? "map" : "list");
+  setView(["map", "stats"].includes(prefs.view) ? prefs.view : "list");
 };
 })();

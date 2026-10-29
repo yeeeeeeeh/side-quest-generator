@@ -79,6 +79,73 @@ function render() {
   document.querySelectorAll("#v-body [data-code]").forEach(b => b.onclick = () => detail(D.countries.find(c => c.code === b.dataset.code)));
 }
 
+// ---------- map ----------
+// Countries coloured by Taiwan-passport status, like the app's visa map layer. Shapes are a simplified copy of the
+// app's GeoJSON (visa/world.json); places too small to draw are dots at their centre. Leaflet loads on first use.
+const COLORS = { free: "#10B981", eta: "#F59E0B", voa: "#3B82F6", visa: "#EF4444", home: "#E5E7EB" };
+let map = null, world = null, mapLayer = null;
+function loadLeaflet() {
+  if (window.L) return Promise.resolve();
+  const css = document.createElement("link");
+  css.rel = "stylesheet"; css.href = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";
+  document.head.appendChild(css);
+  return new Promise((ok, bad) => {
+    const js = document.createElement("script");
+    js.src = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
+    js.onload = ok; js.onerror = () => bad(new Error("couldn't load the map library"));
+    document.head.appendChild(js);
+  });
+}
+function styleFor(c) {
+  const t = typeOf(c), dim = prefs.type !== "all" && t !== prefs.type && t !== "home";
+  return { fillColor: COLORS[t], fillOpacity: dim ? 0.08 : isVisited(c) ? 0.35 : 0.75, color: isVisited(c) ? "#fff" : "#0F172A", weight: isVisited(c) ? 1.5 : 0.6 };
+}
+function drawMap() {
+  if (mapLayer) mapLayer.remove();
+  const byCode = Object.fromEntries(D.countries.map(c => [c.code, c]));
+  mapLayer = L.layerGroup().addTo(map);
+  const withShape = new Set();
+  L.geoJSON(world, {
+    filter: f => f.properties.c !== "AQ", // Antarctica would fill the bottom of the map
+    style: f => byCode[f.properties.c] ? styleFor(byCode[f.properties.c]) : { fillOpacity: 0, weight: 0 },
+    onEachFeature: (f, layer) => {
+      const c = byCode[f.properties.c]; if (!c) return;
+      withShape.add(c.code);
+      layer.bindTooltip(`${c.flag} ${esc(c.name)} · ${TYPES[typeOf(c)] ? TYPES[typeOf(c)].short : "Home"}`, { sticky: true });
+      layer.on("click", () => detail(c));
+    },
+  }).addTo(mapLayer);
+  D.countries.filter(c => !withShape.has(c.code) && c.latlng && c.code !== "TW").forEach(c => {
+    L.circleMarker(c.latlng, Object.assign(styleFor(c), { radius: 5, weight: 1, color: "#0F172A" }))
+      .bindTooltip(`${c.flag} ${esc(c.name)} · ${TYPES[typeOf(c)].short}`).on("click", () => detail(c)).addTo(mapLayer);
+  });
+}
+async function showMap() {
+  const box = $("#v-mapwrap");
+  if (!map) {
+    box.innerHTML = '<p class="v-empty">Loading map…</p>';
+    try {
+      await loadLeaflet();
+      if (!world) { const r = await fetch("visa/world.json"); if (!r.ok) throw new Error(`HTTP ${r.status}`); world = await r.json(); }
+    } catch (e) { box.innerHTML = `<p class="v-empty">Couldn't load the map: ${esc(e.message)}.</p>`; return; }
+    box.innerHTML = `<div id="v-map"></div><div class="v-legend">${Object.entries(TYPES).map(([t, x]) => `<button data-mtype="${t}" class="${prefs.type === t ? "on" : ""}"><i style="background:${COLORS[t]}"></i>${x.short}</button>`).join("")}</div>`;
+    map = L.map("v-map", { worldCopyJump: true, minZoom: 1, maxZoom: 7, zoomSnap: 0.5, attributionControl: false }).setView([25, 15], 1.5);
+    box.querySelectorAll("[data-mtype]").forEach(b => b.onclick = () => {
+      prefs.type = prefs.type === b.dataset.mtype ? "all" : b.dataset.mtype; save();
+      box.querySelectorAll("[data-mtype]").forEach(x => x.classList.toggle("on", x.dataset.mtype === prefs.type));
+      drawMap(); render();
+    });
+  }
+  drawMap();
+  setTimeout(() => map.invalidateSize(), 0);
+}
+function setView(v) {
+  prefs.view = v; save();
+  $("#visa-panel").classList.toggle("v-mapmode", v === "map");
+  document.querySelectorAll("[data-view]").forEach(b => b.classList.toggle("on", b.dataset.view === v));
+  if (v === "map") showMap();
+}
+
 // Detail sheet for one country, over the list.
 function detail(c) {
   const t = typeOf(c), x = TYPES[t] || TYPES.visa;
@@ -108,7 +175,7 @@ function detail(c) {
   sheet.onclick = e => { if (e.target === sheet) close(); };
   $("#v-visited").onchange = e => {
     prefs.visited = e.target.checked ? [...new Set([...prefs.visited, c.code])] : prefs.visited.filter(v => v !== c.code);
-    save(); render();
+    save(); render(); if (map) drawMap();
   };
 }
 
@@ -128,5 +195,7 @@ window.visaInit = async function () {
     return;
   }
   render();
+  document.querySelectorAll("[data-view]").forEach(b => b.onclick = () => setView(b.dataset.view));
+  setView(prefs.view === "map" ? "map" : "list");
 };
 })();

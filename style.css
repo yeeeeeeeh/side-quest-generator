@@ -1713,7 +1713,7 @@ body
 .v-empty, .v-foot { margin: 16px 0; font-size: 0.85rem; color: var(--text-muted); }
 .v-foot a { color: var(--primary); }
 /* detail sheet */
-.v-sheet { position: absolute; inset: 0; z-index: 5; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,0.55); }
+.v-sheet { position: absolute; inset: 0; z-index: 1100; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,0.55); }
 .v-sheet[hidden] { display: none; }
 .v-card { position: relative; width: 100%; max-width: 560px; max-height: 88%; overflow-y: auto; padding: 20px 16px 24px; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 18px 18px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.5); animation: v-up 0.2s ease-out; }
 @keyframes v-up { from { transform: translateY(30px); opacity: 0; } }
@@ -1732,3 +1732,18 @@ body
 .v-links a:hover { border-color: var(--primary); }
 .v-links small { font-size: 0.78rem; color: var(--text-muted); }
 .v-special { color: #FBBF24; }
+/* visa map */
+.v-views { display: flex; gap: 4px; }
+.v-views button { padding: 5px 10px; font: inherit; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); background: transparent; border: 1px solid var(--border); border-radius: 999px; cursor: pointer; }
+.v-views button.on { color: #111; background: var(--primary); border-color: var(--primary); }
+.v-mapwrap { display: none; position: relative; flex: 1; min-height: 0; background: #0B1120; }
+#visa-panel.v-mapmode .v-mapwrap { display: block; }
+#visa-panel.v-mapmode #v-body { display: none; }
+#v-map { position: absolute; inset: 0; background: #0B1120; }
+#v-map .leaflet-control-zoom a { color: var(--text); background: var(--surface); border-color: var(--border); }
+.v-legend { position: absolute; left: 10px; right: 10px; bottom: 12px; z-index: 500; display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+.v-legend button { display: flex; align-items: center; gap: 6px; padding: 6px 10px; font: inherit; font-size: 0.8rem; font-weight: 600; color: var(--text); background: rgba(17,24,39,0.92); border: 1.5px solid var(--border); border-radius: 999px; cursor: pointer; }
+.v-legend button.on { border-color: var(--primary); }
+.v-legend i { width: 12px; height: 12px; border-radius: 3px; }
+.leaflet-tooltip { font-family: 'Inter', sans-serif; }
+#v-map path:focus { outline: none; }

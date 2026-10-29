@@ -55,7 +55,7 @@ const TEXT = {
   "x.noTax":"This is below the tax-free amount, so no box 3 tax: needed = yearly cost ÷ dividend yield.",
   "x.never":"The bottom of the formula is zero or less: box 3 takes all of the dividends, so no portfolio is big enough.",
   "x.s4":"4. Year-by-year projection",
-  "x.s4t":"Each year: next year's portfolio = portfolio + dividends + price growth − box 3 tax + invested − spent. Fund costs come off the growth ({terW} while working, {terR} in retirement) and {leak} of dividends is lost to withholding tax inside the fund. While you work it grows at your while-working ETF figures ({wy} dividend + {wg} growth, dividends reinvested); from retirement it uses the retirement ETF ({ry} dividend + {rg} growth). While you work, invested = salary × {p}{freed}, and the salary rises {r} a year. After you retire, spent = the yearly cost (rising with inflation) plus any mortgage payments, minus AOW and pension once they start. When the dividends after tax fall short, the rest comes from selling shares. \"You will have\" is the portfolio at the start of age {age}. The year-by-year table shows every step.",
+  "x.s4t":"Each year: next year's portfolio = portfolio + dividends + price growth − box 3 tax + invested − spent.{taxsal} Fund costs come off the growth ({terW} while working, {terR} in retirement) and {leak} of dividends is lost to withholding tax inside the fund. While you work it grows at your while-working ETF figures ({wy} dividend + {wg} growth, dividends reinvested); from retirement it uses the retirement ETF ({ry} dividend + {rg} growth). While you work, invested = salary × {p}{freed}, and the salary rises {r} a year. After you retire, spent = the yearly cost (rising with inflation) plus any mortgage payments, minus AOW and pension once they start. When the dividends after tax fall short, the rest comes from selling shares. \"You will have\" is the portfolio at the start of age {age}. The year-by-year table shows every step.",
   "x.s5":"5. How much to invest (reverse calculation)",
   "x.s5t":"The projection is run again with different amounts until the portfolio at age {age} just reaches the amount needed. \"Invest each month\" is what you put in every month from now, rising {r} a year with your raises (shown as a % of your salary too). \"Or have invested today\" is the lump sum you would need now instead of {start}, while still investing {p} of your salary.",
   "x.s6":"6. Mortgage",
@@ -176,7 +176,7 @@ function readInputs(){
   o.partner=$("#r-partner").checked; o.showNew=$("#r-showNew").checked; o.today=$("#r-today").checked; o.useAow=$("#r-useAow").checked; o.mort=readMort();
   // Monthly costs in today's money: expense lines + yearly costs (travel, flights to Taiwan) ÷ 12, now and in
   // retirement (same unless split).
-  o.costSplit=$("#r-costSplit").checked; o.mToStock=$("#r-mToStock").checked;
+  o.costSplit=$("#r-costSplit").checked; o.mToStock=$("#r-mToStock").checked; o.taxFromSalary=$("#r-taxSal").checked;
   o.costs=readCosts(); o.costVer=2;
   const tot=(g,k)=>o.costs[g].reduce((n,c)=>n+c[k],0);
   o.living=tot("m","now"); o.yrNow=tot("y","now");
@@ -220,6 +220,7 @@ function loadInputs(){
   $("#r-useAow").checked=!!(o&&o.useAow);
   $("#r-costSplit").checked=!!(o&&o.costSplit);
   $("#r-mToStock").checked=!!(o&&o.mToStock);
+  $("#r-taxSal").checked=!!(o&&o.taxFromSalary);
   (o&&Array.isArray(o.mort)?o.mort:R_DEFAULT_MORT).forEach(mortRow);
 }
 
@@ -346,9 +347,10 @@ function simulate(regime,inp,investPct,mort,start=inp.start){
     const ben=working?0:benefits(inp,age,f);
     const spend=working?0:Math.max(0,inp.cost*12*f+m.net-ben);
     if(!working&&firstSell==null&&div-tax<spend-0.5) firstSell=age;
-    rows.push({yr,age,salary:working?salary:0,contrib,spend,ben,left:working?salary-contrib-m.net-inp.costNow*12*f:0,
+    const taxPaidBySalary=working&&inp.taxFromSalary?tax:0;
+    rows.push({yr,age,salary:working?salary:0,contrib,spend,ben,left:working?salary-contrib-m.net-inp.costNow*12*f-taxPaidBySalary:0,
       mInt:m.interest,mPaid:m.paid,mRef:m.refund,mBal:m.bal,w,tax});
-    w=Math.max(0,w+div+gain-tax+contrib-spend);
+    w=Math.max(0,w+div+gain-(tax-taxPaidBySalary)+contrib-spend);
     if(w<=0&&broke==null&&!working) broke=age;
     if(working) salary*=1+inp.raise/100;
   }
@@ -427,7 +429,7 @@ ${step(t("x.s2"),t("x.s2t",{leak:pc(inp.leak)}),calc([
   +(nw?`<p>${esc(t("x.s2new",{g:m2(inp.rg)}))}</p>`:""))}
 ${step(t("x.s3"),t("x.s3t",{age:inp.retire,until:inp.until,year:o.yr,free:nw?`${money(oFree)} (old) and ${money(nFree)} (new)`:money(oFree),partner:inp.partner?t("x.partner"):""}),
   calc(needLine("old",o))+(nw?calc(needLine("new",nw)):""))}
-${step(t("x.s4"),t("x.s4t",{freed:inp.freed?`, plus ${money(inp.freed.monthly)} a month from ${inp.freed.endYear+1} once the mortgage is paid off`:"",p:pc(inp.invest),r:pc(inp.raise),age:inp.retire,wy:pc(inp.wYield),wg:pc(inp.wGrowth),ry:pc(inp.yield),rg:pc(inp.growth),terW:pc(inp.terW),terR:pc(inp.terR),leak:pc(inp.leak)}))}
+${step(t("x.s4"),t("x.s4t",{taxsal:inp.taxFromSalary?" While you work, box 3 tax is paid from your salary instead (it shows in \"Left after costs\"), so it isn't taken from the portfolio.":"",freed:inp.freed?`, plus ${money(inp.freed.monthly)} a month from ${inp.freed.endYear+1} once the mortgage is paid off`:"",p:pc(inp.invest),r:pc(inp.raise),age:inp.retire,wy:pc(inp.wYield),wg:pc(inp.wGrowth),ry:pc(inp.yield),rg:pc(inp.growth),terW:pc(inp.terW),terR:pc(inp.terR),leak:pc(inp.leak)}))}
 ${step(t("x.s5"),t("x.s5t",{age:inp.retire,r:pc(inp.raise),start:money(inp.start),p:pc(inp.invest)}))}
 ${step(t("x.s6"),t("x.s6t",{forfait:pc(inp.mForfait),wg:pc(inp.mWozGrowth)}),mortCalc(inp,mort))}
 ${step("7. Selling shares instead",`For comparison: instead of living only on dividends, you sell shares too and take out ${pc(inp.wr)} of the starting portfolio a year, rising with inflation. Dutch FIRE planners use 2–3% rather than the US 4% because of box 3. Needed = long-run yearly cost from step 1 ÷ withdrawal rate${o.bridge>0?", plus a bridge pot that pays the AOW/pension part until it starts":""}.`,

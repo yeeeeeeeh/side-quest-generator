@@ -183,6 +183,149 @@ function savedList(body, kind) {
   on(body, "[data-key]", "click", b => go(savedItem, b.dataset.key));
 }
 
+// ---------- swipe & learn ----------
+// A feed of cards like the app's: every lesson question and practice-exam question with its answer shown, and every
+// tip, trap and exam point. Swipe left (or "Know it") once you know a card: it leaves the deck for good. Swipe right
+// (or "Next") to move on: the card comes back in a later pass. Undo puts back the last swipe.
+const REEL_FILTER_KEY = "javaReelFilter", REEL_PRESETS = {
+  all: { label: "Everything", f: {} },
+  weak: { label: "Weak spots", f: { scope: "mistakes", order: "weakest" } },
+  never: { label: "Never answered", f: { scope: "never" } },
+  cram: { label: "Exam cram", f: { questions: false, tips: true, exam: true, learned: true, order: "random" } },
+  learn: { label: "Tips only", f: { questions: false, tips: true, exam: false } },
+};
+const REEL_DEFAULT = { units: [], questions: true, tips: true, exam: true, scope: "all", learned: false, order: "weakest" };
+P.reelLearned = P.reelLearned || [];
+let REELS = null;
+function allReels() {
+  if (REELS) return REELS;
+  const cards = [], seenTips = new Set(), byKey = {};
+  const addQ = (ex, label, unit, src) => {
+    const key = [ex.prompt, ex.code || "", (ex.options || []).join("\u001f")].join("\u001e");
+    if (byKey[key]) { byKey[key].twins.push(ex.id); return; }
+    const c = { id: ex.id, ex, label, unit, src, twins: [] }; byKey[key] = c; cards.push(c);
+  };
+  C.units.forEach(u => u.lessons.forEach(l => l.steps.forEach((st, k) => {
+    const label = `Unit ${u.info.number} · ${u.info.title}`;
+    if (st.type === "exercise") return addQ(st, label, u.info.number, "lesson");
+    st.blocks.forEach((b, bi) => {
+      if (b.type !== "callout") return;
+      const title = b.kind === "python" ? l.title : (b.title || l.title);
+      if (seenTips.has(title + b.text)) return; seenTips.add(title + b.text);
+      cards.push({ id: `tip:${l.id}#${k}#${bi}`, tip: { kind: b.kind, title, text: b.text }, label, unit: u.info.number });
+    });
+  })));
+  C.mocks.forEach(m => m.questions.forEach(q => addQ(q, m.title, null, "exam")));
+  C.tips.forEach((t, i) => {
+    if (seenTips.has(t.title + t.text)) return;
+    const u = C.units.find(x => x.info.objectives.includes(t.objective));
+    cards.push({ id: `tip:extra:${i}`, tip: { kind: t.kind, title: t.title, text: t.text }, label: u ? `Unit ${u.info.number} · ${u.info.title}` : "Exam point", unit: u ? u.info.number : null });
+  });
+  return (REELS = cards);
+}
+const isLearned = c => P.reelLearned.includes(c.id) || (c.twins || []).some(t => P.reelLearned.includes(t));
+const qStat = c => P.ex[c.id] || null;
+// Applies a filter: which cards, then the order (weakest first deals a tip after every 3 questions).
+function dealReels(f) {
+  const units = new Set(f.units || []);
+  let cards = allReels().filter(c => (f.learned || !isLearned(c)) && (!units.size || c.unit != null && units.has(c.unit)));
+  cards = cards.filter(c => c.tip ? f.tips : c.src === "exam" ? f.exam : f.questions);
+  if (f.scope === "mistakes") cards = cards.filter(c => c.tip || (qStat(c) && qStat(c).c < qStat(c).a));
+  if (f.scope === "never") cards = cards.filter(c => c.tip || !qStat(c));
+  const tips = shuffle(cards.filter(c => c.tip)), qs = cards.filter(c => !c.tip);
+  if (f.order === "random") return shuffle(cards);
+  let ordered;
+  if (f.order === "mistakes") ordered = shuffle(qs).sort((a, b) => ((qStat(b) || {}).a - (qStat(b) || {}).c || 0) - ((qStat(a) || {}).a - (qStat(a) || {}).c || 0));
+  else {
+    const weak = st => !st || !st.a ? 1 : st.c / st.a < 0.7 ? 0 : 2, buckets = [[], [], []];
+    qs.forEach(c => buckets[weak(qStat(c))].push(c));
+    ordered = buckets.flatMap(shuffle);
+  }
+  const out = [];
+  ordered.forEach((c, i) => { out.push(c); if ((i + 1) % 3 === 0 && tips.length) out.push(tips.pop()); });
+  return out.concat(tips);
+}
+function reelFilter() { let f = null; try { f = JSON.parse(localStorage.getItem(REEL_FILTER_KEY) || "null"); } catch (_) {} return Object.assign({}, REEL_DEFAULT, f || {}); }
+function saveReelFilter(f) { try { localStorage.setItem(REEL_FILTER_KEY, JSON.stringify(f)); } catch (_) {} }
+
+function reelCard(c) {
+  if (c.tip) {
+    const icon = { trap: "⚠️", tip: "💡", python: "🐍", exam: "🎯" }[c.tip.kind] || "ℹ️";
+    const kindName = { trap: "Trap", tip: "Tip", python: "Python vs Java", exam: "Exam point" }[c.tip.kind] || "Tip";
+    return `<div class="j-reel-kind j-call-${esc(c.tip.kind)}">${icon} ${kindName}</div><h3 class="j-pt">${esc(c.tip.title)}</h3>${mdP(c.tip.text)}`;
+  }
+  const ex = c.ex, st = qStat(c);
+  return `<div class="j-reel-kind">❓ Question${st ? ` · ${st.c}/${st.a} right before` : " · new"}</div>
+    <div class="j-prompt">${md(ex.prompt)}</div>${ex.kind !== "tapLine" && ex.code ? codeView(ex.code) : ""}
+    <div class="j-hint">Answer</div>${solutionHtml(ex)}<div class="j-feedback ok">${mdP(ex.explanation)}</div>`;
+}
+function reels(body, override) {
+  const f = override || reelFilter();
+  let deck = dealReels(f), pos = 0, history = [], pass = 1;
+  const draw = () => {
+    if (!deck.length) {
+      body.innerHTML = `<div class="j-done"><div class="j-big">🎉</div><h2 class="j-h">${allReels().some(c => !isLearned(c)) ? "No cards match" : "You know every card"}</h2>
+        <p class="j-sub">${allReels().filter(isLearned).length} cards marked as known.</p><button class="btn btn-primary j-wide" id="j-rf">Change filters</button></div>`;
+      $("#j-rf").onclick = () => go(reelFilters, override); return;
+    }
+    if (pos >= deck.length) { deck = dealReels(f); pos = 0; pass++; if (!deck.length) return draw(); }
+    const c = deck[pos];
+    body.innerHTML = `<div class="j-reelbar"><span>${override ? "This unit" : esc(Object.values(REEL_PRESETS).find(p => JSON.stringify(Object.assign({}, REEL_DEFAULT, p.f)) === JSON.stringify(f))?.label || "Custom")} · ${deck.length - pos} left${pass > 1 ? ` · pass ${pass}` : ""}</span>
+        <button class="j-mini" id="j-undo" aria-label="Undo" ${history.length ? "" : "disabled"}>↶</button><button class="j-mini" id="j-filt" aria-label="Filters">⚙︎</button></div>
+      <div class="j-reel" id="j-reel"><div class="j-kicker">${esc(c.label)}</div>${reelCard(c)}</div>
+      <div class="j-actions j-two"><button class="btn j-ghost" id="j-know">‹ Know it</button><button class="btn btn-primary" id="j-nextr">Next ›</button></div>`;
+    $("#j-body").scrollTop = 0;
+    const card = $("#j-reel");
+    let x0 = null, y0 = null, dx = 0;
+    card.addEventListener("pointerdown", e => { x0 = e.clientX; y0 = e.clientY; dx = 0; });
+    card.addEventListener("pointermove", e => {
+      if (x0 == null) return; dx = e.clientX - x0;
+      if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(e.clientY - y0)) { card.style.transform = `translateX(${dx}px) rotate(${dx / 30}deg)`; card.classList.toggle("know", dx < -60); card.classList.toggle("skip", dx > 60); }
+    });
+    const end = () => { if (x0 == null) return; x0 = null; card.style.transform = ""; if (dx < -90) know(); else if (dx > 90) next(); card.classList.remove("know", "skip"); };
+    card.addEventListener("pointerup", end); card.addEventListener("pointercancel", end); card.addEventListener("pointerleave", end);
+    $("#j-know").onclick = know; $("#j-nextr").onclick = next;
+    $("#j-undo").onclick = () => { const h2 = history.pop(); if (!h2) return; if (h2.learned) { P.reelLearned = P.reelLearned.filter(id => id !== h2.learned); save(); } deck = h2.deck; pos = h2.pos; draw(); };
+    $("#j-filt").onclick = () => go(reelFilters, override);
+  };
+  const next = () => { history.push({ deck, pos }); pos++; draw(); };
+  const know = () => {
+    const c = deck[pos]; history.push({ deck: [...deck], pos, learned: c.id });
+    if (!P.reelLearned.includes(c.id)) { P.reelLearned.push(c.id); save(); }
+    deck.splice(pos, 1); draw();
+  };
+  draw();
+}
+function reelFilters(body, override) {
+  const f = override ? Object.assign({}, override) : reelFilter();
+  const total = allReels().length, learned = allReels().filter(isLearned).length;
+  const render = () => {
+    const n = dealReels(f).length;
+    body.innerHTML = `<h2 class="j-h">Swipe &amp; learn filters</h2>
+      <h3 class="j-sec">Presets</h3><div class="j-seg">${Object.entries(REEL_PRESETS).map(([k, p]) => `<button data-p="${k}">${esc(p.label)}</button>`).join("")}</div>
+      <h3 class="j-sec">Cards</h3>
+      <label class="j-chk2"><input type="checkbox" data-f="questions" ${f.questions ? "checked" : ""}> Lesson questions</label>
+      <label class="j-chk2"><input type="checkbox" data-f="exam" ${f.exam ? "checked" : ""}> Practice-exam questions</label>
+      <label class="j-chk2"><input type="checkbox" data-f="tips" ${f.tips ? "checked" : ""}> Tips, traps and exam points</label>
+      <label class="j-chk2"><input type="checkbox" data-f="learned" ${f.learned ? "checked" : ""}> Include cards I know</label>
+      <h3 class="j-sec">Questions</h3><div class="j-seg">${[["all", "All"], ["mistakes", "Mistakes only"], ["never", "Never answered"]].map(([k, t]) => `<button data-scope="${k}" class="${f.scope === k ? "on" : ""}">${t}</button>`).join("")}</div>
+      <h3 class="j-sec">Order</h3><div class="j-seg">${[["weakest", "Weakest first"], ["mistakes", "Most mistakes"], ["random", "Random"]].map(([k, t]) => `<button data-order="${k}" class="${f.order === k ? "on" : ""}">${t}</button>`).join("")}</div>
+      <h3 class="j-sec">Units</h3><div class="j-seg">${C.units.map(u => `<button data-u="${u.info.number}" class="${(f.units || []).includes(u.info.number) ? "on" : ""}">${u.info.number}</button>`).join("")}</div>
+      <p class="j-sub">No unit selected = every unit (practice-exam questions belong to no unit).</p>
+      <button class="btn btn-primary j-wide" id="j-apply">Show ${n} card${n === 1 ? "" : "s"}</button>
+      <button class="btn j-wide j-ghost" id="j-unlearn">Forget the ${learned} cards I marked as known</button>
+      <p class="j-foot">${total} cards in all.</p>`;
+    on(body, "[data-p]", "click", b => { Object.assign(f, REEL_DEFAULT, REEL_PRESETS[b.dataset.p].f); render(); });
+    on(body, "[data-f]", "change", i => { f[i.dataset.f] = i.checked; render(); });
+    on(body, "[data-scope]", "click", b => { f.scope = b.dataset.scope; render(); });
+    on(body, "[data-order]", "click", b => { f.order = b.dataset.order; render(); });
+    on(body, "[data-u]", "click", b => { const n2 = +b.dataset.u, s2 = new Set(f.units || []); s2.has(n2) ? s2.delete(n2) : s2.add(n2); f.units = [...s2].sort((a, c) => a - c); render(); });
+    $("#j-apply").onclick = () => { if (!override) saveReelFilter(f); stack.pop(); stack.pop(); go(reels, override ? f : null); };
+    $("#j-unlearn").onclick = () => { if (learned && confirm(`Put all ${learned} known cards back in the deck?`)) { P.reelLearned = []; save(); render(); } };
+  };
+  render();
+}
+
 // ---------- lesson reader ----------
 // Every page of a lesson in one scroll, without the exercises: for reading or rereading.
 function reader(body, u, l) {
@@ -330,6 +473,7 @@ function home(body) {
   ${dueCount ? `<button class="j-review" id="j-review"><span class="j-big2">🔁</span><span><b>Review ${Math.min(dueCount, REVIEW_SIZE)} exercise${dueCount === 1 ? "" : "s"}</b><small>${dueCount} due · +1 XP each</small></span><span class="j-go">›</span></button>` : ""}
   <h3 class="j-sec">Practice</h3>
   <div class="j-grid">
+    <button class="j-tile" data-go="reels">🃏<b>Swipe &amp; learn</b><small>${allReels().filter(c => !isLearned(c)).length} cards to go</small></button>
     <button class="j-tile" data-go="review">🔁<b>Review</b><small>${dueCount ? `${dueCount} due now` : `${Object.keys(P.ex).length} scheduled`}</small></button>
     <button class="j-tile" data-go="mocks">📝<b>Mock exams</b><small>${C.mocks.length} sets, timed</small></button>
     <button class="j-tile" data-go="fixbug">🐞<b>Fix the bug</b><small>${C.fixbug.length} programs</small></button>
@@ -358,7 +502,7 @@ function home(body) {
     P.goal = v; if (todayXP() >= v && !P.goalMet.includes(dayKey())) P.goalMet.push(dayKey()); save(); show();
   };
   on(body, "[data-unit]", "click", b => go(unit, C.units[+b.dataset.unit]));
-  const views = { mocks, fixbug: drillMenu, write: drillMenu, trace: traceMenu, tips, ready: readinessView, review };
+  const views = { mocks, fixbug: drillMenu, write: drillMenu, trace: traceMenu, tips, ready: readinessView, review, reels: b => reels(b) };
   const rv = $("#j-review"); if (rv) rv.onclick = () => go(review);
   on(body, "[data-saved]", "click", b => go(savedList, b.dataset.saved));
   on(body, "[data-go]", "click", b => go(views[b.dataset.go], b.dataset.go));
@@ -375,7 +519,7 @@ function unit(body, u) {
   body.innerHTML = `<div class="j-kicker">Unit ${u.info.number}</div><h2 class="j-h">${esc(u.info.title)}</h2>
   <p class="j-sub">${esc(u.info.summary)}</p>
   <div class="j-chips">${u.info.objectives.map(id => `<span class="j-chip" title="${esc((C.objectives[id] || {}).title)}">Obj ${esc(id)}${objScore(id) != null ? " · " + pct(objScore(id)) : ""}</span>`).join("")}</div>
-  <div class="j-two j-unitbtns"><button class="btn j-ghost" id="j-ess">⚡ Essentials</button><button class="btn ${edit ? "btn-primary" : "j-ghost"}" id="j-edit">${edit ? "✓ Done editing" : "✎ Edit progress"}</button></div>
+  <div class="j-two j-unitbtns"><button class="btn j-ghost" id="j-ess">⚡ Essentials</button><button class="btn j-ghost" id="j-uswipe">🃏 Swipe</button><button class="btn ${edit ? "btn-primary" : "j-ghost"}" id="j-edit">${edit ? "✓ Done editing" : "✎ Edit progress"}</button></div>
   ${edit ? `<div class="j-editbar"><p>Tap a lesson to mark it skipped or undo it. Skipped lessons count as done, without XP.</p>
     <div class="j-two"><button class="btn j-ghost" id="j-skipall">⤼ Skip whole unit</button><button class="btn j-ghost" id="j-resetall">↺ Reset unit</button></div></div>` : ""}
   <div class="j-path${edit ? " editing" : ""}">${u.lessons.map((l, i) => {
@@ -405,6 +549,7 @@ function unit(body, u) {
   });
   $("#j-ess").onclick = () => go(essentials, u);
   on(body, "[data-read]", "click", b => go(reader, u, u.lessons[+b.dataset.read]));
+  $("#j-uswipe").onclick = () => go(reels, Object.assign({}, REEL_DEFAULT, { units: [u.info.number], exam: false }));
   $("#j-edit").onclick = () => { editingProgress = !editingProgress; show(); };
   const sa = $("#j-skipall"); if (sa) sa.onclick = () => { u.lessons.forEach(skipLesson); show(); };
   const ra = $("#j-resetall"); if (ra) ra.onclick = () => {

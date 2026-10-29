@@ -1654,3 +1654,10 @@ body
 .j-editbar { margin: 8px 0; padding: 10px 12px; background: rgba(245,158,11,0.08); border: 1px dashed var(--primary); border-radius: var(--radius-sm); }
 .j-editbar p { margin: 0 0 8px; font-size: 0.85rem; color: var(--text-light); }
 .j-path.editing .j-node.lock .j-dot, .j-path.editing .j-node.open .j-dot, .j-path.editing .j-node.cur .j-dot { color: #fff; background: #374151; box-shadow: 0 6px 0 #1F2937; animation: none; }
+/* Java: lesson reader */
+.j-nbtns { display: flex; flex-wrap: wrap; gap: 6px; }
+.j-toc { display: flex; flex-direction: column; gap: 4px; margin: 4px 0 14px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.j-toc a { font-size: 0.88rem; color: var(--primary); text-decoration: none; }
+.j-rpage { margin-bottom: 12px; scroll-margin-top: 8px; }
+.j-rhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.j-actions.j-static { position: static; margin: 14px 0 0; padding: 0; background: none; }

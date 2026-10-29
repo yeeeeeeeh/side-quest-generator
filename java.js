@@ -183,6 +183,24 @@ function savedList(body, kind) {
   on(body, "[data-key]", "click", b => go(savedItem, b.dataset.key));
 }
 
+// ---------- lesson reader ----------
+// Every page of a lesson in one scroll, without the exercises: for reading or rereading.
+function reader(body, u, l) {
+  const pages = l.steps.map((st, k) => [st, k]).filter(([st]) => st.type === "page");
+  const exCount = l.steps.length - pages.length, i = u.lessons.indexOf(l);
+  body.innerHTML = `<div class="j-kicker">Unit ${u.info.number} · Lesson ${i + 1} · read</div><h2 class="j-h">${esc(l.title)}</h2>
+    <p class="j-sub">${esc(l.summary)} · ${pages.length} page${pages.length === 1 ? "" : "s"}${exCount ? `, ${exCount} exercises not shown` : ""}</p>
+    <nav class="j-toc">${pages.map(([st, k], n) => `<a href="#" data-to="${k}">${n + 1}. ${esc(st.title)}</a>`).join("")}</nav>
+    ${pages.map(([st, k]) => { const e = savedEntry(l, k) || {};
+      return `<section class="j-card j-rpage" id="j-rp-${k}"><div class="j-rhead"><h3 class="j-pt">${esc(st.title)}</h3><button class="j-mini${e.bookmark ? " on" : ""}" data-bm="${k}" aria-label="Bookmark">${e.bookmark ? "★" : "☆"}</button></div>
+        ${st.blocks.map(blockHtml).join("")}${e.note ? `<div class="j-notebox">✎ ${esc(e.note)}</div>` : ""}</section>`; }).join("")}
+    <div class="j-actions j-two j-static">${i + 1 < u.lessons.length ? `<button class="btn j-ghost" id="j-rnext">Read next ›</button>` : ""}<button class="btn btn-primary" id="j-rplay">${lessonDone(l) ? "Practise this lesson" : "Start this lesson"}</button></div>`;
+  on(body, "[data-to]", "click", (a, e) => { e.preventDefault(); $("#j-rp-" + a.dataset.to).scrollIntoView({ behavior: "smooth", block: "start" }); });
+  on(body, "[data-bm]", "click", b => { const k = +b.dataset.bm; updateSaved(l, k, { bookmark: !(savedEntry(l, k) || {}).bookmark }); const on2 = !!(savedEntry(l, k) || {}).bookmark; b.textContent = on2 ? "★" : "☆"; b.classList.toggle("on", on2); });
+  const nx = $("#j-rnext"); if (nx) nx.onclick = () => { stack.pop(); go(reader, u, u.lessons[i + 1]); };
+  $("#j-rplay").onclick = () => { if (lessonUnlocked(u, i)) { stack.pop(); openLesson(u, l); } else alert("Finish or skip the lesson before this one to unlock it (tap it on the path)."); };
+}
+
 // ---------- unit essentials ----------
 // The exam-critical points of a unit in one place: its objectives, then every "On the exam" and trap callout from its
 // lessons, grouped by lesson.
@@ -368,7 +386,7 @@ function unit(body, u) {
     return `<div class="j-node ${cls}" style="--dx:${dx}px">
       <button class="j-dot" data-i="${i}" aria-label="${esc(l.title)}">${icon}</button>
       <div class="j-nlabel"><b>${esc(l.title)}</b><small>${edit ? `${state} · tap to ${st.done ? "undo" : "skip"}` : `${l.minutes} min${st.skipped ? " · skipped" : st.best != null ? ` · best ${pct(st.best)}` : ""}${paused && paused.l.id === l.id ? " · in progress" : ""}`}</small>
-      ${!edit && isCur && !(paused && paused.l.id === l.id) ? `<button class="j-skip" data-skip="${i}">Skip lesson</button>` : ""}</div></div>`;
+      ${!edit ? `<div class="j-nbtns"><button class="j-skip" data-read="${i}">📖 Read</button>${isCur && !(paused && paused.l.id === l.id) ? `<button class="j-skip" data-skip="${i}">Skip lesson</button>` : ""}</div>` : ""}</div></div>`;
   }).join("")}</div>`;
   on(body, "[data-i]", "click", b => {
     const i = +b.dataset.i, l = u.lessons[i], st = P.lessons[l.id] || {};
@@ -386,6 +404,7 @@ function unit(body, u) {
     openLesson(u, l);
   });
   $("#j-ess").onclick = () => go(essentials, u);
+  on(body, "[data-read]", "click", b => go(reader, u, u.lessons[+b.dataset.read]));
   $("#j-edit").onclick = () => { editingProgress = !editingProgress; show(); };
   const sa = $("#j-skipall"); if (sa) sa.onclick = () => { u.lessons.forEach(skipLesson); show(); };
   const ra = $("#j-resetall"); if (ra) ra.onclick = () => {

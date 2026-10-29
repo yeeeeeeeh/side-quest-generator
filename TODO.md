@@ -9,6 +9,8 @@ Sizes are rough % of one session's usage.
 
 ## Next up
 
+- [ ] 🌐 **Light mode for Retire and Visa**: add `themed` to their panels and swap hard-coded dark colours for tokens (see "Light theme" in style.css); Visa map in light colours too. Add the 🌗 theme button to their toolbars. (5–8%)
+- [ ] 🌐 **Light mode for Quests and IKEA**: same for the Quests home (cards, filters, progress panel) and IKEA; once every tab is themed, move the light tokens to `:root` and put the theme button in all toolbars. (5–8%)
 - [ ] 🛂 **Dutch passport column**: side-by-side with Taiwan in the list and the detail sheet, plus a "Dutch is easier" filter. Data: map-app `dutch_visa_requirements.txt` + `DutchVisaDatabase`. (4–6%)
 - [ ] ☕ **Compiles or not?**: quick yes/no game on the labelled snippets already in the Java course; misses feed review. (4–6%)
 - [ ] ☕ **Readiness planner**: exam date countdown, lessons per day to finish, mock score trend, lesson vs mock mastery. (5–7%)
@@ -33,6 +35,7 @@ Sizes are rough % of one session's usage.
 
 ## Done
 
+- [x] ☕ Light mode for Java, with Auto / Light / Dark switch (2026-10-29, COMMIT)
 - [x] 🛂 Direct flights from Schiphol (9ff8ec2)
 - [x] 🛂 Visited stats (c7f7d92)
 - [x] 🛂 Health & vaccines (8b23ddc)

@@ -306,6 +306,31 @@ function hideCompletion() {
 }
 
 
+// ===== Theme =====
+// Light / dark / follow the phone. Sets <html data-theme> to the resolved theme; only panels
+// with the "themed" class have light colours so far (Java), so the rest stays dark.
+const THEMES = { auto: ["🌗", "Auto"], light: ["☀️", "Light"], dark: ["🌙", "Dark"] };
+const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+function themePref() {
+  try { const v = localStorage.getItem("theme"); return THEMES[v] ? v : "auto"; } catch { return "auto"; }
+}
+function applyTheme() {
+  const pref = themePref();
+  document.documentElement.dataset.theme = pref === "auto" ? (darkQuery.matches ? "dark" : "light") : pref;
+  document.querySelectorAll("[data-theme-toggle]").forEach(b => {
+    b.textContent = THEMES[pref][0];
+    b.title = `Theme: ${THEMES[pref][1]} (tap to change)`;
+    b.setAttribute("aria-label", b.title);
+  });
+}
+document.querySelectorAll("[data-theme-toggle]").forEach(b => b.addEventListener("click", () => {
+  const keys = Object.keys(THEMES), next = keys[(keys.indexOf(themePref()) + 1) % keys.length];
+  try { localStorage.setItem("theme", next); } catch {}
+  applyTheme();
+}));
+darkQuery.addEventListener("change", applyTheme);
+applyTheme();
+
 // ===== Tabs =====
 // Each tab besides Quests is a full-screen panel with an optional init
 const TAB_PANELS = {
@@ -321,6 +346,7 @@ function showTab(tab) {
     document.getElementById(panel).hidden = name !== current;
   });
   document.body.classList.toggle("webview-open", current !== "quests");
+  document.body.classList.toggle("themed-open", !!TAB_PANELS[current] && document.getElementById(TAB_PANELS[current].panel).classList.contains("themed"));
   TAB_PANELS[current]?.init();
   document.querySelectorAll(".tab-item").forEach(t => {
     const active = t.dataset.tab === current;

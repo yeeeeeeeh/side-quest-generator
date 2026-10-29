@@ -1470,7 +1470,7 @@ body
 .j-chip { padding: 3px 10px; font-size: 0.75rem; font-weight: 600; color: var(--text-light); border: 1px solid var(--border); border-radius: 999px; }
 .j-card { padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
 .j-card p, .j-call p, .j-feedback p { margin: 8px 0; line-height: 1.55; }
-.j-body code { padding: 1px 5px; font: 0.86em ui-monospace, SFMono-Regular, Menlo, monospace; color: #FCD34D; background: rgba(255,255,255,0.06); border-radius: 4px; }
+.j-body code { padding: 1px 5px; font: 0.86em ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--code-inline); background: var(--tint); border-radius: 4px; }
 .j-pt { margin: 0 0 6px; font-size: 1.1rem; color: var(--text); }
 .j-bul { margin: 8px 0; padding-left: 20px; line-height: 1.55; }
 .j-tblwrap { overflow-x: auto; margin: 10px 0; }
@@ -1483,18 +1483,18 @@ body
 .j-call-exam { border-color: var(--success); background: rgba(16,185,129,0.08); }
 .j-call-t { font-weight: 700; color: var(--text); }
 /* code */
-.jc { margin: 10px 0; padding: 8px 0; overflow-x: auto; font: 0.82rem/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; background: #0B1120; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.jc { margin: 10px 0; padding: 8px 0; overflow-x: auto; font: 0.82rem/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius-sm); }
 .jc-line { display: flex; min-width: max-content; padding-right: 12px; border-left: 3px solid transparent; }
-.jc-no { flex: 0 0 34px; padding-right: 10px; text-align: right; color: #4B5563; user-select: none; }
-.jc-src { white-space: pre; color: #E5E7EB; }
-.jc-kw { color: #C084FC; } .jc-str { color: #86EFAC; } .jc-num { color: #FCA5A5; } .jc-com { color: #6B7280; font-style: italic; } .jc-type { color: #7DD3FC; }
+.jc-no { flex: 0 0 34px; padding-right: 10px; text-align: right; color: var(--code-no); user-select: none; }
+.jc-src { white-space: pre; color: var(--code-text); }
+.jc-kw { color: var(--code-kw); } .jc-str { color: var(--code-str); } .jc-num { color: var(--code-num); } .jc-com { color: var(--code-com); font-style: italic; } .jc-type { color: var(--code-type); }
 .jc-tap .jc-line { cursor: pointer; }
-.jc-tap .jc-line:hover { background: rgba(255,255,255,0.04); }
+.jc-tap .jc-line:hover { background: var(--tint); }
 .jc-line.sel { background: rgba(245,158,11,0.16); border-left-color: var(--primary); }
 .jc-line.right { background: rgba(16,185,129,0.16); border-left-color: var(--success); }
 .jc-line.wrong { background: rgba(239,68,68,0.16); border-left-color: var(--danger); }
 .jc-line.cur { background: rgba(96,165,250,0.18); border-left-color: #60A5FA; }
-.j-out { margin: 6px 0; padding: 8px 10px; font: 0.82rem ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; color: #E5E7EB; background: #0B1120; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.j-out { margin: 6px 0; padding: 8px 10px; font: 0.82rem ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; color: var(--code-text); background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius-sm); }
 /* exercises */
 .j-prompt { font-size: 1rem; color: var(--text); line-height: 1.5; }
 .j-prompt p { margin: 0 0 6px; }
@@ -1503,7 +1503,7 @@ body
 .j-tf { flex-direction: row; } .j-tf .j-opt { flex: 1; justify-content: center; }
 .j-opt { display: flex; align-items: flex-start; gap: 10px; width: 100%; padding: 12px; font: inherit; font-size: 0.92rem; text-align: left; color: var(--text); background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; }
 .j-opt p { margin: 0; }
-.j-opt.code code { padding: 0; white-space: pre-wrap; background: none; color: #E5E7EB; }
+.j-opt.code code { padding: 0; white-space: pre-wrap; background: none; color: var(--code-text); }
 .j-opt small { display: block; margin-top: 4px; font-size: 0.78rem; color: var(--text-muted); }
 .j-opt.code { flex-direction: column; gap: 2px; }
 .j-opt.sel { border-color: var(--primary); background: rgba(245,158,11,0.1); }
@@ -1517,9 +1517,9 @@ body
 .j-blank.right { background: var(--success); border-color: var(--success); } .j-blank.wrong { background: var(--danger); border-color: var(--danger); color: #fff; }
 .j-bank, .j-pool { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .j-chipbtn { padding: 6px 10px; font: inherit; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; }
-.j-order { display: flex; flex-direction: column; gap: 4px; min-height: 60px; margin-top: 6px; padding: 8px; background: #0B1120; border: 1px dashed var(--border); border-radius: var(--radius-sm); }
+.j-order { display: flex; flex-direction: column; gap: 4px; min-height: 60px; margin-top: 6px; padding: 8px; background: var(--code-bg); border: 1px dashed var(--border); border-radius: var(--radius-sm); }
 .j-ol { padding: 6px 10px; font: inherit; text-align: left; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; }
-.j-ol code { white-space: pre; background: none; padding: 0; color: #E5E7EB; }
+.j-ol code { white-space: pre; background: none; padding: 0; color: var(--code-text); }
 .j-ol.right { border-color: var(--success); } .j-ol.wrong { border-color: var(--danger); }
 .j-empty { padding: 10px; font-size: 0.85rem; color: var(--text-muted); text-align: center; }
 .j-feedback { margin-top: 12px; padding: 12px 14px; font-size: 0.92rem; color: var(--text-light); background: var(--surface); border: 1px solid var(--border); border-left-width: 4px; border-radius: var(--radius-sm); }
@@ -1554,7 +1554,7 @@ body
 .j-link { padding: 0; margin: 6px 0; font: inherit; font-weight: 600; color: var(--primary); background: none; border: 0; cursor: pointer; }
 .j-file { margin: 8px 0; font-size: 0.85rem; color: var(--text-light); }
 .j-file summary { cursor: pointer; font-family: ui-monospace, monospace; color: var(--text-muted); }
-.j-code { width: 100%; margin-top: 10px; padding: 12px; font: 0.88rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: #E5E7EB; background: #0B1120; border: 1px solid var(--border); border-radius: var(--radius-sm); resize: vertical; tab-size: 4; }
+.j-code { width: 100%; margin-top: 10px; padding: 12px; font: 0.88rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--code-text); background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius-sm); resize: vertical; tab-size: 4; }
 .j-code:focus { outline: none; border-color: var(--primary); }
 .j-vars { width: 100%; margin: 6px 0; border-collapse: collapse; font-size: 0.85rem; }
 .j-vars td { padding: 4px 8px; border-bottom: 1px solid var(--border-light); }
@@ -1585,13 +1585,13 @@ body
 /* Java: lesson path */
 .j-path { display: flex; flex-direction: column; gap: 18px; padding: 10px 0 20px 56px; }
 .j-node { display: flex; align-items: center; gap: 14px; transform: translateX(var(--dx)); }
-.j-dot { flex: 0 0 64px; height: 58px; display: grid; place-items: center; font: 700 1.3rem/1 inherit; color: #fff; background: #374151; border: 0; border-radius: 50%; box-shadow: 0 6px 0 #1F2937; cursor: pointer; transition: transform 0.1s; }
-.j-dot:active { transform: translateY(4px); box-shadow: 0 2px 0 #1F2937; }
+.j-dot { flex: 0 0 64px; height: 58px; display: grid; place-items: center; font: 700 1.3rem/1 inherit; color: #fff; background: var(--dot); border: 0; border-radius: 50%; box-shadow: 0 6px 0 var(--dot-shadow); cursor: pointer; transition: transform 0.1s; }
+.j-dot:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--dot-shadow); }
 .j-node.done .j-dot { background: #F59E0B; box-shadow: 0 6px 0 #B45309; }
 .j-node.skip .j-dot { background: #6B7280; box-shadow: 0 6px 0 #4B5563; }
 .j-node.cur .j-dot, .j-node.open .j-dot { background: #10B981; box-shadow: 0 6px 0 #047857; }
 .j-node.cur .j-dot { animation: j-pulse 1.8s infinite; }
-.j-node.lock .j-dot { font-size: 1rem; color: #9CA3AF; }
+.j-node.lock .j-dot { font-size: 1rem; color: var(--dot-lock-text); }
 @keyframes j-pulse { 0%, 100% { outline: 0 solid rgba(16,185,129,0.5); } 50% { outline: 8px solid rgba(16,185,129,0); } }
 .j-nlabel { display: flex; flex-direction: column; min-width: 0; }
 .j-nlabel b { color: var(--text); font-size: 0.95rem; }
@@ -1620,9 +1620,11 @@ body
 .j-body .j-feedback.ok > b { color: var(--success); } .j-body .j-feedback.bad > b { color: var(--danger); }
 /* Java: edit progress */
 .j-unitbtns { margin: 4px 0 6px; }
+.j-unitbtns .btn { min-width: 0; padding-left: 8px; padding-right: 8px; font-size: 0.85rem; white-space: normal; text-align: center; }
+.j-opt .j-box { flex: none; width: 16px; }
 .j-editbar { margin: 8px 0; padding: 10px 12px; background: rgba(245,158,11,0.08); border: 1px dashed var(--primary); border-radius: var(--radius-sm); }
 .j-editbar p { margin: 0 0 8px; font-size: 0.85rem; color: var(--text-light); }
-.j-path.editing .j-node.lock .j-dot, .j-path.editing .j-node.open .j-dot, .j-path.editing .j-node.cur .j-dot { color: #fff; background: #374151; box-shadow: 0 6px 0 #1F2937; animation: none; }
+.j-path.editing .j-node.lock .j-dot, .j-path.editing .j-node.open .j-dot, .j-path.editing .j-node.cur .j-dot { color: #fff; background: var(--dot); box-shadow: 0 6px 0 var(--dot-shadow); animation: none; }
 /* Java: lesson reader */
 .j-nbtns { display: flex; flex-wrap: wrap; gap: 6px; }
 .j-toc { display: flex; flex-direction: column; gap: 4px; margin: 4px 0 14px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }
@@ -1750,3 +1752,33 @@ body
 .v-risk summary small { font-weight: 400; color: var(--text-muted); margin-left: 4px; }
 .v-risk p { margin: 6px 0 0; font-size: 0.88rem; line-height: 1.5; }
 .v-src { font-size: 0.78rem; opacity: 0.75; }
+
+/* ===== Light theme =====
+   Applies inside elements with the "themed" class (Java so far). To theme another tab, add
+   "themed" to its panel and swap any hard-coded dark colours in its rules for tokens. */
+.theme-btn { width: 36px; height: 36px; padding: 0; font-size: 1.1rem; line-height: 1; background: transparent; border: 1px solid var(--border); border-radius: 50%; cursor: pointer; }
+.themed {
+  --code-bg: #0B1120; --code-text: #E5E7EB; --code-no: #4B5563; --code-inline: #FCD34D; --tint: rgba(255,255,255,0.06);
+  --code-kw: #C084FC; --code-str: #86EFAC; --code-num: #FCA5A5; --code-com: #6B7280; --code-type: #7DD3FC;
+  --dot: #374151; --dot-shadow: #1F2937; --dot-lock-text: #9CA3AF;
+}
+:root[data-theme="light"] .themed {
+  color-scheme: light;
+  --primary: #D97706; --primary-dark: #B45309; --primary-light: #F59E0B;
+  --success: #059669; --success-dark: #047857; --danger: #DC2626; --danger-dark: #B91C1C;
+  --accent: #D97706; --accent-light: #FCD34D;
+  --bg: #F6F7FB; --bg-alt: #FFFFFF; --surface: #FFFFFF;
+  --border: rgba(15, 23, 42, 0.12); --border-light: rgba(15, 23, 42, 0.06);
+  --text: #0F172A; --text-muted: #64748B; --text-light: #334155;
+  --shadow: 0 4px 18px rgba(15,23,42,0.08); --shadow-lg: 0 12px 30px rgba(15,23,42,0.12);
+  --code-bg: #F1F5F9; --code-text: #1E293B; --code-no: #94A3B8; --code-inline: #9A3412; --tint: rgba(15,23,42,0.06);
+  --code-kw: #7C3AED; --code-str: #15803D; --code-num: #B91C1C; --code-com: #64748B; --code-type: #0369A1;
+  --dot: #CBD5E1; --dot-shadow: #94A3B8; --dot-lock-text: #64748B;
+}
+:root[data-theme="light"] .themed .j-kicker, :root[data-theme="light"] .themed .j-xpc, :root[data-theme="light"] .themed .j-xpchip,
+:root[data-theme="light"] .themed .j-link, :root[data-theme="light"] .themed .j-toc a, :root[data-theme="light"] .themed .j-backbtn,
+:root[data-theme="light"] .themed .j-retry, :root[data-theme="light"] .themed .j-foot a, :root[data-theme="light"] .themed .j-num { color: #B45309; }
+:root[data-theme="light"] .themed .j-reel { box-shadow: 0 10px 30px rgba(15,23,42,0.1); }
+:root[data-theme="light"] .themed .j-ghost, :root[data-theme="light"] .themed .btn-pin { background: var(--surface); }
+:root[data-theme="light"] body.themed-open .tab-bar { background: rgba(255,255,255,0.96); border-top-color: rgba(15,23,42,0.12); }
+:root[data-theme="light"] body.themed-open .tab-item:not(.active) { color: #64748B; }

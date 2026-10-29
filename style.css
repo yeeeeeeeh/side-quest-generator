@@ -1741,3 +1741,12 @@ body
 .v-cont b { text-align: right; color: var(--text); font-variant-numeric: tabular-nums; }
 .v-cbar { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
 .v-cbar i { display: block; height: 100%; background: var(--primary); border-radius: 4px; }
+
+/* Visa: health & vaccines */
+.v-health { margin-top: 10px; }
+.v-risk { border-top: 1px solid var(--border); padding: 8px 0; }
+.v-risk:first-of-type { border-top: 0; padding-top: 0; }
+.v-risk summary { cursor: pointer; font-weight: 600; color: var(--text); }
+.v-risk summary small { font-weight: 400; color: var(--text-muted); margin-left: 4px; }
+.v-risk p { margin: 6px 0 0; font-size: 0.88rem; line-height: 1.5; }
+.v-src { font-size: 0.78rem; opacity: 0.75; }

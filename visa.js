@@ -71,7 +71,7 @@ function render() {
           <span class="v-name">${esc(c.name)}${c.zh ? ` <small>${esc(c.zh)}</small>` : ""}</span>${c.ams ? '<span class="v-plane" title="Direct flights from Amsterdam">✈️</span>' : ""}
           <span class="v-stay">${c.visa ? esc(c.visa.stay) : SPECIAL_NOTES[c.code] ? "see note" : ""}</span><span class="v-badge v-${x.cls}">${x.short}</span></button>`; }).join("")}</div>`).join("")
       : `<p class="v-empty">No matching countries.</p>`}
-    <p class="v-foot">Taiwan passport rules from the <a href="${esc(D.sourceUrl)}" target="_blank" rel="noopener">Bureau of Consular Affairs</a> (as in the map app). Always check the official page before you travel. Country list from <a href="https://github.com/mledoze/countries" target="_blank" rel="noopener">mledoze/countries</a> (ODbL).</p>`;
+    <p class="v-foot">Taiwan passport rules from the <a href="${esc(D.sourceUrl)}" target="_blank" rel="noopener">Bureau of Consular Affairs</a> (as in the map app). Always check the official page before you travel. Country list from <a href="https://github.com/mledoze/countries" target="_blank" rel="noopener">mledoze/countries</a> (ODbL). Health risks from WHO/CDC lists, as in the map app; not medical advice.</p>`;
   const q = $("#v-q");
   q.oninput = () => { prefs.q = q.value; save(); const pos = q.selectionStart; render(); const n = $("#v-q"); n.focus(); n.setSelectionRange(pos, pos); };
   $("#v-hide").onchange = e => { prefs.hideVisited = e.target.checked; save(); render(); };
@@ -218,6 +218,7 @@ function detail(c) {
     ${c.ams ? `<div class="v-pass v-ams"><div class="v-passhead">✈️ Direct from Amsterdam (AMS)</div>
       <p class="v-note">${c.ams.map(a => esc(a.city)).join(" · ")}</p>
       <a class="v-sky" href="${esc(skyscanner(c.code))}" target="_blank" rel="noopener">Search flights next month on Skyscanner ↗</a></div>` : ""}
+    ${healthBox(c)}
     <label class="v-visit"><input type="checkbox" id="v-visited" ${isVisited(c) ? "checked" : ""}> I've visited ${esc(c.name)}</label>
     <div class="v-links">${links.map(([href, t2, sub]) => `<a href="${esc(href)}" target="_blank" rel="noopener"><b>${t2}</b><small>${esc(sub)}</small></a>`).join("")}</div>
   </div>`;
@@ -229,6 +230,20 @@ function detail(c) {
     prefs.visited = e.target.checked ? [...new Set([...prefs.visited, c.code])] : prefs.visited.filter(v => v !== c.code);
     save(); render(); if (map) drawMap(); if (prefs.view === "stats") stats();
   };
+}
+
+// Health & vaccines, copied from map-app's country_risks.yaml (WHO/CDC lists, see visa/build-health.py).
+// Optional: if health.json fails to load the sheet just leaves the section out.
+let H = null;
+function healthBox(c) {
+  if (!H) return "";
+  const risks = Object.entries(H.risks).filter(([, r]) => r.codes.includes(c.code));
+  return `<div class="v-pass v-health"><div class="v-passhead">💉 Health &amp; vaccines</div>
+    ${risks.length ? risks.map(([, r]) => `<details class="v-risk"><summary>${r.emoji} ${esc(r.en)} <small>${esc(r.zh)}</small></summary>
+      <p>${esc(r.about)}</p><p><b>傳播</b> ${esc(r.how)}</p><p><b>預防</b> ${esc(r.prevent)}</p>${r.source ? `<p class="v-src">Source: ${esc(r.source)}</p>` : ""}</details>`).join("")
+      : `<p class="v-note">None of the tracked risks (${Object.keys(H.risks).length} diseases) are listed for ${esc(c.name)}. Routine vaccines still apply.</p>`}
+    <p class="v-note v-src">Snapshot reviewed ${esc(H.reviewed)}. ${esc(H.note)} See a travel clinic (旅遊醫學門診) 4–6 weeks before you go.</p>
+    <a class="v-sky" href="https://wwwnc.cdc.gov/travel/destinations/list" target="_blank" rel="noopener">CDC Travelers' Health by destination ↗</a></div>`;
 }
 
 let started = false;
@@ -246,6 +261,7 @@ window.visaInit = async function () {
     $("#v-body").innerHTML = `<p class="v-empty">Couldn't load the visa list: ${esc(e.message)}. Open the tab again to retry.</p>`;
     return;
   }
+  fetch("visa/health.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(h => { H = h; }).catch(() => {});
   render();
   document.querySelectorAll("[data-view]").forEach(b => b.onclick = () => setView(b.dataset.view));
   setView(["map", "stats"].includes(prefs.view) ? prefs.view : "list");

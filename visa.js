@@ -217,6 +217,7 @@ function detail(c) {
     </div>
     ${c.ams ? `<div class="v-pass v-ams"><div class="v-passhead">✈️ Direct from Amsterdam (AMS)</div>
       <p class="v-note">${c.ams.map(a => esc(a.city)).join(" · ")}</p>
+      ${D.amsSource ? `<p class="v-note v-src">Routes: ${esc(D.amsSource)}</p>` : ""}
       <a class="v-sky" href="${esc(skyscanner(c.code))}" target="_blank" rel="noopener">Search flights next month on Skyscanner ↗</a></div>` : ""}
     ${healthBox(c)}
     <label class="v-visit"><input type="checkbox" id="v-visited" ${isVisited(c) ? "checked" : ""}> I've visited ${esc(c.name)}</label>

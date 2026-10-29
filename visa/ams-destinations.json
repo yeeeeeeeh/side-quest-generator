@@ -1,0 +1,606 @@
+{
+ "updated": "2026-10-29",
+ "source": "map-app SchipholDestinations.yaml",
+ "destinations": [
+  {
+   "city": "Abu Dhabi",
+   "countryCode": "AE",
+   "lat": 24.4539,
+   "lon": 54.3773
+  },
+  {
+   "city": "Accra",
+   "countryCode": "GH",
+   "lat": 5.6037,
+   "lon": -0.187
+  },
+  {
+   "city": "Agadir",
+   "countryCode": "MA",
+   "lat": 30.4278,
+   "lon": -9.5981
+  },
+  {
+   "city": "Amman",
+   "countryCode": "JO",
+   "lat": 31.9539,
+   "lon": 35.9106
+  },
+  {
+   "city": "Atyrau",
+   "countryCode": "KZ",
+   "lat": 47.1167,
+   "lon": 51.8833
+  },
+  {
+   "city": "Austin",
+   "countryCode": "US",
+   "lat": 30.2672,
+   "lon": -97.7431
+  },
+  {
+   "city": "Bangalore",
+   "countryCode": "IN",
+   "lat": 12.9716,
+   "lon": 77.5946
+  },
+  {
+   "city": "Bangkok",
+   "countryCode": "TH",
+   "lat": 13.7563,
+   "lon": 100.5018
+  },
+  {
+   "city": "Banjul",
+   "countryCode": "GM",
+   "lat": 13.4549,
+   "lon": -16.579
+  },
+  {
+   "city": "Beijing Capital",
+   "countryCode": "CN",
+   "lat": 40.0799,
+   "lon": 116.6031
+  },
+  {
+   "city": "Beijing Daxing",
+   "countryCode": "CN",
+   "lat": 39.5098,
+   "lon": 116.4105
+  },
+  {
+   "city": "Boa Vista",
+   "countryCode": "CV",
+   "lat": 16.1372,
+   "lon": -22.9089
+  },
+  {
+   "city": "Bogota",
+   "countryCode": "CO",
+   "lat": 4.711,
+   "lon": -74.0721
+  },
+  {
+   "city": "Bonaire",
+   "countryCode": "BQ",
+   "lat": 12.1784,
+   "lon": -68.2385
+  },
+  {
+   "city": "Boston",
+   "countryCode": "US",
+   "lat": 42.3601,
+   "lon": -71.0589
+  },
+  {
+   "city": "Buenos Aires",
+   "countryCode": "AR",
+   "lat": -34.6037,
+   "lon": -58.3816
+  },
+  {
+   "city": "Cairo",
+   "countryCode": "EG",
+   "lat": 30.0444,
+   "lon": 31.2357
+  },
+  {
+   "city": "Cancun",
+   "countryCode": "MX",
+   "lat": 21.1619,
+   "lon": -86.8515
+  },
+  {
+   "city": "Cape Town",
+   "countryCode": "ZA",
+   "lat": -33.9249,
+   "lon": 18.4241
+  },
+  {
+   "city": "Cartagena",
+   "countryCode": "CO",
+   "lat": 10.391,
+   "lon": -75.4794
+  },
+  {
+   "city": "Casablanca",
+   "countryCode": "MA",
+   "lat": 33.5731,
+   "lon": -7.5898
+  },
+  {
+   "city": "Chicago",
+   "countryCode": "US",
+   "lat": 41.8781,
+   "lon": -87.6298
+  },
+  {
+   "city": "Curacao",
+   "countryCode": "CW",
+   "lat": 12.1696,
+   "lon": -68.99
+  },
+  {
+   "city": "Dakar",
+   "countryCode": "SN",
+   "lat": 14.7167,
+   "lon": -17.4677
+  },
+  {
+   "city": "Dallas/Fort Worth",
+   "countryCode": "US",
+   "lat": 32.8998,
+   "lon": -97.0403
+  },
+  {
+   "city": "Dammam",
+   "countryCode": "SA",
+   "lat": 26.4207,
+   "lon": 50.0888
+  },
+  {
+   "city": "Dar Es Salaam",
+   "countryCode": "TZ",
+   "lat": -6.7924,
+   "lon": 39.2083
+  },
+  {
+   "city": "Denpasar Bali",
+   "countryCode": "ID",
+   "lat": -8.6705,
+   "lon": 115.2126
+  },
+  {
+   "city": "Detroit",
+   "countryCode": "US",
+   "lat": 42.3314,
+   "lon": -83.0458
+  },
+  {
+   "city": "Doha",
+   "countryCode": "QA",
+   "lat": 25.2854,
+   "lon": 51.531
+  },
+  {
+   "city": "Dubai",
+   "countryCode": "AE",
+   "lat": 25.2048,
+   "lon": 55.2708
+  },
+  {
+   "city": "Edmonton",
+   "countryCode": "CA",
+   "lat": 53.5461,
+   "lon": -113.4938
+  },
+  {
+   "city": "Entebbe",
+   "countryCode": "UG",
+   "lat": 0.0512,
+   "lon": 32.4637
+  },
+  {
+   "city": "Erbil",
+   "countryCode": "IQ",
+   "lat": 36.1901,
+   "lon": 44.0091
+  },
+  {
+   "city": "Fuzhou",
+   "countryCode": "CN",
+   "lat": 26.0745,
+   "lon": 119.2965
+  },
+  {
+   "city": "Georgetown",
+   "countryCode": "GY",
+   "lat": 6.8013,
+   "lon": -58.1553
+  },
+  {
+   "city": "Guangzhou",
+   "countryCode": "CN",
+   "lat": 23.1291,
+   "lon": 113.2644
+  },
+  {
+   "city": "Guayaquil",
+   "countryCode": "EC",
+   "lat": -2.1962,
+   "lon": -79.8862
+  },
+  {
+   "city": "Halifax",
+   "countryCode": "CA",
+   "lat": 44.6488,
+   "lon": -63.5752
+  },
+  {
+   "city": "Hanoi",
+   "countryCode": "VN",
+   "lat": 21.0245,
+   "lon": 105.8412
+  },
+  {
+   "city": "Hong Kong",
+   "countryCode": "HK",
+   "lat": 22.3193,
+   "lon": 114.1694
+  },
+  {
+   "city": "Houston",
+   "countryCode": "US",
+   "lat": 29.7604,
+   "lon": -95.3698
+  },
+  {
+   "city": "Hurghada",
+   "countryCode": "EG",
+   "lat": 27.2579,
+   "lon": 33.8116
+  },
+  {
+   "city": "Hyderabad",
+   "countryCode": "IN",
+   "lat": 17.385,
+   "lon": 78.4867
+  },
+  {
+   "city": "Ilha do Sal",
+   "countryCode": "CV",
+   "lat": 16.7333,
+   "lon": -22.9333
+  },
+  {
+   "city": "Jakarta",
+   "countryCode": "ID",
+   "lat": -6.2088,
+   "lon": 106.8456
+  },
+  {
+   "city": "Jeddah",
+   "countryCode": "SA",
+   "lat": 21.5433,
+   "lon": 39.1728
+  },
+  {
+   "city": "Johannesburg",
+   "countryCode": "ZA",
+   "lat": -26.2041,
+   "lon": 28.0473
+  },
+  {
+   "city": "Kigali",
+   "countryCode": "RW",
+   "lat": -1.9441,
+   "lon": 30.0619
+  },
+  {
+   "city": "Kilimanjaro",
+   "countryCode": "TZ",
+   "lat": -3.4272,
+   "lon": 37.0747
+  },
+  {
+   "city": "Kuala Lumpur",
+   "countryCode": "MY",
+   "lat": 3.139,
+   "lon": 101.6869
+  },
+  {
+   "city": "Kuwait",
+   "countryCode": "KW",
+   "lat": 29.3759,
+   "lon": 47.9774
+  },
+  {
+   "city": "Lagos",
+   "countryCode": "NG",
+   "lat": 6.5244,
+   "lon": 3.3792
+  },
+  {
+   "city": "Las Vegas",
+   "countryCode": "US",
+   "lat": 36.1699,
+   "lon": -115.1398
+  },
+  {
+   "city": "Los Angeles",
+   "countryCode": "US",
+   "lat": 34.0522,
+   "lon": -118.2437
+  },
+  {
+   "city": "Manila",
+   "countryCode": "PH",
+   "lat": 14.5995,
+   "lon": 120.9842
+  },
+  {
+   "city": "Marrakech",
+   "countryCode": "MA",
+   "lat": 31.6295,
+   "lon": -7.9811
+  },
+  {
+   "city": "Marsa Alam",
+   "countryCode": "EG",
+   "lat": 25.0657,
+   "lon": 34.8943
+  },
+  {
+   "city": "Mexico City",
+   "countryCode": "MX",
+   "lat": 19.4326,
+   "lon": -99.1332
+  },
+  {
+   "city": "Miami",
+   "countryCode": "US",
+   "lat": 25.7617,
+   "lon": -80.1918
+  },
+  {
+   "city": "Minneapolis/St. Paul",
+   "countryCode": "US",
+   "lat": 44.9778,
+   "lon": -93.265
+  },
+  {
+   "city": "Montego Bay",
+   "countryCode": "JM",
+   "lat": 18.4762,
+   "lon": -77.8939
+  },
+  {
+   "city": "Montreal",
+   "countryCode": "CA",
+   "lat": 45.5017,
+   "lon": -73.5673
+  },
+  {
+   "city": "Mumbai",
+   "countryCode": "IN",
+   "lat": 19.076,
+   "lon": 72.8777
+  },
+  {
+   "city": "Muscat",
+   "countryCode": "OM",
+   "lat": 23.588,
+   "lon": 58.3829
+  },
+  {
+   "city": "Nador",
+   "countryCode": "MA",
+   "lat": 35.1681,
+   "lon": -2.9334
+  },
+  {
+   "city": "New Delhi",
+   "countryCode": "IN",
+   "lat": 28.6139,
+   "lon": 77.209
+  },
+  {
+   "city": "New York JFK",
+   "countryCode": "US",
+   "lat": 40.6413,
+   "lon": -73.7781
+  },
+  {
+   "city": "New York Newark",
+   "countryCode": "US",
+   "lat": 40.6895,
+   "lon": -74.1745
+  },
+  {
+   "city": "Orlando",
+   "countryCode": "US",
+   "lat": 28.5383,
+   "lon": -81.3792
+  },
+  {
+   "city": "Osaka",
+   "countryCode": "JP",
+   "lat": 34.6937,
+   "lon": 135.5023
+  },
+  {
+   "city": "Panama City",
+   "countryCode": "PA",
+   "lat": 8.9936,
+   "lon": -79.5197
+  },
+  {
+   "city": "Philadelphia",
+   "countryCode": "US",
+   "lat": 39.9526,
+   "lon": -75.1652
+  },
+  {
+   "city": "Port of Spain",
+   "countryCode": "TT",
+   "lat": 10.6918,
+   "lon": -61.2225
+  },
+  {
+   "city": "Portland",
+   "countryCode": "US",
+   "lat": 45.5051,
+   "lon": -122.675
+  },
+  {
+   "city": "Punta Cana",
+   "countryCode": "DO",
+   "lat": 18.5601,
+   "lon": -68.3725
+  },
+  {
+   "city": "Quito",
+   "countryCode": "EC",
+   "lat": -0.1807,
+   "lon": -78.4678
+  },
+  {
+   "city": "Rio de Janeiro",
+   "countryCode": "BR",
+   "lat": -22.9068,
+   "lon": -43.1729
+  },
+  {
+   "city": "Riyadh",
+   "countryCode": "SA",
+   "lat": 24.6877,
+   "lon": 46.7219
+  },
+  {
+   "city": "Salt Lake City",
+   "countryCode": "US",
+   "lat": 40.7608,
+   "lon": -111.891
+  },
+  {
+   "city": "San Diego",
+   "countryCode": "US",
+   "lat": 32.7157,
+   "lon": -117.1611
+  },
+  {
+   "city": "San Francisco",
+   "countryCode": "US",
+   "lat": 37.7749,
+   "lon": -122.4194
+  },
+  {
+   "city": "San Jose",
+   "countryCode": "CR",
+   "lat": 9.9281,
+   "lon": -84.0907
+  },
+  {
+   "city": "Santiago",
+   "countryCode": "CL",
+   "lat": -33.4489,
+   "lon": -70.6693
+  },
+  {
+   "city": "Sao Vicente Island",
+   "countryCode": "CV",
+   "lat": 16.8833,
+   "lon": -25.0167
+  },
+  {
+   "city": "Seattle",
+   "countryCode": "US",
+   "lat": 47.4502,
+   "lon": -122.3088
+  },
+  {
+   "city": "Seoul",
+   "countryCode": "KR",
+   "lat": 37.5665,
+   "lon": 126.978
+  },
+  {
+   "city": "Shanghai",
+   "countryCode": "CN",
+   "lat": 31.2304,
+   "lon": 121.4737
+  },
+  {
+   "city": "Sharm El Sheikh",
+   "countryCode": "EG",
+   "lat": 27.9158,
+   "lon": 34.33
+  },
+  {
+   "city": "Singapore",
+   "countryCode": "SG",
+   "lat": 1.3644,
+   "lon": 103.9915
+  },
+  {
+   "city": "St Maarten",
+   "countryCode": "SX",
+   "lat": 18.0425,
+   "lon": -63.0548
+  },
+  {
+   "city": "Taipei",
+   "countryCode": "TW",
+   "lat": 25.033,
+   "lon": 121.5654
+  },
+  {
+   "city": "Tampa",
+   "countryCode": "US",
+   "lat": 27.9506,
+   "lon": -82.4572
+  },
+  {
+   "city": "Tokyo",
+   "countryCode": "JP",
+   "lat": 35.5494,
+   "lon": 139.7798
+  },
+  {
+   "city": "Toronto",
+   "countryCode": "CA",
+   "lat": 43.6532,
+   "lon": -79.3832
+  },
+  {
+   "city": "Tétouan",
+   "countryCode": "MA",
+   "lat": 35.5785,
+   "lon": -5.3684
+  },
+  {
+   "city": "Vancouver",
+   "countryCode": "CA",
+   "lat": 49.2827,
+   "lon": -123.1207
+  },
+  {
+   "city": "Washington",
+   "countryCode": "US",
+   "lat": 38.9072,
+   "lon": -77.0369
+  },
+  {
+   "city": "Xiamen",
+   "countryCode": "CN",
+   "lat": 24.4798,
+   "lon": 118.0894
+  },
+  {
+   "city": "Zanzibar",
+   "countryCode": "TZ",
+   "lat": -6.1659,
+   "lon": 39.2026
+  }
+ ]
+}

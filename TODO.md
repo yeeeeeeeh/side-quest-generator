@@ -35,7 +35,7 @@ Sizes are rough % of one session's usage.
 
 ## Done
 
-- [x] ☕ Light mode for Java, with Auto / Light / Dark switch (2026-10-29, COMMIT)
+- [x] ☕ Light mode for Java, with Auto / Light / Dark switch (2026-10-29, 7f8cbe7)
 - [x] 🛂 Direct flights from Schiphol (9ff8ec2)
 - [x] 🛂 Visited stats (c7f7d92)
 - [x] 🛂 Health & vaccines (8b23ddc)

@@ -87,11 +87,26 @@ function streak() {
   let n = 0; while (met(dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
   return n;
 }
-function completeLesson(l, score) {
+// Lesson style: "full" plays every exercise, "light" only a couple of quick checks, "cards" only the pages.
+// Only full lessons set the best score; cards-only earns less XP since nothing is checked.
+const LESSON_STYLES = { full: "📚 Full", light: "🃏 Light", cards: "📖 Cards only" }, LIGHT_CHECKS = 2, CARDS_XP = 5;
+P.lessonStyle = LESSON_STYLES[P.lessonStyle] ? P.lessonStyle : "full";
+// Light: the two quickest exercises not seen yet (true/false and single choice first, short code), in lesson order.
+function lessonItems(l, style) {
+  const all = l.steps.map((st, k) => [st, k]);
+  if (style === "full") return all.map(([, k]) => [k, 0]);
+  if (style === "cards") return all.filter(([st]) => st.type === "page").map(([, k]) => [k, 0]);
+  const rank = { trueFalse: 0, singleChoice: 1, multiChoice: 2, tapLine: 3, fillBlanks: 4, orderLines: 5 };
+  const cost = st => (P.ex[st.id] ? 10 : 0) + (rank[st.kind] ?? 6) + ((st.code || "").split("\n").length > 8 ? 1 : 0);
+  const keep = new Set(all.filter(([st]) => st.type === "exercise").sort((a, b) => cost(a[0]) - cost(b[0]) || a[1] - b[1]).slice(0, LIGHT_CHECKS).map(([, k]) => k));
+  return all.filter(([st, k]) => st.type === "page" || keep.has(k)).map(([, k]) => [k, 0]);
+}
+function completeLesson(l, score, style = "full") {
   const st = P.lessons[l.id] || {};
-  P.lessons[l.id] = { done: true, best: Math.max(st.best ?? 0, score), at: Date.now() };
+  P.lessons[l.id] = { done: true, best: style === "full" ? Math.max(st.best ?? 0, score) : st.best, at: Date.now(), style };
+  if (P.lessons[l.id].best == null) delete P.lessons[l.id].best;
   P.lastLesson = l.id;
-  const xp = LESSON_XP + (score >= 1 ? PERFECT_XP : 0);
+  const xp = style === "cards" ? CARDS_XP : LESSON_XP + (score >= 1 ? PERFECT_XP : 0);
   addXP(xp); save();
   return xp;
 }
@@ -466,6 +481,8 @@ function home(body) {
       <div><b>${r.covered}/${r.of}</b><span>objectives tried</span></div>
       <div><b>${done}/${all}</b><span>lessons</span></div>
     </div>
+    <div class="j-style"><span>Lessons</span><div class="j-seg">${Object.entries(LESSON_STYLES).map(([k, t]) => `<button data-style="${k}" class="${P.lessonStyle === k ? "on" : ""}">${t}</button>`).join("")}</div></div>
+    <p class="j-stylehint">${{ full: "Every page and every exercise.", light: `Every page, but only ${LIGHT_CHECKS} quick checks per lesson.`, cards: `Just the pages, no exercises (${CARDS_XP} XP a lesson).` }[P.lessonStyle]}</p>
     ${paused ? `<button class="btn btn-primary j-wide" id="j-resume">⏸ Resume: ${esc(paused.l.title)}<small>Unit ${paused.u.info.number} · ${Math.round(paused.state.index / paused.state.items.length * 100)}% done</small></button>`
       : next ? `<button class="btn btn-primary j-wide" id="j-cont">▶ ${done ? "Continue" : "Start"}: ${esc(next.l.title)}<small>Unit ${next.u.info.number} · ${next.l.minutes} min</small></button>` : `<p class="j-sub">Every lesson is done. Keep sharp with reviews, mock exams and drills.</p>`}
   </div>
@@ -505,6 +522,7 @@ function home(body) {
   const views = { mocks, fixbug: drillMenu, write: drillMenu, trace: traceMenu, tips, ready: readinessView, review, reels: b => reels(b) };
   const rv = $("#j-review"); if (rv) rv.onclick = () => go(review);
   on(body, "[data-saved]", "click", b => go(savedList, b.dataset.saved));
+  on(body, "[data-style]", "click", b => { P.lessonStyle = b.dataset.style; save(); show(); });
   on(body, "[data-go]", "click", b => go(views[b.dataset.go], b.dataset.go));
 }
 
@@ -659,14 +677,15 @@ function exercise(box, ex) {
 // right. Back is always allowed (answered exercises show read-only). The session is saved after every step, so a
 // lesson can be left and resumed. A first-try right answer can be marked "I guessed": review then treats it as a miss.
 function lesson(body, u, l, resume) {
-  const S = resume || { lessonId: l.id, items: l.steps.map((_, k) => [k, 0]), index: 0, results: {}, firstTry: {}, guessed: [] };
+  const S = resume || { lessonId: l.id, style: P.lessonStyle, items: lessonItems(l, P.lessonStyle), index: 0, results: {}, firstTry: {}, guessed: [] };
+  S.style = S.style || "full";
   const persist = () => { try { localStorage.setItem(PAUSE_KEY, JSON.stringify(S)); } catch (_) {} };
   persist();
   const exercises = l.steps.filter(st => st.type === "exercise"), pages = l.steps.length - exercises.length;
   let current = null, checked = false;
   body.innerHTML = `<div class="j-lhead"><div class="j-lrow"><button class="j-lback" id="j-lprev" aria-label="Previous step">‹</button>
       <div class="j-bar big"><i id="j-prog"></i></div><button class="j-mini" id="j-bm" aria-label="Bookmark">☆</button><button class="j-mini" id="j-nt" aria-label="Note">✎</button><span class="j-xpchip">⚡${todayXP()}</span></div>
-      <div class="j-kicker">Unit ${u.info.number} · ${esc(l.title)}</div></div>
+      <div class="j-kicker">Unit ${u.info.number} · ${esc(l.title)}${S.style !== "full" ? ` · ${LESSON_STYLES[S.style]}` : ""}</div></div>
     <div class="j-card" id="j-step"></div><div class="j-notebox" id="j-notebox" hidden></div><div class="j-feedback" id="j-fb" hidden></div>
     <div class="j-actions"><button class="btn btn-primary j-wide" id="j-next">Continue</button></div>`;
   const step = $("#j-step"), fb = $("#j-fb"), nextBtn = $("#j-next");
@@ -685,7 +704,7 @@ function lesson(body, u, l, resume) {
   const progress = () => {
     const passedPages = new Set(), doneEx = new Set();
     S.items.forEach(([k], idx) => { const st = l.steps[k]; if (st.type === "page" && idx < S.index) passedPages.add(k); if (st.type === "exercise" && S.results[idx]) doneEx.add(st.id); });
-    return (passedPages.size + doneEx.size) / (pages + exercises.length || 1);
+    return (passedPages.size + doneEx.size) / (new Set(S.items.map(([k]) => k)).size || 1);
   };
   const feedback = (st, correct, idx) => {
     const canGuess = correct && !S.items[idx][1] && S.firstTry[st.id] === true;
@@ -742,9 +761,9 @@ function lesson(body, u, l, resume) {
     try { localStorage.removeItem(PAUSE_KEY); } catch (_) {}
     const ids = Object.keys(S.firstTry), right = ids.filter(id => S.firstTry[id]).length, score = ids.length ? right / ids.length : 1;
     ids.forEach(id => reviewRecord(id, S.firstTry[id] && !S.guessed.includes(id)));
-    const before = streak(), xp = completeLesson(l, score), after = streak(), nx = nextLesson();
-    body.innerHTML = `<div class="j-done"><div class="j-big">${score >= 1 ? "🌟" : "🎉"}</div><h2 class="j-h">${score >= 1 ? "Perfect lesson!" : "Lesson complete"}</h2>
-      <div class="j-stats"><div><b class="j-xpc">+${xp}</b><span>XP earned</span></div><div><b>${ids.length ? pct(score) : "—"}</b><span>first try</span></div><div><b>🔥 ${after}</b><span>day streak</span></div></div>
+    const before = streak(), xp = completeLesson(l, score, S.style), after = streak(), nx = nextLesson();
+    body.innerHTML = `<div class="j-done"><div class="j-big">${!ids.length ? "📖" : score >= 1 ? "🌟" : "🎉"}</div><h2 class="j-h">${!ids.length ? "Lesson read" : score >= 1 ? "Perfect lesson!" : "Lesson complete"}</h2>
+      <div class="j-stats"><div><b class="j-xpc">+${xp}</b><span>XP earned</span></div><div><b>${ids.length ? pct(score) : S.items.length}</b><span>${ids.length ? "first try" : "cards read"}</span></div><div><b>🔥 ${after}</b><span>day streak</span></div></div>
       ${after > before ? `<p class="j-sub">Daily goal reached. Your streak is now ${after} day${after === 1 ? "" : "s"}!</p>` : todayXP() < P.goal ? `<p class="j-sub">${P.goal - todayXP()} XP to today's goal.</p>` : ""}
       ${nx ? `<button class="btn btn-primary j-wide" id="j-nx">Next: ${esc(nx.l.title)}<small>Unit ${nx.u.info.number} · ${nx.l.minutes} min</small></button>` : ""}
       <button class="btn j-wide j-ghost" id="j-home">Done</button></div>`;

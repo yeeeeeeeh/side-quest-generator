@@ -814,26 +814,105 @@ function openLesson(u, l) {
 
 // ---------- mock exams ----------
 const MOCK_KEY = "javaMockRun";
+// Generated mocks, as in the app: the exam-style choice questions from lessons, the ones seen least first, spread across
+// objectives (round-robin), then shuffled. Mini = 20 questions, full = the real exam's 50.
+const MINI_COUNT = 20, MOCK_MODE_KEY = "javaMockPractice";
+P.mockSeen = P.mockSeen || {};
+const examPool = () => Object.values(exerciseIndex()).map(x => x.ex).filter(ex => ex.examStyle && (ex.kind === "singleChoice" || ex.kind === "multiChoice"));
+const seenCount = id => ((P.ex[id] || {}).a || 0) + (P.mockSeen[id] || 0);
+function pickMock(count) {
+  const ranked = shuffle(examPool()).map((ex, i) => ({ ex, i, n: seenCount(ex.id) })).sort((a, b) => a.n - b.n || a.i - b.i);
+  const queues = {}, order = [];
+  ranked.forEach(r => { if (!queues[r.ex.objective]) { queues[r.ex.objective] = []; order.push(r.ex.objective); } queues[r.ex.objective].push(r); });
+  const objs = shuffle(order), heads = {}, picks = {}, out = [];
+  while (out.length < count) {
+    let best = null;
+    objs.forEach((o, k) => { const q = queues[o], hd = heads[o] || 0; if (hd >= q.length) return;
+      const cand = { o, n: q[hd].n, p: picks[o] || 0, k };
+      if (!best || cand.n < best.n || (cand.n === best.n && (cand.p < best.p || (cand.p === best.p && cand.k < best.k)))) best = cand; });
+    if (!best) break;
+    out.push(queues[best.o][heads[best.o] || 0].ex); heads[best.o] = (heads[best.o] || 0) + 1; picks[best.o] = (picks[best.o] || 0) + 1;
+  }
+  return shuffle(out);
+}
+// A saved run of a generated mock keeps its question ids; fixed sets are found by id.
+function runExam(run) {
+  if (run.qids) { const idx = exerciseIndex(); return { setId: run.setId, title: run.title, questions: run.qids.map(id => idx[id] && idx[id].ex).filter(Boolean) }; }
+  return C.mocks.find(m => m.setId === run.setId);
+}
 function mocks(body) {
   let run = null; try { run = JSON.parse(localStorage.getItem(MOCK_KEY) || "null"); } catch (_) {}
-  body.innerHTML = `<h2 class="j-h">Mock exams</h2><p class="j-sub">Timed like the real exam (${C.catalog.exam.minutes} min for ${C.catalog.exam.questions} questions), pass at ${C.catalog.exam.passPercent}%.</p>
-  ${run ? `<button class="btn btn-primary j-wide" id="j-resume">▶ Resume ${esc((C.mocks.find(m => m.setId === run.setId) || {}).title || "exam")}</button>` : ""}
-  <div class="j-list">${C.mocks.map((m, i) => {
-    const st = P.mocks[m.setId];
-    return `<button class="j-lesson" data-m="${i}"><span class="j-check">📝</span><span class="j-ut"><b>${esc(m.title)}</b><small>${m.questions.length} questions · ${minutesFor(m)} min${m.credit ? ` · ${esc(m.credit)}` : ""}</small></span>
-      <span class="j-cnt">${st ? `best <b class="${st.best >= C.catalog.exam.passPercent / 100 ? "ok" : "bad"}">${pct(st.best)}</b><br>${st.attempts}×` : ""}</span></button>`;
-  }).join("")}</div>`;
-  if (run) $("#j-resume").onclick = () => go(exam, C.mocks.find(m => m.setId === run.setId), run);
-  on(body, "[data-m]", "click", b => {
-    const m = C.mocks[+b.dataset.m];
+  let practice = false; try { practice = localStorage.getItem(MOCK_MODE_KEY) === "1"; } catch (_) {}
+  const pool = examPool(), fresh = pool.filter(ex => !seenCount(ex.id)).length, ex = C.catalog.exam;
+  const gen = [["gen-mini", "Mini mock", Math.min(MINI_COUNT, pool.length)], ["gen-full", "Full mock", Math.min(ex.questions, pool.length)]];
+  const best = id => { const st = P.mocks[id]; return st ? `best <b class="${st.best >= ex.passPercent / 100 ? "ok" : "bad"}">${pct(st.best)}</b><br>${st.attempts}×` : ""; };
+  body.innerHTML = `<h2 class="j-h">Mock exams</h2>
+  <div class="j-seg"><button data-mode="0" class="${practice ? "" : "on"}">⏱ Exam</button><button data-mode="1" class="${practice ? "on" : ""}">💬 Practice</button></div>
+  <p class="j-sub">${practice ? "Practice: check each answer and see the explanation right away, like a lesson. No timer; misses come back at the end. Results go to your review schedule, not to exam scores."
+    : `Exam: timed like the real one (${ex.minutes} min for ${ex.questions} questions), mark questions for review, no feedback until you submit. Pass at ${ex.passPercent}%.`}</p>
+  ${run && !practice ? `<button class="btn btn-primary j-wide" id="j-resume">▶ Resume ${esc((runExam(run) || {}).title || "exam")}</button>` : ""}
+  <h3 class="j-sec">From the course</h3>
+  <div class="j-list">${gen.map(([id, title, n]) => `<button class="j-lesson" data-gen="${id}"><span class="j-check">${id === "gen-full" ? "🏁" : "⚡"}</span>
+    <span class="j-ut"><b>${title}</b><small>${n} questions${practice ? "" : ` · ${Math.round(ex.minutes * n / ex.questions)} min`} · ${Math.min(n, fresh)} new to you</small></span><span class="j-cnt">${practice ? "" : best(id)}</span></button>`).join("")}</div>
+  <p class="j-foot">${pool.length} exam-style questions from lessons, ${fresh} you haven't answered yet. Mocks use the ones you've seen least, spread across objectives; questions you've practised score higher, so read results with that in mind.</p>
+  <h3 class="j-sec">Practice exams</h3>
+  <div class="j-list">${C.mocks.map((m, i) => `<button class="j-lesson" data-m="${i}"><span class="j-check">📝</span><span class="j-ut"><b>${esc(m.title)}</b><small>${m.questions.length} questions${practice ? "" : ` · ${minutesFor(m)} min`}${m.credit ? ` · ${esc(m.credit)}` : ""}</small></span>
+      <span class="j-cnt">${practice ? "" : best(m.setId)}</span></button>`).join("")}</div>`;
+  on(body, "[data-mode]", "click", b => { try { localStorage.setItem(MOCK_MODE_KEY, b.dataset.mode); } catch (_) {} show(); });
+  if ($("#j-resume")) $("#j-resume").onclick = () => go(exam, runExam(run), run);
+  const start = m => {
+    if (practice) return go(mockPractice, m);
     if (run && !confirm("Start a new exam? The unfinished one will be discarded.")) return;
     go(exam, m, null);
-  });
+  };
+  on(body, "[data-gen]", "click", b => { const [id, title, n] = gen.find(g => g[0] === b.dataset.gen); start({ setId: id, title, questions: pickMock(n), generated: true }); });
+  on(body, "[data-m]", "click", b => start(C.mocks[+b.dataset.m]));
+}
+// Practice mode: lesson-style feedback, no timer, misses come back at the end; results feed the review schedule.
+function mockPractice(body, m) {
+  const queue = m.questions.map(q => ({ q, retry: false }));
+  let i = 0, current = null, checked = false, first = {};
+  body.innerHTML = `<div class="j-lhead"><div class="j-lrow"><div class="j-bar big"><i id="j-prog"></i></div><span class="j-xpchip" id="j-pc"></span></div>
+    <div class="j-kicker">${esc(m.title)} · practice</div></div><div class="j-card" id="j-step"></div><div class="j-feedback" id="j-fb" hidden></div>
+    <div class="j-actions"><button class="btn btn-primary j-wide" id="j-next">Check</button></div>`;
+  const step = $("#j-step"), fb = $("#j-fb"), nextBtn = $("#j-next");
+  const render = () => {
+    const done = Object.keys(first).length;
+    $("#j-prog").style.width = (queue.slice(0, i).filter(x => !x.retry).length / m.questions.length * 100) + "%";
+    $("#j-pc").textContent = `${Object.values(first).filter(Boolean).length}/${done}`;
+    fb.hidden = true; checked = false;
+    step.innerHTML = queue[i].retry ? '<div class="j-retry">↻ Try this one again</div>' : "";
+    const box = h("div"); step.appendChild(box); step.dataset.ex = queue[i].q.id; current = exercise(box, queue[i].q); nextBtn.textContent = "Check";
+    $("#j-body").scrollTop = 0;
+  };
+  nextBtn.onclick = () => {
+    const { q, retry } = queue[i];
+    if (!checked) {
+      const r = current.check();
+      if (!r.ready) { nextBtn.classList.add("shake"); setTimeout(() => nextBtn.classList.remove("shake"), 400); return; }
+      checked = true;
+      if (!retry) { first[q.id] = r.correct; recordAnswer(q.objective, r.correct); reviewRecord(q.id, r.correct); if (r.correct) addXP(1); }
+      if (!r.correct) queue.push({ q, retry: true });
+      fb.className = "j-feedback " + (r.correct ? "ok" : "bad"); fb.hidden = false;
+      fb.innerHTML = `<b>${r.correct ? "✓ Correct" : "✗ Not quite, it comes back at the end"}</b>${mdP(q.explanation)}`;
+      nextBtn.textContent = "Continue"; fb.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      return;
+    }
+    if (++i < queue.length) return render();
+    const right = Object.values(first).filter(Boolean).length;
+    body.innerHTML = `<div class="j-done"><div class="j-big">💬</div><h2 class="j-h">Practice done</h2>
+      <div class="j-stats"><div><b class="j-xpc">+${right}</b><span>XP earned</span></div><div><b>${pct(right / m.questions.length)}</b><span>first try</span></div><div><b>🔥 ${streak()}</b><span>day streak</span></div></div>
+      <p class="j-sub">${right} of ${m.questions.length} right on the first try. Misses are in your review schedule.</p>
+      <button class="btn btn-primary j-wide" id="j-home">Done</button></div>`;
+    $("#j-home").onclick = back;
+  };
+  render();
 }
 const minutesFor = m => Math.round(C.catalog.exam.minutes * m.questions.length / C.catalog.exam.questions);
 
 function exam(body, m, resume) {
-  const run = resume || { setId: m.setId, order: shuffle(m.questions.map((_, i) => i)), answers: {}, flags: {}, idx: 0, endsAt: Date.now() + minutesFor(m) * 60000 };
+  const run = resume || { setId: m.setId, order: shuffle(m.questions.map((_, i) => i)), answers: {}, flags: {}, idx: 0, endsAt: Date.now() + minutesFor(m) * 60000,
+    ...(m.generated ? { qids: m.questions.map(q => q.id), title: m.title } : {}) };
   const persist = () => { try { localStorage.setItem(MOCK_KEY, JSON.stringify(run)); } catch (_) {} };
   persist();
   let timer = null;
@@ -876,6 +955,7 @@ function exam(body, m, resume) {
       const want = qq.kind === "multiChoice" ? qq.answers : [qq.answer], got = run.answers[qq.id] || [];
       const correct = want.length === got.length && want.every(i => got.includes(i));
       recordAnswer(qq.objective, correct);
+      P.mockSeen[qq.id] = (P.mockSeen[qq.id] || 0) + 1;
       return { qq, got, want, correct };
     });
     const score = results.filter(r => r.correct).length / results.length;

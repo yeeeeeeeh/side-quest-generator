@@ -1716,3 +1716,6 @@ body
 .v-legend i { width: 12px; height: 12px; border-radius: 3px; }
 .leaflet-tooltip { font-family: 'Inter', sans-serif; }
 #v-map path:focus { outline: none; }
+.v-plane { flex: 0 0 auto; font-size: 0.85rem; }
+.v-ams { margin-top: 10px; }
+.v-sky { display: inline-block; margin-top: 8px; font-size: 0.88rem; font-weight: 600; color: var(--primary); }

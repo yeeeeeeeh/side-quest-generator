@@ -32,7 +32,7 @@ function zhName(c) {
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[<>&'"]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&#39;", '"': "&quot;" }[c]));
 let D = null;
-let prefs = { visited: [], hideVisited: false, territories: true, type: "all", q: "" };
+let prefs = { visited: [], hideVisited: false, territories: true, type: "all", q: "", direct: false, amsLayer: true };
 try { prefs = Object.assign(prefs, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (_) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch (_) {} };
 
@@ -46,6 +46,7 @@ function shown() {
     && (prefs.territories || c.independent)
     && !(prefs.hideVisited && isVisited(c))
     && (prefs.type === "all" || typeOf(c) === prefs.type)
+    && (!prefs.direct || c.ams)
     && matches(c, q));
 }
 
@@ -60,13 +61,14 @@ function render() {
     <div class="v-opts">
       <label><input type="checkbox" id="v-hide" ${prefs.hideVisited ? "checked" : ""}> Hide visited (${prefs.visited.length})</label>
       <label><input type="checkbox" id="v-terr" ${prefs.territories ? "checked" : ""}> Include territories</label>
+      <label><input type="checkbox" id="v-direct" ${prefs.direct ? "checked" : ""}> ✈️ Direct from Amsterdam</label>
       ${prefs.type !== "all" ? `<button class="v-clear" id="v-all">Show all types ✕</button>` : ""}
     </div>
     <div class="v-colhead"><span>Country</span><span>Taiwan 🇹🇼</span></div>
     ${groups.length ? groups.map(([r, cs]) => `<h3 class="v-region">${esc(r)} <small>${cs.length}</small></h3>
       <div class="v-list">${cs.map(c => { const t = typeOf(c), x = TYPES[t];
         return `<button class="v-row${isVisited(c) ? " visited" : ""}" data-code="${c.code}"><span class="v-flag">${c.flag}</span>
-          <span class="v-name">${esc(c.name)}${c.zh ? ` <small>${esc(c.zh)}</small>` : ""}</span>
+          <span class="v-name">${esc(c.name)}${c.zh ? ` <small>${esc(c.zh)}</small>` : ""}</span>${c.ams ? '<span class="v-plane" title="Direct flights from Amsterdam">✈️</span>' : ""}
           <span class="v-stay">${c.visa ? esc(c.visa.stay) : SPECIAL_NOTES[c.code] ? "see note" : ""}</span><span class="v-badge v-${x.cls}">${x.short}</span></button>`; }).join("")}</div>`).join("")
       : `<p class="v-empty">No matching countries.</p>`}
     <p class="v-foot">Taiwan passport rules from the <a href="${esc(D.sourceUrl)}" target="_blank" rel="noopener">Bureau of Consular Affairs</a> (as in the map app). Always check the official page before you travel. Country list from <a href="https://github.com/mledoze/countries" target="_blank" rel="noopener">mledoze/countries</a> (ODbL).</p>`;
@@ -74,6 +76,7 @@ function render() {
   q.oninput = () => { prefs.q = q.value; save(); const pos = q.selectionStart; render(); const n = $("#v-q"); n.focus(); n.setSelectionRange(pos, pos); };
   $("#v-hide").onchange = e => { prefs.hideVisited = e.target.checked; save(); render(); };
   $("#v-terr").onchange = e => { prefs.territories = e.target.checked; save(); render(); };
+  $("#v-direct").onchange = e => { prefs.direct = e.target.checked; save(); render(); if (map) drawMap(); };
   const all2 = $("#v-all"); if (all2) all2.onclick = () => { prefs.type = "all"; save(); render(); };
   document.querySelectorAll("#v-body [data-type]").forEach(b => b.onclick = () => { prefs.type = prefs.type === b.dataset.type ? "all" : b.dataset.type; save(); render(); });
   document.querySelectorAll("#v-body [data-code]").forEach(b => b.onclick = () => detail(D.countries.find(c => c.code === b.dataset.code)));
@@ -97,7 +100,7 @@ function loadLeaflet() {
   });
 }
 function styleFor(c) {
-  const t = typeOf(c), dim = prefs.type !== "all" && t !== prefs.type && t !== "home";
+  const t = typeOf(c), dim = (prefs.type !== "all" && t !== prefs.type && t !== "home") || (prefs.direct && !c.ams && t !== "home");
   return { fillColor: COLORS[t], fillOpacity: dim ? 0.08 : isVisited(c) ? 0.35 : 0.75, color: isVisited(c) ? "#fff" : "#0F172A", weight: isVisited(c) ? 1.5 : 0.6 };
 }
 function drawMap() {
@@ -115,6 +118,10 @@ function drawMap() {
       layer.on("click", () => detail(c));
     },
   }).addTo(mapLayer);
+  if (prefs.amsLayer) D.countries.filter(c => c.ams).forEach(c => c.ams.forEach(a => {
+    L.circleMarker([a.lat, a.lon], { radius: 3.5, weight: 1.5, color: "#fff", fillColor: "#111827", fillOpacity: 1, pane: "markerPane" })
+      .bindTooltip(`✈️ ${esc(a.city)}, ${esc(c.name)}`).on("click", () => detail(c)).addTo(mapLayer);
+  }));
   D.countries.filter(c => !withShape.has(c.code) && c.latlng && c.code !== "TW").forEach(c => {
     L.circleMarker(c.latlng, Object.assign(styleFor(c), { radius: 5, weight: 1, color: "#0F172A" }))
       .bindTooltip(`${c.flag} ${esc(c.name)} · ${TYPES[typeOf(c)].short}`).on("click", () => detail(c)).addTo(mapLayer);
@@ -128,13 +135,14 @@ async function showMap() {
       await loadLeaflet();
       if (!world) { const r = await fetch("visa/world.json"); if (!r.ok) throw new Error(`HTTP ${r.status}`); world = await r.json(); }
     } catch (e) { box.innerHTML = `<p class="v-empty">Couldn't load the map: ${esc(e.message)}.</p>`; return; }
-    box.innerHTML = `<div id="v-map"></div><div class="v-legend">${Object.entries(TYPES).map(([t, x]) => `<button data-mtype="${t}" class="${prefs.type === t ? "on" : ""}"><i style="background:${COLORS[t]}"></i>${x.short}</button>`).join("")}</div>`;
+    box.innerHTML = `<div id="v-map"></div><div class="v-legend">${Object.entries(TYPES).map(([t, x]) => `<button data-mtype="${t}" class="${prefs.type === t ? "on" : ""}"><i style="background:${COLORS[t]}"></i>${x.short}</button>`).join("")}<button data-ams class="${prefs.amsLayer ? "on" : ""}">✈️ AMS</button></div>`;
     map = L.map("v-map", { worldCopyJump: true, minZoom: 1, maxZoom: 7, zoomSnap: 0.5, attributionControl: false }).setView([25, 15], 1.5);
     box.querySelectorAll("[data-mtype]").forEach(b => b.onclick = () => {
       prefs.type = prefs.type === b.dataset.mtype ? "all" : b.dataset.mtype; save();
       box.querySelectorAll("[data-mtype]").forEach(x => x.classList.toggle("on", x.dataset.mtype === prefs.type));
       drawMap(); render();
     });
+    box.querySelector("[data-ams]").onclick = e => { prefs.amsLayer = !prefs.amsLayer; save(); e.currentTarget.classList.toggle("on", prefs.amsLayer); drawMap(); };
   }
   drawMap();
   setTimeout(() => map.invalidateSize(), 0);
@@ -144,6 +152,13 @@ function setView(v) {
   $("#visa-panel").classList.toggle("v-mapmode", v === "map");
   document.querySelectorAll("[data-view]").forEach(b => b.classList.toggle("on", b.dataset.view === v));
   if (v === "map") showMap();
+}
+
+// Skyscanner search from Amsterdam to a country for next month (same link as the app: /ams/<cc>/<yymm>/<yymm>/).
+function skyscanner(code) {
+  const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() + 1);
+  const yymm = String(d.getFullYear() % 100).padStart(2, "0") + String(d.getMonth() + 1).padStart(2, "0");
+  return `https://www.skyscanner.net/transport/flights/ams/${code.toLowerCase()}/${yymm}/${yymm}/?adults=1&cabinclass=economy&rtn=1`;
 }
 
 // Detail sheet for one country, over the list.
@@ -166,6 +181,9 @@ function detail(c) {
       ${SPECIAL_NOTES[c.code] ? `<p class="v-note v-special">ⓘ ${esc(SPECIAL_NOTES[c.code])}</p>` : t === "visa" ? `<p class="v-note">Not on the visa-free, eTA or visa-on-arrival list: apply for a visa before you travel.</p>` : ""}
       ${t === "eta" ? `<p class="v-note">Apply online before you travel.</p>` : ""}
     </div>
+    ${c.ams ? `<div class="v-pass v-ams"><div class="v-passhead">✈️ Direct from Amsterdam (AMS)</div>
+      <p class="v-note">${c.ams.map(a => esc(a.city)).join(" · ")}</p>
+      <a class="v-sky" href="${esc(skyscanner(c.code))}" target="_blank" rel="noopener">Search flights next month on Skyscanner ↗</a></div>` : ""}
     <label class="v-visit"><input type="checkbox" id="v-visited" ${isVisited(c) ? "checked" : ""}> I've visited ${esc(c.name)}</label>
     <div class="v-links">${links.map(([href, t2, sub]) => `<a href="${esc(href)}" target="_blank" rel="noopener"><b>${t2}</b><small>${esc(sub)}</small></a>`).join("")}</div>
   </div>`;

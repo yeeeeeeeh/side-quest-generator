@@ -310,7 +310,6 @@ function hideCompletion() {
 // Each tab besides Quests is a full-screen panel with an optional init
 const TAB_PANELS = {
   ikea: { panel: "ikea-panel", init: () => ikeaInit() },
-  shop: { panel: "shop-panel", init: () => shopInit() },
   retire: { panel: "retire-panel", init: () => retireInit() },
   java: { panel: "java-panel", init: () => javaInit() },
   visa: { panel: "visa-panel", init: () => visaInit() },

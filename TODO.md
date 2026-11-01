@@ -37,7 +37,7 @@ Sizes are rough % of one session's usage.
 
 ## Done
 
-- [x] 🇯🇵 Japan shopping tab: shop search, Rakuten live prices, "worth it?" calculator, shopping list (2026-11-01, COMMIT)
+- [x] 🇯🇵 Japan shopping tab: shop search, Rakuten live prices, "worth it?" calculator, shopping list (2026-11-01, f1521e6)
 - [x] ☕ Light mode for Java, with Auto / Light / Dark switch (2026-10-29, 7f8cbe7)
 - [x] 🛂 Direct flights from Schiphol (9ff8ec2)
 - [x] 🛂 Visited stats (c7f7d92)

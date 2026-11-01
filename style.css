@@ -1782,3 +1782,56 @@ body
 :root[data-theme="light"] .themed .j-ghost, :root[data-theme="light"] .themed .btn-pin { background: var(--surface); }
 :root[data-theme="light"] body.themed-open .tab-bar { background: rgba(255,255,255,0.96); border-top-color: rgba(15,23,42,0.12); }
 :root[data-theme="light"] body.themed-open .tab-item:not(.active) { color: #64748B; }
+
+/* ===== Japan shopping ===== */
+#japan-panel { color: var(--text-light); }
+.jp-body { max-width: 760px; width: 100%; margin: 0 auto; }
+.jp-tools { display: flex; gap: 8px; }
+.jp-h { margin: 18px 0 6px; font-family: 'Cinzel', serif; font-size: 1rem; color: var(--text); }
+.jp-note { margin: 6px 0; font-size: 0.8rem; color: var(--text-muted); line-height: 1.45; }
+.jp-body .ok { color: var(--success); } .jp-body .bad { color: var(--danger); }
+.jp-seg { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.jp-seg button { flex: 1; padding: 8px 10px; font: inherit; font-size: 0.85rem; font-weight: 600; color: var(--text-light); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; cursor: pointer; }
+.jp-seg button.on { color: #111; background: var(--primary); border-color: var(--primary); }
+.jp-seg.small button { flex: 0 1 auto; padding: 5px 10px; font-size: 0.78rem; }
+.jp-tabs { margin-top: 0; }
+.jp-shops { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.jp-shop { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.jp-shop:hover { border-color: var(--primary); }
+.jp-shop.off { opacity: 0.5; }
+.jp-shop b { font-size: 0.9rem; } .jp-shop small { font-size: 0.72rem; color: var(--text-muted); }
+.jp-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.jp-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.jp-item.got { opacity: 0.75; }
+.jp-item img { flex: 0 0 48px; width: 48px; height: 48px; object-fit: contain; background: #fff; border-radius: 6px; }
+.jp-item input[type=checkbox] { flex: 0 0 auto; width: 20px; height: 20px; accent-color: var(--primary); }
+.jp-it { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 0.85rem; }
+.jp-it a, .jp-it b { color: var(--text); overflow-wrap: anywhere; }
+.jp-it small, .jp-ip small { font-size: 0.75rem; color: var(--text-muted); }
+.jp-ip { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.jp-ip b { color: var(--text); }
+.jp-mini { padding: 2px 6px; font: inherit; font-size: 0.9rem; color: var(--text-muted); background: transparent; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; }
+.jp-card { margin: 10px 0; padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+.jp-card summary { cursor: pointer; font-weight: 600; color: var(--text); }
+.jp-card ul { margin: 8px 0; padding-left: 18px; font-size: 0.85rem; line-height: 1.5; }
+.jp-f { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+.jp-f input { padding: 10px 12px; font: inherit; font-size: 1rem; font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.jp-f input:focus { outline: none; border-color: var(--primary); }
+.jp-f .jp-seg { margin: 0; }
+.jp-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.jp-two > *, .jp-f input { min-width: 0; } .jp-f input { width: 100%; box-sizing: border-box; }
+.jp-chk { display: flex; gap: 8px; align-items: flex-start; margin: 10px 0; font-size: 0.85rem; color: var(--text-light); }
+.jp-chk input { margin-top: 2px; accent-color: var(--primary); }
+.jp-line { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; font-size: 0.9rem; border-bottom: 1px solid var(--border-light); }
+.jp-line b { color: var(--text); text-align: right; } .jp-line b.ok { color: var(--success); } .jp-line.ok b { color: var(--success); }
+.jp-line small { font-weight: 400; color: var(--text-muted); }
+.jp-line.big { font-size: 1.05rem; border-bottom: 0; } .jp-line.big b { font-size: 1.15rem; }
+.jp-verdict { margin: 8px 0; padding: 10px 12px; font-weight: 700; border-radius: var(--radius-sm); background: var(--bg); }
+.jp-wide { width: 100%; justify-content: center; margin-top: 8px; }
+.jp-wide:disabled { opacity: 0.5; cursor: default; }
+.jp-bar { display: block; height: 8px; margin: 6px 0; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.jp-bar i { display: block; height: 100%; background: var(--success); }
+.jp-bar i.bad { background: var(--danger); }
+.jp-empty { padding: 24px 10px; text-align: center; color: var(--text-muted); }
+.jp-settings code { font-size: 0.85em; }
+.jp-settings[hidden] { display: none; }

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=40" />
+  <link rel="stylesheet" href="style.css?v=41" />
 </head>
 <body>
   <!-- Header -->
@@ -354,6 +354,15 @@
     <div class="gw-body j-body" id="j-body"></div>
   </section>
 
+  <!-- Japan shopping -->
+  <section class="webview-panel themed" id="japan-panel" hidden aria-label="Japan shopping">
+    <div class="webview-toolbar">
+      <span class="webview-title">🇯🇵 Japan shopping</span>
+      <span class="jp-tools"><button type="button" class="theme-btn" data-theme-toggle aria-label="Theme">🌗</button><button type="button" class="theme-btn" id="jp-gear" aria-label="Settings">⚙️</button></span>
+    </div>
+    <div class="gw-body jp-body" id="jp-body"></div>
+  </section>
+
   <!-- Bottom Tab Bar -->
   <nav class="tab-bar" aria-label="Tabs">
     <a href="#" class="tab-item active" data-tab="quests"><span class="tab-icon">🎲</span><span class="tab-label">Quests</span></a>
@@ -361,6 +370,7 @@
     <a href="#retire" class="tab-item" data-tab="retire"><span class="tab-icon">💰</span><span class="tab-label">Retire</span></a>
     <a href="#visa" class="tab-item" data-tab="visa"><span class="tab-icon">🛂</span><span class="tab-label">Visa</span></a>
     <a href="#java" class="tab-item" data-tab="java"><span class="tab-icon">☕</span><span class="tab-label">Java</span></a>
+    <a href="#japan" class="tab-item" data-tab="japan"><span class="tab-icon">🇯🇵</span><span class="tab-label">Japan</span></a>
   </nav>
 
   <script src="quests.js?v=2"></script>
@@ -369,6 +379,7 @@
   <script src="retire.js?v=21"></script>
   <script src="java.js?v=9"></script>
   <script src="visa.js?v=9"></script>
-  <script src="script.js?v=13"></script>
+  <script src="japan.js?v=1"></script>
+  <script src="script.js?v=14"></script>
 </body>
 </html>

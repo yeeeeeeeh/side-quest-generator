@@ -338,6 +338,7 @@ const TAB_PANELS = {
   retire: { panel: "retire-panel", init: () => retireInit() },
   java: { panel: "java-panel", init: () => javaInit() },
   visa: { panel: "visa-panel", init: () => visaInit() },
+  japan: { panel: "japan-panel", init: () => japanInit() },
 };
 
 function showTab(tab) {

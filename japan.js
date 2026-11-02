@@ -32,6 +32,10 @@ const SHOPS = {
     ["Rakuten", "楽天市場", q => `https://search.rakuten.co.jp/search/mall/${enc(q)}/`],
   ],
 };
+// Barcode scanning: iPhone Safari has no BarcodeDetector, so the camera is read with html5-qrcode
+// (ZXing inside; it uses the native detector where there is one). Loaded only when 📷 is tapped.
+const SCAN_LIB = "https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js";
+const SCAN_SRI = "sha512-r6rDA7W6ZeQhvl8S7yRVQUKVHdexq+GAlNkNNqVC7YyIV+NwqCTJe2hDWCiffTyRNOeGEzRRJ9ifvRm/HCzGYg==";
 const COUPONS = [[0, "None"], [3, "3%"], [5, "5%"], [7, "7%"], [10, "10%"]];
 
 const esc = s => String(s ?? "").replace(/[<>&'"]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&#39;", '"': "&quot;" }[c]));
@@ -81,9 +85,10 @@ function shopsBlock() {
 function searchView() {
   return `<form class="gw-city-row" id="jp-form" role="search">
       <input class="gw-search" id="jp-q" type="search" enterkeyhint="search" autocomplete="off" placeholder="AirPods Pro 2, 4549980…, Melano CC" value="${esc(S.q)}">
+      <button class="btn jp-scan" type="button" id="jp-scan" aria-label="Scan barcode" title="Scan barcode">📷</button>
       <button class="btn btn-primary" type="submit">Search</button>
     </form>
-    <p class="jp-note">Name, model number or the barcode number (JAN) on the box.</p>
+    <p class="jp-note">Name, model number or the barcode number (JAN) on the box. 📷 scans the barcode.</p>
     ${shopsBlock()}
     <h3 class="jp-h">Rakuten live prices</h3>
     <div id="jp-rk">${S.rk.id && S.rk.key ? (S.q.trim() ? '<p class="jp-note">Loading…</p>' : '<p class="jp-note">Search to see prices.</p>') : `<p class="jp-note">Add your Rakuten App ID and Access Key in ⚙️ to see live online prices here. Everything else works without them.</p>`}</div>`;
@@ -218,6 +223,7 @@ function wire() {
     save(); $("#jp-settings").hidden = true; render(); if (S.view === "search") rakuten();
   };
   if (S.view === "search") {
+    $("#jp-scan").onclick = openScan;
     $("#jp-form").onsubmit = e => { e.preventDefault(); S.q = $("#jp-q").value; save(); $("#jp-q").blur(); render(); rakuten(); };
     document.querySelectorAll("[data-cat]").forEach(b => b.onclick = () => { S.cat = b.dataset.cat; save(); render(); rakuten(); });
   }
@@ -244,6 +250,95 @@ function wire() {
     document.querySelectorAll("[data-del]").forEach(b => b.onclick = () => { S.list.splice(+b.dataset.del, 1); save(); render(); });
   }
 }
+
+// ----- Barcode scan -----
+// JAN = EAN-13 (or EAN-8); UPC-A reads as EAN-13 with a leading 0. The check digit filters misreads.
+function validCode(t) {
+  if (!/^(\d{8}|\d{12,13})$/.test(t)) return false;
+  const d = t.padStart(13, "0").split("").map(Number);
+  const sum = d.slice(0, 12).reduce((s, n, i) => s + n * (i % 2 ? 3 : 1), 0);
+  return (10 - sum % 10) % 10 === d[12];
+}
+
+let libP = null;
+function loadLib() {
+  if (window.Html5Qrcode) return Promise.resolve();
+  return libP ||= new Promise((ok, fail) => {
+    const sc = document.createElement("script");
+    sc.src = SCAN_LIB; sc.integrity = SCAN_SRI; sc.crossOrigin = "anonymous"; sc.referrerPolicy = "no-referrer";
+    sc.onload = ok; sc.onerror = () => { libP = null; fail(new Error("Couldn't load the scanner (offline?)")); };
+    document.head.appendChild(sc);
+  });
+}
+
+let scanner = null;
+function scanBox() {
+  let o = $("#jp-scanbox");
+  if (o) return o;
+  o = document.createElement("div");
+  o.id = "jp-scanbox"; o.className = "jp-scanbox"; o.hidden = true;
+  o.setAttribute("role", "dialog"); o.setAttribute("aria-label", "Scan barcode");
+  o.innerHTML = `<div class="jp-scanin">
+      <div class="jp-scanhead"><b>📷 Scan the barcode</b><button type="button" class="jp-mini" id="jp-scanx" aria-label="Close">✕</button></div>
+      <div id="jp-cam" class="jp-cam"></div>
+      <p class="jp-note" id="jp-scanmsg">Starting camera…</p>
+      <label class="btn jp-wide jp-photo">🖼️ Use a photo instead<input type="file" accept="image/*" id="jp-scanfile" hidden></label>
+    </div>`;
+  $("#japan-panel").appendChild(o);
+  $("#jp-scanx").onclick = closeScan;
+  o.onclick = e => { if (e.target === o) closeScan(); };
+  $("#jp-scanfile").onchange = async e => {
+    const f = e.target.files[0]; e.target.value = "";
+    if (!f) return;
+    msg("Reading the photo…");
+    try {
+      await stopCam();
+      const code = await scanner.scanFile(f, false);
+      if (!found(code)) msg("That's not a product barcode. Try a sharper photo of the stripes.", true);
+    } catch { msg("No barcode found in the photo. Fill the frame with the barcode and keep it sharp.", true); }
+  };
+  return o;
+}
+const msg = (t, bad) => { const m = $("#jp-scanmsg"); if (m) { m.textContent = t; m.classList.toggle("bad", !!bad); } };
+
+async function stopCam() {
+  try { if (scanner?.isScanning) await scanner.stop(); } catch {}
+  try { scanner?.clear(); } catch {}
+}
+
+function found(text) {
+  const code = String(text || "").trim();
+  if (!validCode(code)) return false;
+  const jan = code.length === 12 ? "0" + code : code;
+  navigator.vibrate?.(60);
+  closeScan();
+  S.q = jan; S.view = "search"; save();
+  const box = $("#jp-q"); if (box) box.value = jan; // render() keeps typed text, so set it here too
+  render(); rakuten();
+  return true;
+}
+
+async function openScan() {
+  const o = scanBox();
+  o.hidden = false; msg("Starting camera…");
+  try {
+    await loadLib();
+    const F = window.Html5QrcodeSupportedFormats;
+    scanner ||= new window.Html5Qrcode("jp-cam", { verbose: false, formatsToSupport: [F.EAN_13, F.EAN_8, F.UPC_A, F.UPC_E], useBarCodeDetectorIfSupported: true });
+    if (o.hidden) return;
+    await scanner.start({ facingMode: "environment" },
+      { fps: 12, qrbox: (w, h) => ({ width: Math.floor(Math.min(w * 0.85, 320)), height: Math.floor(Math.min(h * 0.45, 140)) }), aspectRatio: 1.333 },
+      t => { found(t); }, () => {});
+    if (o.hidden) return stopCam();
+    msg("Hold the barcode inside the box. It searches as soon as it reads it.");
+  } catch (e) {
+    const denied = /NotAllowed|Permission/i.test(String(e?.name || e));
+    msg(window.Html5Qrcode
+      ? (denied ? "Camera blocked. Allow camera access for this site in Settings → Safari → Camera, or use a photo." : "No camera available here. Use a photo of the barcode instead.")
+      : e.message, true);
+  }
+}
+function closeScan() { const o = $("#jp-scanbox"); if (o) o.hidden = true; stopCam(); }
 
 let started = false;
 window.japanInit = function () {

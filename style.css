@@ -1835,3 +1835,12 @@ body
 .jp-empty { padding: 24px 10px; text-align: center; color: var(--text-muted); }
 .jp-settings code { font-size: 0.85em; }
 .jp-settings[hidden] { display: none; }
+.jp-scan { flex: 0 0 auto; padding: 0 12px; font-size: 1.15rem; background: var(--surface); border: 1px solid var(--border); }
+.jp-scanbox { position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0,0,0,0.6); }
+.jp-scanbox[hidden] { display: none; }
+.jp-scanin { width: 100%; max-width: 420px; padding: 14px; color: var(--text-light); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-sizing: border-box; }
+.jp-scanhead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: var(--text); }
+.jp-cam { width: 100%; min-height: 200px; overflow: hidden; background: #000; border-radius: var(--radius-sm); }
+.jp-cam video { display: block; width: 100% !important; height: auto; }
+.jp-scanin .bad { color: var(--danger); }
+.jp-photo { box-sizing: border-box; cursor: pointer; background: var(--bg); border: 1px solid var(--border); color: var(--text); }

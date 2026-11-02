@@ -9,7 +9,6 @@ Sizes are rough % of one session's usage.
 
 ## Next up
 
-- [ ] 🇯🇵 **Japan: barcode scan**: 📷 button in the Japan tab's search; scan the JAN barcode with the camera (a small scanning library from cdnjs, since iPhone Safari has no BarcodeDetector), then search it. Needed before the trip (14 Nov). (3–4%)
 - [ ] 🇯🇵 **Japan: list export / import**: back up the shopping list as a JSON file and restore it. (1–2%)
 - [ ] 🌐 **Light mode for Retire and Visa**: add `themed` to their panels and swap hard-coded dark colours for tokens (see "Light theme" in style.css); Visa map in light colours too. Add the 🌗 theme button to their toolbars. (5–8%)
 - [ ] 🌐 **Light mode for Quests and IKEA**: same for the Quests home (cards, filters, progress panel) and IKEA; once every tab is themed, move the light tokens to `:root` and put the theme button in all toolbars. (5–8%)
@@ -37,6 +36,7 @@ Sizes are rough % of one session's usage.
 
 ## Done
 
+- [x] 🇯🇵 Japan: barcode scan with the camera, or from a photo (2026-11-02, 705e557)
 - [x] 🇯🇵 Japan shopping tab: shop search, Rakuten live prices, "worth it?" calculator, shopping list (2026-11-01, f1521e6)
 - [x] ☕ Light mode for Java, with Auto / Light / Dark switch (2026-10-29, 7f8cbe7)
 - [x] 🛂 Direct flights from Schiphol (9ff8ec2)

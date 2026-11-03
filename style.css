@@ -1843,4 +1843,6 @@ body
 .jp-cam { width: 100%; min-height: 200px; overflow: hidden; background: #000; border-radius: var(--radius-sm); }
 .jp-cam video { display: block; width: 100% !important; height: auto; }
 .jp-scanin .bad { color: var(--danger); }
+.jp-backup .jp-wide { margin-top: 0; }
+.jp-backup .jp-wide:disabled { opacity: 0.5; }
 .jp-photo { box-sizing: border-box; cursor: pointer; background: var(--bg); border: 1px solid var(--border); color: var(--text); }

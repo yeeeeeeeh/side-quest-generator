@@ -162,9 +162,59 @@ function tipsCard() {
     <p class="jp-note">Rules as reported by travel sources in Oct 2026; check the official Japan Tax-free Shop guidance before you shop.</p></details>`;
 }
 
+// ----- Backup: the shopping list as a JSON file -----
+let ioMsg = null; // [text, ok] shown once in the backup card after an import
+function backupCard() {
+  const n = S.list.length;
+  return `<details class="jp-card jp-backup"${ioMsg ? " open" : ""}><summary>💾 Back up or restore the list</summary>
+    <p class="jp-note">Save the list as a file (Files, AirDrop, mail) so it's safe if Safari clears this site's data, or to move it to another phone.</p>
+    <div class="jp-two">
+      <button class="btn jp-wide jp-photo" id="jp-export" ${n ? "" : "disabled"}>⬇️ Export</button>
+      <label class="btn jp-wide jp-photo">⬆️ Import<input type="file" accept="application/json,.json" id="jp-import" hidden></label>
+    </div>
+    ${ioMsg ? `<p class="jp-note ${ioMsg[1] ? "ok" : "bad"}">${esc(ioMsg[0])}</p>` : ""}
+    <p class="jp-note">Import adds items that aren't on the list yet; nothing is deleted.</p>
+  </details>`;
+}
+
+function exportList() {
+  const data = { app: "side-quest-generator", kind: "japanShop.list", version: 1, exported: new Date().toISOString(), list: S.list };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+  const a = Object.assign(document.createElement("a"), { href: url, download: `japan-shopping-list-${today()}.json` });
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+// Accepts this tab's export, a bare array of items, or a whole japanShop store
+function cleanItem(i) {
+  if (!i || typeof i !== "object") return null;
+  const num = v => Number.isFinite(+v) ? Math.round(+v) : 0;
+  const net = num(i.net), paid = num(i.paid) || net;
+  if (!net && !String(i.name || "").trim()) return null;
+  return { id: Number.isFinite(+i.id) && +i.id ? +i.id : Date.now() + Math.random(), name: String(i.name || "").slice(0, 200), store: String(i.store || "").slice(0, 100),
+    tax: +i.tax === 8 ? 8 : 10, paid, net, nl: i.nl ?? "", bought: !!i.bought, day: i.bought && /^\d{4}-\d{2}-\d{2}$/.test(i.day) ? i.day : "" };
+}
+async function importList(file) {
+  try {
+    const d = JSON.parse(await file.text());
+    const raw = Array.isArray(d) ? d : Array.isArray(d?.list) ? d.list : null;
+    if (!raw) throw new Error("not a shopping list file");
+    const items = raw.map(cleanItem).filter(Boolean);
+    const have = new Set(S.list.map(i => i.id)), key = i => `${i.name}|${i.store}|${i.net}`, haveKey = new Set(S.list.map(key));
+    const add = items.filter(i => !have.has(i.id) && !haveKey.has(key(i)));
+    S.list.push(...add); save();
+    const skip = items.length - add.length;
+    ioMsg = [`Imported ${add.length} item${add.length === 1 ? "" : "s"}${skip ? `, ${skip} already on the list` : ""}.`, true];
+  } catch (e) {
+    ioMsg = [`Couldn't import: ${e instanceof SyntaxError ? "the file isn't valid JSON" : e.message}.`, false];
+  }
+  render();
+  ioMsg = null;
+}
+
 function listView() {
   const L = S.list;
-  if (!L.length) return `<p class="jp-empty">Nothing on the list yet. Add items from the 🧮 calculator.</p>${tipsCard()}`;
+  if (!L.length) return `<p class="jp-empty">Nothing on the list yet. Add items from the 🧮 calculator.</p>${backupCard()}${tipsCard()}`;
   const bought = L.filter(i => i.bought);
   const groups = {};
   bought.forEach(i => { const k = `${i.day} · ${i.store || "Unknown shop"}`; (groups[k] ||= []).push(i); });
@@ -182,6 +232,7 @@ function listView() {
       <div class="jp-ip"><b>${yen(i.net)}</b>${rate ? `<small>${eur(toEur(i.net))}</small>` : ""}<button class="jp-mini" data-del="${n}" title="Remove">✕</button></div></div>`).join("")}</div>
     <p class="jp-note">Tick an item when you buy it: it's dated today and counts toward the shop's refund threshold and your customs allowance.</p>
     ${bought.length ? `<details class="jp-card"><summary>🛫 Airport refund checklist</summary><ul>${Object.entries(groups).map(([k, items]) => `<li><b>${esc(k)}</b>: ${items.map(i => esc(i.name)).join(", ")}</li>`).join("")}</ul><p class="jp-note">Have these with you (unused) and your passport at the customs kiosk.</p></details>` : ""}
+    ${backupCard()}
     ${tipsCard()}`;
 }
 
@@ -246,6 +297,8 @@ function wire() {
     };
   }
   if (S.view === "list") {
+    $("#jp-export").onclick = exportList;
+    $("#jp-import").onchange = e => { const f = e.target.files[0]; e.target.value = ""; if (f) importList(f); };
     document.querySelectorAll("[data-buy]").forEach(b => b.onchange = () => { const i = S.list[+b.dataset.buy]; i.bought = b.checked; i.day = b.checked ? today() : ""; save(); render(); });
     document.querySelectorAll("[data-del]").forEach(b => b.onclick = () => { S.list.splice(+b.dataset.del, 1); save(); render(); });
   }

@@ -83,9 +83,13 @@ function render() {
 }
 
 // ---------- map ----------
+new MutationObserver(() => { if (map && world) drawMap(); }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 // Countries coloured by Taiwan-passport status, like the app's visa map layer. Shapes are a simplified copy of the
 // app's GeoJSON (visa/world.json); places too small to draw are dots at their centre. Leaflet loads on first use.
 const COLORS = { free: "#10B981", eta: "#F59E0B", voa: "#3B82F6", visa: "#EF4444", home: "#E5E7EB" };
+// Borders and the home country follow the light / dark theme; the map is redrawn when it changes.
+const isLight = () => document.documentElement.dataset.theme === "light";
+const ink = () => isLight() ? { edge: "#FFFFFF", visited: "#0F172A", home: "#94A3B8" } : { edge: "#0F172A", visited: "#FFFFFF", home: COLORS.home };
 let map = null, world = null, mapLayer = null;
 function loadLeaflet() {
   if (window.L) return Promise.resolve();
@@ -101,7 +105,8 @@ function loadLeaflet() {
 }
 function styleFor(c) {
   const t = typeOf(c), dim = (prefs.type !== "all" && t !== prefs.type && t !== "home") || (prefs.direct && !c.ams && t !== "home");
-  return { fillColor: COLORS[t], fillOpacity: dim ? 0.08 : isVisited(c) ? 0.35 : 0.75, color: isVisited(c) ? "#fff" : "#0F172A", weight: isVisited(c) ? 1.5 : 0.6 };
+  const k = ink();
+  return { fillColor: t === "home" ? k.home : COLORS[t], fillOpacity: dim ? 0.08 : isVisited(c) ? 0.35 : 0.75, color: isVisited(c) ? k.visited : k.edge, weight: isVisited(c) ? 1.5 : 0.6 };
 }
 function drawMap() {
   if (mapLayer) mapLayer.remove();
@@ -123,7 +128,7 @@ function drawMap() {
       .bindTooltip(`✈️ ${esc(a.city)}, ${esc(c.name)}`).on("click", () => detail(c)).addTo(mapLayer);
   }));
   D.countries.filter(c => !withShape.has(c.code) && c.latlng && c.code !== "TW").forEach(c => {
-    L.circleMarker(c.latlng, Object.assign(styleFor(c), { radius: 5, weight: 1, color: "#0F172A" }))
+    L.circleMarker(c.latlng, Object.assign(styleFor(c), { radius: 5, weight: 1, color: ink().edge }))
       .bindTooltip(`${c.flag} ${esc(c.name)} · ${TYPES[typeOf(c)].short}`).on("click", () => detail(c)).addTo(mapLayer);
   });
 }

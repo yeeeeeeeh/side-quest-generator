@@ -308,7 +308,7 @@ function hideCompletion() {
 
 // ===== Theme =====
 // Light / dark / follow the phone. Sets <html data-theme> to the resolved theme; only panels
-// with the "themed" class have light colours so far (Java), so the rest stays dark.
+// with the "themed" class have light colours so far (Java, Japan, Retire, Visa); the rest stays dark.
 const THEMES = { auto: ["🌗", "Auto"], light: ["☀️", "Light"], dark: ["🌙", "Dark"] };
 const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
 function themePref() {

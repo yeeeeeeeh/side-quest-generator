@@ -9,7 +9,6 @@ Sizes are rough % of one session's usage.
 
 ## Next up
 
-- [ ] 🌐 **Light mode for Quests and IKEA**: same for the Quests home (cards, filters, progress panel) and IKEA; once every tab is themed, move the light tokens to `:root` and put the theme button in all toolbars. (5–8%)
 - [ ] 🛂 **Dutch passport column**: side-by-side with Taiwan in the list and the detail sheet, plus a "Dutch is easier" filter. Data: map-app `dutch_visa_requirements.txt` + `DutchVisaDatabase`. (4–6%)
 - [ ] ☕ **Compiles or not?**: quick yes/no game on the labelled snippets already in the Java course; misses feed review. (4–6%)
 - [ ] ☕ **Readiness planner**: exam date countdown, lessons per day to finish, mock score trend, lesson vs mock mastery. (5–7%)
@@ -34,6 +33,7 @@ Sizes are rough % of one session's usage.
 
 ## Done
 
+- [x] 🌐 Light mode for Quests and IKEA; light tokens now site-wide, 🌗 in every toolbar (2026-11-05, 1348beb)
 - [x] 🌐 Light mode for Retire and Visa, map included (2026-11-04, 8b80c40)
 - [x] 🇯🇵 Japan: shopping list export / import as a JSON file (2026-11-03, 39d81ec)
 - [x] 🇯🇵 Japan: barcode scan with the camera, or from a photo (2026-11-02, 705e557)

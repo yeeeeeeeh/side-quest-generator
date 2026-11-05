@@ -307,8 +307,8 @@ function hideCompletion() {
 
 
 // ===== Theme =====
-// Light / dark / follow the phone. Sets <html data-theme> to the resolved theme; only panels
-// with the "themed" class have light colours so far (Java, Japan, Retire, Visa); the rest stays dark.
+// Light / dark / follow the phone. Sets <html data-theme> to the resolved theme; style.css swaps
+// its colour tokens for the whole site when it is "light".
 const THEMES = { auto: ["🌗", "Auto"], light: ["☀️", "Light"], dark: ["🌙", "Dark"] };
 const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
 function themePref() {
@@ -347,7 +347,6 @@ function showTab(tab) {
     document.getElementById(panel).hidden = name !== current;
   });
   document.body.classList.toggle("webview-open", current !== "quests");
-  document.body.classList.toggle("themed-open", !!TAB_PANELS[current] && document.getElementById(TAB_PANELS[current].panel).classList.contains("themed"));
   TAB_PANELS[current]?.init();
   document.querySelectorAll(".tab-item").forEach(t => {
     const active = t.dataset.tab === current;

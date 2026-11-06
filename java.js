@@ -42,6 +42,7 @@ async function loadContent() {
 const KEY = "javaProgress";
 let P = { lessons: {}, answers: {}, mocks: {}, drills: { fixbug: {}, write: {}, trace: {} } };
 try { P = Object.assign(P, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (_) {}
+P.drills.compile = P.drills.compile || {};
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (_) {} };
 
 // One answered question towards readiness for its exam objective.
@@ -135,8 +136,95 @@ function reviewRecord(id, correct) {
 }
 let EXERCISES = null; // id -> {ex, u, l}
 function exerciseIndex() {
-  if (!EXERCISES) { EXERCISES = {}; C.units.forEach(u => u.lessons.forEach(l => l.steps.forEach(st => { if (st.type === "exercise") EXERCISES[st.id] = { ex: st, u, l }; }))); }
+  if (!EXERCISES) {
+    EXERCISES = {}; C.units.forEach(u => u.lessons.forEach(l => l.steps.forEach(st => { if (st.type === "exercise") EXERCISES[st.id] = { ex: st, u, l }; })));
+    // "Compiles or not?" snippets come back in review as true/false questions once missed
+    compileCards().forEach(c => { if (c.u) EXERCISES[c.id] = { ex: c.ex, u: c.u, l: { title: "Compiles or not?" } }; });
+  }
   return EXERCISES;
+}
+
+// ---------- compiles or not? ----------
+// Snippets labelled by the Fix-the-bug drill: each buggy program, and the same program with each candidate fix on the
+// bug line, is marked as not compiling, throwing, printing something, or working. Multi-file (module) programs are left out.
+let COMPILE = null;
+// What a compiling snippet does when run; a working one prints the drill's expected output.
+const runText = (outcome, it) => outcome ? outcomeText(outcome) : `Works, prints ${outcomeText({ kind: "output", value: it.output }).replace(/^Prints /, "")}`;
+function compileCards() {
+  if (COMPILE) return COMPILE;
+  const seen = new Set(); COMPILE = [];
+  C.fixbug.filter(it => !it.files && !it.mainModule).forEach(it => {
+    const lines = it.code.split("\n"), indent = (lines[it.bugLine - 1].match(/^\s*/) || [""])[0];
+    const add = (v, code, outcome) => {
+      if (seen.has(code)) return; seen.add(code);
+      const id = `cmp:${it.id}:${v}`, compiles = !outcome || outcome.kind !== "compile";
+      const u = C.units.find(x => x.info.id === it.unit);
+      COMPILE.push({ id, it, code, outcome, compiles, line: it.bugLine, u,
+        ex: { id, kind: "trueFalse", objective: it.objective, prompt: "**This code compiles.** True or false?", code, answer: compiles,
+          explanation: `${compiles ? "It compiles" : "It doesn't compile"}${compiles ? `: ${runText(outcome, it).replace(/<\/?code>/g, "`")}` : ""}. ${it.explanation}` } });
+    };
+    add("o", it.code, it.symptom);
+    it.options.forEach((o, i) => { const l = [...lines]; l[it.bugLine - 1] = indent + o.trim(); add(i, l.join("\n"), it.outcomes[i]); });
+  });
+  return COMPILE;
+}
+const COMPILE_ROUND = 10;
+// Never tried first, then last answered wrong, then the oldest; shuffled within each group.
+function pickCompile(cards) {
+  const st = P.drills.compile, rank = c => { const x = st[c.id]; return !x ? 0 : !x.ok ? 1 : 2; };
+  return shuffle(cards).sort((a, b) => rank(a) - rank(b) || ((st[a.id] || {}).at || 0) - ((st[b.id] || {}).at || 0)).slice(0, COMPILE_ROUND);
+}
+function compileMenu(body) {
+  const cards = compileCards(), st = P.drills.compile;
+  const tried = cards.filter(c => st[c.id]).length, right = cards.filter(c => st[c.id] && st[c.id].ok).length, no = cards.filter(c => !c.compiles).length;
+  body.innerHTML = `<h2 class="j-h">✅ Compiles or not?</h2>
+    <p class="j-sub">A program flashes up: does it compile? Quick yes/no calls like the exam's "compilation fails" answers. A miss goes into 🔁 Review.</p>
+    <div class="j-stats"><div><b>${tried}/${cards.length}</b><span>tried</span></div><div><b>${right}</b><span>last right</span></div><div><b>${no}</b><span>don't compile</span></div></div>
+    <button class="btn btn-primary j-wide" id="j-round">▶ Play a round of ${COMPILE_ROUND}</button>
+    <h3 class="j-sec">By unit</h3><div class="j-list">${C.units.map(u => {
+      const its = cards.filter(c => c.u === u); if (!its.length) return "";
+      return `<button class="j-lesson" data-u="${u.info.id}"><span class="j-check">${u.info.number}</span><span class="j-ut"><b>${esc(u.info.title)}</b><small>${its.filter(c => st[c.id] && st[c.id].ok).length} of ${its.length} right</small></span></button>`;
+    }).join("")}</div>
+    <p class="j-foot">Snippets from the Fix-the-bug drill: each program and each candidate fix. Imports are assumed, as on the exam.</p>`;
+  $("#j-round").onclick = () => go(compileRound, pickCompile(cards));
+  on(body, "[data-u]", "click", b => go(compileRound, pickCompile(cards.filter(c => c.u && c.u.info.id === b.dataset.u))));
+}
+function compileRound(body, cards) {
+  let k = 0, score = 0, missed = 0;
+  const next = () => {
+    if (k >= cards.length) {
+      body.innerHTML = `<div class="j-done"><div class="j-big">${score === cards.length ? "🏆" : "💪"}</div><h2 class="j-h">${score} of ${cards.length}</h2>
+        <div class="j-stats"><div><b class="j-xpc">+${score}</b><span>XP earned</span></div><div><b>${missed}</b><span>${missed === 1 ? "miss" : "misses"} to review</span></div><div><b>🔥 ${streak()}</b><span>day streak</span></div></div>
+        <button class="btn btn-primary j-wide" id="j-again">Another round</button><button class="btn j-wide j-ghost" id="j-back2">Done</button></div>`;
+      $("#j-again").onclick = () => { stack.pop(); go(compileRound, pickCompile(compileCards())); };
+      $("#j-back2").onclick = back;
+      return;
+    }
+    const c = cards[k];
+    body.innerHTML = `<div class="j-lhead"><div class="j-lrow"><div class="j-bar big"><i style="width:${k / cards.length * 100}%"></i></div><span class="j-xpchip">✅ ${score}</span></div>
+      <div class="j-kicker">Compiles? · ${k + 1} of ${cards.length}${c.u ? ` · Unit ${c.u.info.number}` : ""} · Obj ${esc(c.it.objective)}</div></div>
+      <div class="j-card" id="j-cc">${codeView(c.code)}</div>
+      <div class="j-opts j-cmp"><button class="j-opt" data-yes="1">✅ Compiles</button><button class="j-opt" data-yes="0">❌ Doesn't compile</button></div>
+      <div id="j-cfb"></div>`;
+    body.scrollTop = 0;
+    on(body, "[data-yes]", "click", b => {
+      if (body.querySelector(".j-cmp.done")) return;
+      const said = b.dataset.yes === "1", ok = said === c.compiles;
+      body.querySelector(".j-cmp").classList.add("done");
+      body.querySelectorAll("[data-yes]").forEach(x => { const y = x.dataset.yes === "1"; x.classList.toggle("right", y === c.compiles); x.classList.toggle("wrong", y === said && !ok); });
+      $("#j-cc").innerHTML = codeView(c.code, { lineClass: n => n === c.line ? (ok ? "right" : "sel") : "" });
+      P.drills.compile[c.id] = { ok, at: Date.now() }; recordAnswer(c.it.objective, ok);
+      if (!ok || P.ex[c.id]) reviewRecord(c.id, ok);
+      if (ok) { score++; addXP(1); } else missed++;
+      save();
+      $("#j-cfb").innerHTML = `<div class="j-feedback ${ok ? "ok" : "bad"}"><b>${ok ? "✓ Right" : "✗ Not quite, it comes back in review tomorrow"}</b>
+        <p>${c.compiles ? `It compiles. When run: ${runText(c.outcome, c.it)}.` : `It doesn't compile.`} The line to look at is highlighted.</p>${mdP(c.it.explanation)}</div>
+        <div class="j-actions"><button class="btn btn-primary j-wide" id="j-cnext">${k + 1 < cards.length ? "Next" : "Finish"}</button></div>`;
+      $("#j-cnext").onclick = () => { k++; next(); };
+      $("#j-cfb").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  };
+  next();
 }
 // Due exercises that still exist in the course, lowest box first, then the longest overdue.
 function dueExercises() {
@@ -494,6 +582,7 @@ function home(body) {
     <button class="j-tile" data-go="review">🔁<b>Review</b><small>${dueCount ? `${dueCount} due now` : `${Object.keys(P.ex).length} scheduled`}</small></button>
     <button class="j-tile" data-go="mocks">📝<b>Mock exams</b><small>${C.mocks.length} sets, timed</small></button>
     <button class="j-tile" data-go="fixbug">🐞<b>Fix the bug</b><small>${C.fixbug.length} programs</small></button>
+    <button class="j-tile" data-go="compile">✅<b>Compiles or not?</b><small>${compileCards().length} quick calls</small></button>
     <button class="j-tile" data-go="write">⌨️<b>Write it</b><small>${C.write.length} from memory</small></button>
     <button class="j-tile" data-go="trace">🔍<b>Trace it</b><small>${C.trace.length} step by step</small></button>
     <button class="j-tile" data-go="tips">💡<b>Tips &amp; traps</b><small>${C.tips.length} short notes</small></button>
@@ -519,7 +608,7 @@ function home(body) {
     P.goal = v; if (todayXP() >= v && !P.goalMet.includes(dayKey())) P.goalMet.push(dayKey()); save(); show();
   };
   on(body, "[data-unit]", "click", b => go(unit, C.units[+b.dataset.unit]));
-  const views = { mocks, fixbug: drillMenu, write: drillMenu, trace: traceMenu, tips, ready: readinessView, review, reels: b => reels(b) };
+  const views = { mocks, compile: compileMenu, fixbug: drillMenu, write: drillMenu, trace: traceMenu, tips, ready: readinessView, review, reels: b => reels(b) };
   const rv = $("#j-review"); if (rv) rv.onclick = () => go(review);
   on(body, "[data-saved]", "click", b => go(savedList, b.dataset.saved));
   on(body, "[data-style]", "click", b => { P.lessonStyle = b.dataset.style; save(); show(); });
@@ -821,7 +910,7 @@ function review(body) {
 function reviewEmpty(body) {
   const nd = nextDue(), boxes = [1, 2, 3, 4, 5].map(b => Object.values(P.ex).filter(st => st.box === b).length);
   body.innerHTML = `<div class="j-done"><div class="j-big">✅</div><h2 class="j-h">Nothing to review</h2>
-    <p class="j-sub">${Object.keys(P.ex).length ? `Next review ${nd ? new Date(nd).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "short" }) : "later"}.` : "Exercises you answer in lessons come back here on a schedule."}</p></div>
+    <p class="j-sub">${Object.keys(P.ex).length ? `Next review ${nd ? new Date(nd).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "short" }) : "later"}.` : "Exercises you answer in lessons, and snippets you miss in Compiles or not?, come back here on a schedule."}</p></div>
     <h3 class="j-sec">Your exercises by box</h3><div class="j-boxes">${boxes.map((n, k) => `<div><b>${n}</b><span>box ${k + 1} · ${INTERVAL_DAYS[k]}d</span></div>`).join("")}</div>`;
 }
 

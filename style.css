@@ -1507,6 +1507,7 @@ body
 .j-hint { margin: 8px 0 4px; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
 .j-opts { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
 .j-tf { flex-direction: row; } .j-tf .j-opt { flex: 1; justify-content: center; }
+.j-cmp { display: flex; gap: 8px; margin: 12px 0; } .j-cmp .j-opt { flex: 1; justify-content: center; padding: 14px 8px; font-weight: 700; } .j-cmp.done .j-opt { cursor: default; }
 .j-opt { display: flex; align-items: flex-start; gap: 10px; width: 100%; padding: 12px; font: inherit; font-size: 0.92rem; text-align: left; color: var(--text); background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; }
 .j-opt p { margin: 0; }
 .j-opt.code code { padding: 0; white-space: pre-wrap; background: none; color: var(--code-text); }

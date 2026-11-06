@@ -9,8 +9,6 @@ Sizes are rough % of one session's usage.
 
 ## Next up
 
-- [ ] 🛂 **Dutch passport column**: side-by-side with Taiwan in the list and the detail sheet, plus a "Dutch is easier" filter. Data: map-app `dutch_visa_requirements.txt` + `DutchVisaDatabase`. (4–6%)
-- [ ] ☕ **Compiles or not?**: quick yes/no game on the labelled snippets already in the Java course; misses feed review. (4–6%)
 - [ ] ☕ **Readiness planner**: exam date countdown, lessons per day to finish, mock score trend, lesson vs mock mastery. (5–7%)
 - [ ] 🌐 **One backup for all tabs**: export/import everything (Java progress, Retire inputs, Visa visited/wishlist) as one JSON file. (2–4%)
 - [ ] 🛂 **Wishlist**: mark countries to visit with a note; filter the list and highlight them on the map; count them in Stats. (3–5%)
@@ -28,11 +26,13 @@ Sizes are rough % of one session's usage.
 - [ ] ☕ **Pearson VUE exam look** for mocks, with the "review marked questions" screen. (4–6%)
 - [ ] ☕ **Arcade**: Survival (lives), Speed run (timer), Boss fight per unit; feeds review. (8–12%)
 - [ ] ☕ **Flight plan**: long study session in blocks with guided breaks and a final mock. (8–12%)
+- [ ] 🛂 **Dutch passport column**: side-by-side with Taiwan in the list and the detail sheet, plus a "Dutch is easier" filter. Data: map-app `dutch_visa_requirements.txt` + `DutchVisaDatabase`. (4–6%) Blocked (2026-11-06): the scheduled job can attach map-app but cloning it was refused by the permission check; allow the clone and move this back up.
 
 ## From the map app
 
 ## Done
 
+- [x] ☕ Compiles or not?: 325 yes/no snippets from the Fix-the-bug drill, misses go to review (2026-11-06, a439ebf)
 - [x] 🌐 Light mode for Quests and IKEA; light tokens now site-wide, 🌗 in every toolbar (2026-11-05, 1348beb)
 - [x] 🌐 Light mode for Retire and Visa, map included (2026-11-04, 8b80c40)
 - [x] 🇯🇵 Japan: shopping list export / import as a JSON file (2026-11-03, 39d81ec)

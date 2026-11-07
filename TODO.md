@@ -9,7 +9,6 @@ Sizes are rough % of one session's usage.
 
 ## Next up
 
-- [ ] ☕ **Readiness planner**: exam date countdown, lessons per day to finish, mock score trend, lesson vs mock mastery. (5–7%)
 - [ ] 🌐 **One backup for all tabs**: export/import everything (Java progress, Retire inputs, Visa visited/wishlist) as one JSON file. (2–4%)
 - [ ] 🛂 **Wishlist**: mark countries to visit with a note; filter the list and highlight them on the map; count them in Stats. (3–5%)
 - [ ] 🛂 **Travel advisory level** per country (GOV.UK), coloured on the list and the map, with an advisory map layer. Map-app: `TravelAdvisoryStore`. (5–8%)
@@ -32,6 +31,7 @@ Sizes are rough % of one session's usage.
 
 ## Done
 
+- [x] ☕ Readiness planner: exam countdown, lessons a day, mock trend, lessons vs mocks (2026-11-07, 49bdb11)
 - [x] ☕ Compiles or not?: 325 yes/no snippets from the Fix-the-bug drill, misses go to review (2026-11-06, a439ebf)
 - [x] 🌐 Light mode for Quests and IKEA; light tokens now site-wide, 🌗 in every toolbar (2026-11-05, 1348beb)
 - [x] 🌐 Light mode for Retire and Visa, map included (2026-11-04, 8b80c40)

@@ -1889,3 +1889,10 @@ body
 .j-cmptab tbody th small { display: block; font-weight: 400; color: var(--text-muted); }
 .j-cmptab td small { color: var(--text-muted); font-weight: 400; }
 .j-cmptab tr.gap th { color: var(--danger); }
+/* Backup everything (Quests home) */
+.backup-all { margin-top: 28px; }
+.backup-note { margin: 6px 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+.backup-note.bad { color: var(--danger); }
+.backup-btns { display: flex; gap: 10px; margin-top: 10px; }
+.backup-btns .btn { flex: 1; justify-content: center; margin: 0; cursor: pointer; }
+.backup-btns .btn:hover { transform: none; }

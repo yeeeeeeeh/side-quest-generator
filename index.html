@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=47" />
+  <link rel="stylesheet" href="style.css?v=48" />
 </head>
 <body>
   <!-- Header -->
@@ -190,6 +190,15 @@
           <div class="completed-list" id="completed-list">
             <p class="empty-state">No quests completed yet — roll one above and set sail!</p>
           </div>
+        </div>
+        <div class="backup-all">
+          <h4 class="completed-title">💾 Backup everything</h4>
+          <p class="backup-note">One file with your Java progress, Retire inputs, Visa visited list and settings, Japan shopping list and theme. Keep it in Files or iCloud Drive, or move it to another phone.</p>
+          <div class="backup-btns">
+            <button class="btn btn-pin" id="backup-export" type="button">⬇️ Export</button>
+            <label class="btn btn-pin">⬆️ Restore<input type="file" accept="application/json,.json" id="backup-import" hidden></label>
+          </div>
+          <p class="backup-note" id="backup-msg" role="status"></p>
         </div>
       </div>
     </div>
@@ -382,6 +391,6 @@
   <script src="java.js?v=11"></script>
   <script src="visa.js?v=10"></script>
   <script src="japan.js?v=3"></script>
-  <script src="script.js?v=16"></script>
+  <script src="script.js?v=17"></script>
 </body>
 </html>

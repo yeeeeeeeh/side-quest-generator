@@ -331,6 +331,50 @@ document.querySelectorAll("[data-theme-toggle]").forEach(b => b.addEventListener
 darkQuery.addEventListener("change", applyTheme);
 applyTheme();
 
+// ===== Backup everything =====
+// Every tab keeps its data in this browser's localStorage. One JSON file holds all of it; restoring replaces those
+// keys and reloads. In-progress lessons and mock runs are included so they can be resumed; caches are not.
+// Rakuten API keys (Japan settings) stay out of the file and are kept on restore.
+const BACKUP_KEYS = {
+  javaProgress: "Java progress", javaReelFilter: "Java swipe filters", javaPaused: "Java lesson in progress",
+  javaMockRun: "Java mock exam in progress", javaMockPractice: "Java mock mode",
+  retire: "Retire inputs", retireLock: "Retire lock", retireOpen: "Retire open sections",
+  visaPrefs: "Visa visited list and filters", japanShop: "Japan shopping list", theme: "Theme",
+};
+function backupExport() {
+  const data = {};
+  Object.keys(BACKUP_KEYS).forEach(k => { let v = null; try { v = localStorage.getItem(k); } catch {} if (v != null) data[k] = v; });
+  if (!Object.keys(data).length) return backupMsg("Nothing to back up yet on this device.");
+  if (data.japanShop) { try { const j = JSON.parse(data.japanShop); delete j.rk; data.japanShop = JSON.stringify(j); } catch {} }
+  const file = { app: "side-quest-generator", kind: "backup", version: 1, exported: new Date().toISOString(), data };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(file, null, 1)], { type: "application/json" }));
+  const a = Object.assign(document.createElement("a"), { href: url, download: `side-quest-backup-${new Date().toLocaleDateString("sv-SE")}.json` });
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 10000);
+  backupMsg(`Saved ${Object.keys(data).length} item${Object.keys(data).length === 1 ? "" : "s"}: ${Object.keys(data).map(k => BACKUP_KEYS[k]).join(", ")}.`);
+}
+async function backupImport(f) {
+  try {
+    const file = JSON.parse(await f.text());
+    if (file?.kind !== "backup" || !file.data || typeof file.data !== "object") throw new Error("this isn't a Side Quest backup file");
+    const keys = Object.keys(file.data).filter(k => BACKUP_KEYS[k] && typeof file.data[k] === "string");
+    if (!keys.length) throw new Error("the file has nothing to restore");
+    keys.forEach(k => { if (k !== "theme") JSON.parse(file.data[k]); }); // every value must be valid JSON before anything is replaced
+    const when = file.exported ? new Date(file.exported).toLocaleString() : "an unknown date";
+    if (!confirm(`Restore the backup from ${when}?\n\nThis replaces on this device:\n• ${keys.map(k => BACKUP_KEYS[k]).join("\n• ")}`)) return;
+    keys.forEach(k => {
+      let v = file.data[k];
+      if (k === "japanShop") { try { const cur = JSON.parse(localStorage.getItem(k) || "{}"), j = JSON.parse(v); if (cur.rk) j.rk = cur.rk; else delete j.rk; v = JSON.stringify(j); } catch {} }
+      localStorage.setItem(k, v);
+    });
+    location.reload();
+  } catch (e) {
+    backupMsg(`Couldn't restore: ${e instanceof SyntaxError ? "the file isn't valid JSON" : e.message}.`, true);
+  }
+}
+function backupMsg(t, bad) { const m = document.getElementById("backup-msg"); if (m) { m.textContent = t; m.classList.toggle("bad", !!bad); } }
+document.getElementById("backup-export")?.addEventListener("click", backupExport);
+document.getElementById("backup-import")?.addEventListener("change", e => { const f = e.target.files[0]; e.target.value = ""; if (f) backupImport(f); });
+
 // ===== Tabs =====
 // Each tab besides Quests is a full-screen panel with an optional init
 const TAB_PANELS = {

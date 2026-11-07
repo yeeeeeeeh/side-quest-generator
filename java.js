@@ -45,11 +45,15 @@ try { P = Object.assign(P, JSON.parse(localStorage.getItem(KEY) || "{}")); } cat
 P.drills.compile = P.drills.compile || {};
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (_) {} };
 
-// One answered question towards readiness for its exam objective.
-function recordAnswer(objective, correct) {
+// One answered question towards readiness for its exam objective. Also tallied by source (lesson, mock, drill) for
+// the planner's lesson-vs-mock comparison; answers from before the split only count in the overall tally.
+P.answersBy = P.answersBy || {};
+function recordAnswer(objective, correct, src = "lesson") {
   if (!objective) return;
   const a = P.answers[objective] || (P.answers[objective] = { right: 0, total: 0 });
   a.total++; if (correct) a.right++;
+  const by = P.answersBy[src] || (P.answersBy[src] = {}), b = by[objective] || (by[objective] = { right: 0, total: 0 });
+  b.total++; if (correct) b.right++;
 }
 function readiness() {
   const ids = C.catalog.objectives.map(o => o.id);
@@ -213,7 +217,7 @@ function compileRound(body, cards) {
       body.querySelector(".j-cmp").classList.add("done");
       body.querySelectorAll("[data-yes]").forEach(x => { const y = x.dataset.yes === "1"; x.classList.toggle("right", y === c.compiles); x.classList.toggle("wrong", y === said && !ok); });
       $("#j-cc").innerHTML = codeView(c.code, { lineClass: n => n === c.line ? (ok ? "right" : "sel") : "" });
-      P.drills.compile[c.id] = { ok, at: Date.now() }; recordAnswer(c.it.objective, ok);
+      P.drills.compile[c.id] = { ok, at: Date.now() }; recordAnswer(c.it.objective, ok, "drill");
       if (!ok || P.ex[c.id]) reviewRecord(c.id, ok);
       if (ok) { score++; addXP(1); } else missed++;
       save();
@@ -563,7 +567,7 @@ function home(body) {
   <div class="j-hero">
     <div class="j-kicker">${esc(ex.code)}</div>
     <h2 class="j-h">${esc(ex.title)}</h2>
-    <div class="j-meta">${ex.questions} questions · ${ex.minutes} min · pass ${ex.passPercent}%</div>
+    <div class="j-meta">${ex.questions} questions · ${ex.minutes} min · pass ${ex.passPercent}%${examDays() != null ? ` · <b class="j-countdown">${examDays() > 0 ? `📅 ${examDays()} day${examDays() === 1 ? "" : "s"} to go` : examDays() === 0 ? "📅 exam today" : "📅 exam date passed"}</b>` : ""}</div>
     <div class="j-stats">
       <div><b>${r.total ? pct(r.score) : "—"}</b><span>readiness</span></div>
       <div><b>${r.covered}/${r.of}</b><span>objectives tried</span></div>
@@ -586,7 +590,7 @@ function home(body) {
     <button class="j-tile" data-go="write">⌨️<b>Write it</b><small>${C.write.length} from memory</small></button>
     <button class="j-tile" data-go="trace">🔍<b>Trace it</b><small>${C.trace.length} step by step</small></button>
     <button class="j-tile" data-go="tips">💡<b>Tips &amp; traps</b><small>${C.tips.length} short notes</small></button>
-    <button class="j-tile" data-go="ready">🎯<b>Readiness</b><small>by objective</small></button>
+    <button class="j-tile" data-go="ready">🎯<b>Readiness</b><small>${examDays() != null && examDays() >= 0 ? `plan · ${examDays()} days left` : "plan & objectives"}</small></button>
   </div>
   <h3 class="j-sec">Saved</h3>
   <div class="j-grid">
@@ -886,7 +890,7 @@ function review(body) {
       const r = current.check();
       if (!r.ready) { nextBtn.classList.add("shake"); setTimeout(() => nextBtn.classList.remove("shake"), 400); return; }
       checked = true; it.correct = r.correct;
-      recordAnswer(it.ex.objective, r.correct);
+      recordAnswer(it.ex.objective, r.correct, "lesson");
       fb.className = "j-feedback " + (r.correct ? "ok" : "bad"); fb.hidden = false;
       fb.innerHTML = `<b>${r.correct ? "✓ Correct" : "✗ Not quite, it comes back tomorrow"}</b>${mdP(it.ex.explanation)}${r.correct ? '<button class="j-guess" id="j-guess">🎲 I guessed</button>' : ""}`;
       const g = $("#j-guess"); if (g) g.onclick = () => { guessed = !guessed; g.classList.toggle("on", guessed); };
@@ -999,7 +1003,7 @@ function mockPractice(body, m) {
       const r = current.check();
       if (!r.ready) { nextBtn.classList.add("shake"); setTimeout(() => nextBtn.classList.remove("shake"), 400); return; }
       checked = true;
-      if (!retry) { first[q.id] = r.correct; recordAnswer(q.objective, r.correct); reviewRecord(q.id, r.correct); if (r.correct) addXP(1); }
+      if (!retry) { first[q.id] = r.correct; recordAnswer(q.objective, r.correct, "mock"); reviewRecord(q.id, r.correct); if (r.correct) addXP(1); }
       if (!r.correct) queue.push({ q, retry: true });
       fb.className = "j-feedback " + (r.correct ? "ok" : "bad"); fb.hidden = false;
       fb.innerHTML = `<b>${r.correct ? "✓ Correct" : "✗ Not quite, it comes back at the end"}</b>${mdP(q.explanation)}`;
@@ -1062,13 +1066,14 @@ function exam(body, m, resume) {
     const results = m.questions.map(qq => {
       const want = qq.kind === "multiChoice" ? qq.answers : [qq.answer], got = run.answers[qq.id] || [];
       const correct = want.length === got.length && want.every(i => got.includes(i));
-      recordAnswer(qq.objective, correct);
+      recordAnswer(qq.objective, correct, "mock");
       P.mockSeen[qq.id] = (P.mockSeen[qq.id] || 0) + 1;
       return { qq, got, want, correct };
     });
     const score = results.filter(r => r.correct).length / results.length;
     const st = P.mocks[m.setId] || { best: 0, attempts: 0 };
-    P.mocks[m.setId] = { best: Math.max(st.best, score), last: score, attempts: st.attempts + 1, at: Date.now() }; save(); addXP(MOCK_XP);
+    P.mocks[m.setId] = { best: Math.max(st.best, score), last: score, attempts: st.attempts + 1, at: Date.now() };
+    mockLog().push({ set: m.setId, score, at: Date.now() }); save(); addXP(MOCK_XP);
     stack.pop(); go(examResult, m, results, score);
   }
   $("#j-flag").onclick = () => { const id = q().id; run.flags[id] = !run.flags[id]; persist(); render(); grid(); };
@@ -1132,7 +1137,7 @@ function drillRound(body, mode, items) {
       $("#j-back2").onclick = back;
       return;
     }
-    const it = items[k], done = ok => { P.drills[mode][it.id] = { ok, at: Date.now() }; recordAnswer(it.objective, ok); save(); if (ok) { score++; addXP(mode === "write" ? 2 : 1); } k++; };
+    const it = items[k], done = ok => { P.drills[mode][it.id] = { ok, at: Date.now() }; recordAnswer(it.objective, ok, "drill"); save(); if (ok) { score++; addXP(mode === "write" ? 2 : 1); } k++; };
     body.innerHTML = `<div class="j-kicker">${mode === "fixbug" ? "Fix the bug" : "Write it"} · ${k + 1} of ${items.length} · Obj ${esc(it.objective)}</div><div id="j-dr"></div>`;
     (mode === "fixbug" ? fixBugCard : writeCard)($("#j-dr"), it, ok => { done(ok); }, next);
     body.scrollTop = 0;
@@ -1295,7 +1300,7 @@ function trace(body, p) {
     on($("#j-tq"), "[data-c]", "click", b => {
       if (asked[cp.step] != null) return;
       const ok = +b.dataset.c === cp.answer; asked[cp.step] = ok; if (ok) { right++; addXP(1); }
-      recordAnswer(p.objective, ok); save();
+      recordAnswer(p.objective, ok, "drill"); save();
       $("#j-tq").querySelectorAll("[data-c]").forEach(x => { const i = +x.dataset.c; x.classList.toggle("right", i === cp.answer); x.classList.toggle("wrong", i === +b.dataset.c && !ok); });
       $("#j-tn").textContent = "Reveal ›";
     });
@@ -1330,16 +1335,82 @@ function tips(body) {
   };
   render();
 }
+// ---------- readiness planner ----------
+// Exam date (local day, "YYYY-MM-DD"), the mock score history and the lesson-vs-mock split per objective.
+function examDays() {
+  if (!P.examDate) return null;
+  const [y, m, d] = P.examDate.split("-").map(Number), t = new Date(); t.setHours(0, 0, 0, 0);
+  return Math.round((new Date(y, m - 1, d) - t) / 864e5);
+}
+// Every finished mock exam; older progress only kept the last score per set, so those seed the log once.
+function mockLog() {
+  if (!P.mockLog) P.mockLog = Object.entries(P.mocks).filter(([, st]) => st.at && st.last != null).map(([set, st]) => ({ set, score: st.last, at: st.at })).sort((a, b) => a.at - b.at);
+  return P.mockLog;
+}
+function trendSvg(log, pass) {
+  const W = 320, H = 120, L = 30, R = 8, T = 10, B = 18, n = log.length;
+  const x = i => L + (n === 1 ? (W - L - R) / 2 : i * (W - L - R) / (n - 1)), y = v => T + (1 - v) * (H - T - B);
+  const pts = log.map((e, i) => `${x(i).toFixed(1)},${y(e.score).toFixed(1)}`).join(" ");
+  return `<svg class="j-trend" viewBox="0 0 ${W} ${H}" role="img" aria-label="Mock exam scores over time">
+    ${[0, 0.5, 1].map(v => `<line class="j-tgrid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text class="j-tlbl" x="${L - 4}" y="${y(v) + 4}" text-anchor="end">${v * 100}%</text>`).join("")}
+    <line class="j-tpass" x1="${L}" x2="${W - R}" y1="${y(pass)}" y2="${y(pass)}"/><text class="j-tlbl j-tpasst" x="${W - R}" y="${y(pass) - 4}" text-anchor="end">pass ${Math.round(pass * 100)}%</text>
+    ${n > 1 ? `<polyline class="j-tline" points="${pts}"/>` : ""}
+    ${log.map((e, i) => `<circle class="j-tdot ${e.score >= pass ? "ok" : "bad"}" cx="${x(i)}" cy="${y(e.score)}" r="4"><title>${new Date(e.at).toLocaleDateString()} · ${pct(e.score)}</title></circle>`).join("")}
+    <text class="j-tlbl" x="${L}" y="${H - 3}">${new Date(log[0].at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}</text>
+    ${n > 1 ? `<text class="j-tlbl" x="${W - R}" y="${H - 3}" text-anchor="end">${new Date(log[n - 1].at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}</text>` : ""}
+  </svg>`;
+}
+function plannerHtml() {
+  const ex = C.catalog.exam, pass = ex.passPercent / 100, days = examDays();
+  const lessons = C.units.flatMap(u => u.lessons), left = lessons.filter(l => !lessonDone(l)), minsLeft = left.reduce((n, l) => n + (l.minutes || 0), 0);
+  const weekAgo = Date.now() - 7 * 864e5, pace = lessons.filter(l => { const st = P.lessons[l.id]; return st && st.done && !st.skipped && st.at >= weekAgo; }).length / 7;
+  // Leave the last few days for mocks and review: lessons should be done 3 days before the exam (or 1 when it's close).
+  const buffer = days == null ? 0 : days > 10 ? 3 : days > 3 ? 1 : 0, studyDays = days == null ? null : Math.max(days - buffer, 0);
+  const perDay = studyDays ? Math.ceil(left.length / studyDays) : null;
+  let plan;
+  if (days == null) plan = `<p class="j-sub">Set your exam date to get a daily lesson target.</p>`;
+  else if (days < 0) plan = `<p class="j-sub">That date has passed. Booked a new one? Change it above.</p>`;
+  else if (!left.length) plan = `<p class="j-sub">✅ Every lesson is done. Spend the ${days} day${days === 1 ? "" : "s"} left on mock exams and review.</p>`;
+  else if (!studyDays) plan = `<p class="j-sub">${left.length} lessons left and no study days before the exam: focus on mock exams, review and your weakest objectives.</p>`;
+  else {
+    const onTrack = pace >= left.length / studyDays;
+    plan = `<div class="j-stats"><div><b>${perDay}</b><span>lesson${perDay === 1 ? "" : "s"} a day</span></div><div><b>~${Math.ceil(minsLeft / studyDays)}</b><span>min a day</span></div><div><b>${left.length}</b><span>lessons left</span></div></div>
+      <p class="j-sub">Finishes the lessons ${buffer ? `${buffer} day${buffer === 1 ? "" : "s"} before the exam, leaving ${buffer === 1 ? "it" : "them"} for mocks and review` : "by exam day"}.
+      Your pace this week: ${pace ? `${(pace).toFixed(1)} a day` : "no lessons yet"}, <b class="${onTrack ? "ok" : "bad"}">${onTrack ? "on track" : "behind"}</b>.</p>`;
+  }
+  const log = mockLog(), lastN = log.slice(-3), avg = lastN.length ? lastN.reduce((n, e) => n + e.score, 0) / lastN.length : null;
+  const by = P.answersBy || {}, L = by.lesson || {}, M = by.mock || {};
+  const sc = a => a && a.total ? a.right / a.total : null;
+  const rows = C.catalog.objectives.map(o => ({ o, l: sc(L[o.id]), m: sc(M[o.id]), ln: (L[o.id] || {}).total || 0, mn: (M[o.id] || {}).total || 0 })).filter(x => x.l != null || x.m != null);
+  const cell = (v, n) => v == null ? `<td>—</td>` : `<td class="${v >= pass ? "ok" : "bad"}">${pct(v)}<small> ${n}</small></td>`;
+  return `<div class="j-card j-plan">
+    <h3 class="j-sec">📅 Plan</h3>
+    <label class="j-dlabel">Exam date <input type="date" id="j-exdate" value="${esc(P.examDate || "")}"></label>
+    ${days != null && days >= 0 ? `<div class="j-cd"><b>${days}</b><span>${days === 1 ? "day" : "days"} to go</span></div>` : ""}
+    ${plan}
+    <h3 class="j-sec">📈 Mock exam scores</h3>
+    ${log.length ? `${trendSvg(log, pass)}<p class="j-sub">${log.length} mock${log.length === 1 ? "" : "s"} taken. Last ${lastN.length}: <b class="${avg >= pass ? "ok" : "bad"}">${pct(avg)}</b> average${log.length > 1 ? `, ${log[log.length - 1].score >= log[0].score ? "up" : "down"} from ${pct(log[0].score)} at the start` : ""}.</p>` : `<p class="j-sub">No mock exams yet. Take one when about half the lessons are done to see where you stand.</p>`}
+    <h3 class="j-sec">⚖️ Lessons vs mock exams</h3>
+    ${rows.length ? `<p class="j-sub">Right answers per objective in lessons and reviews, against mock exams. A big drop in the mock column means it doesn't stick under exam conditions yet.</p>
+      <div class="j-cmpwrap"><table class="j-cmptab"><thead><tr><th>Objective</th><th>Lessons</th><th>Mocks</th></tr></thead><tbody>${rows.map(x => {
+        const gap = x.l != null && x.m != null && x.l - x.m >= 0.2;
+        return `<tr${gap ? ' class="gap"' : ""}><th title="${esc(x.o.title)}">${esc(x.o.id)} <small>${esc(x.o.title)}</small>${gap ? " ⚠️" : ""}</th>${cell(x.l, x.ln)}${cell(x.m, x.mn)}</tr>`; }).join("")}</tbody></table></div>`
+      : `<p class="j-sub">Answer some lesson questions and take a mock exam to compare them here. Answers from before this planner count in the overall readiness only.</p>`}
+  </div>`;
+}
+
 function readinessView(body) {
   const r = readiness();
-  body.innerHTML = `<h2 class="j-h">🎯 Readiness</h2><p class="j-sub">Share of questions answered right per exam objective, across lessons, mock exams and drills. Aim for ${C.catalog.exam.passPercent}% or more everywhere.</p>
+  body.innerHTML = `<h2 class="j-h">🎯 Readiness</h2>${plannerHtml()}
+    <h3 class="j-sec">By objective</h3><p class="j-sub">Share of questions answered right per exam objective, across lessons, mock exams and drills. Aim for ${C.catalog.exam.passPercent}% or more everywhere.</p>
     <div class="j-stats"><div><b>${r.total ? pct(r.score) : "—"}</b><span>overall</span></div><div><b>${r.total}</b><span>answers</span></div></div>
     <div class="j-list">${C.catalog.objectives.map(o => { const a = P.answers[o.id], s = objScore(o.id);
       return `<div class="j-row j-rrow"><span>${esc(o.id)} · ${esc(o.title)}<span class="j-bar"><i class="${s == null ? "" : s >= 0.68 ? "ok" : "bad"}" style="width:${s == null ? 0 : s * 100}%"></i></span></span><b class="${s == null ? "" : s >= 0.68 ? "ok" : "bad"}">${s == null ? "—" : `${pct(s)}<small> ${a.right}/${a.total}</small>`}</b></div>`; }).join("")}</div>
     <button class="btn j-wide j-ghost" id="j-reset">Reset all Java progress</button>`;
+  $("#j-exdate").onchange = e => { P.examDate = e.target.value || undefined; save(); readinessView(body); };
   $("#j-reset").onclick = () => {
     if (!confirm("Erase all lesson, exam and drill progress for the Java course?")) return;
-    P = { lessons: {}, answers: {}, mocks: {}, drills: { fixbug: {}, write: {}, trace: {} }, xpByDay: {}, goalMet: [], goal: P.goal, ex: {} }; save();
+    P = { lessons: {}, answers: {}, answersBy: {}, mocks: {}, mockLog: [], drills: { fixbug: {}, write: {}, trace: {}, compile: {} }, xpByDay: {}, goalMet: [], goal: P.goal, ex: {}, examDate: P.examDate }; save();
     try { localStorage.removeItem(MOCK_KEY); localStorage.removeItem(PAUSE_KEY); } catch (_) {}
     stack.length = 0; go(home);
   };

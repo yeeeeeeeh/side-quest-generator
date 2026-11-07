@@ -1865,3 +1865,27 @@ body
 .header-theme { flex: 0 0 auto; margin-left: 16px; }
 .header-theme + .update-btn { margin-left: 8px; }
 @media (max-width: 767px) { .header-theme { margin-left: auto; width: 32px; height: 32px; font-size: 1rem; } }
+/* Java: readiness planner */
+.j-plan { margin-bottom: 8px; }
+.j-plan .j-sec:first-child { margin-top: 0; }
+.j-dlabel { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 0.9rem; font-weight: 600; color: var(--text); }
+.j-dlabel input { padding: 8px 10px; font: inherit; font-weight: 400; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color-scheme: var(--scheme, dark); }
+.j-cd { display: flex; align-items: baseline; justify-content: center; gap: 8px; margin: 12px 0 4px; }
+.j-cd b { font-size: 2.4rem; line-height: 1; color: var(--primary); font-variant-numeric: tabular-nums; }
+.j-cd span { color: var(--text-muted); }
+.j-plan .ok { color: var(--success); } .j-plan .bad { color: var(--danger); }
+.j-countdown { font-weight: 600; color: var(--primary); white-space: nowrap; }
+.j-trend { display: block; width: 100%; height: auto; margin: 4px 0 6px; }
+.j-tgrid { stroke: var(--border); } .j-tpass { stroke: var(--success); stroke-dasharray: 4 3; }
+.j-tlbl { fill: var(--text-muted); font: 10px 'Inter', sans-serif; } .j-tpasst { fill: var(--success); }
+.j-tline { fill: none; stroke: var(--primary); stroke-width: 2; }
+.j-tdot { stroke: var(--surface); stroke-width: 1.5; } .j-tdot.ok { fill: var(--success); } .j-tdot.bad { fill: var(--danger); }
+.j-cmpwrap { overflow-x: auto; }
+.j-cmptab { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.j-cmptab th, .j-cmptab td { padding: 6px 4px; text-align: right; border-bottom: 1px solid var(--border-light); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.j-cmptab thead th:first-child { text-align: left; }
+.j-cmptab thead th { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+.j-cmptab tbody th { text-align: left; font-weight: 600; color: var(--text); white-space: normal; }
+.j-cmptab tbody th small { display: block; font-weight: 400; color: var(--text-muted); }
+.j-cmptab td small { color: var(--text-muted); font-weight: 400; }
+.j-cmptab tr.gap th { color: var(--danger); }

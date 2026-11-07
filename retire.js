@@ -1,7 +1,7 @@
 // ===== Retirement calculator =====
 // How big a portfolio must be to pay a monthly cost from dividends alone, after Dutch box 3 tax,
 // and whether saving a % of salary gets you there. "Old" box 3 taxes a deemed return on wealth
-// (forfaitair rendement); "new" taxes the actual return incl. unrealised price gains (planned 2028).
+// (forfaitair rendement); "new" taxes the actual return incl. unrealised price gains (planned 2028–2029; not law yet, and a pending change would tax shares only on sale).
 // Inputs are kept in localStorage. Wrapped in a function so its names don't clash with other tabs.
 (function () {
 "use strict";
@@ -68,7 +68,7 @@ const esc = s => String(s ?? "").replace(/[<>&'"]/g, c => ({"<":"&lt;",">":"&gt;
 const NOW_YEAR = new Date().getFullYear();
 const R_FIELDS = {age:35,retire:60,until:95,salary:50000,raise:2.5,invest:20,start:25000,
   infl:2.5,wYield:2,wGrowth:8.3,yield:3.5,growth:3,oRate:36,oDeemed:6,oFree:59357,nRate:36,nFree:1800,mBal:250000,mDed:37.56,mWoz:400000,mWozGrowth:4,mForfait:0.35,
-  aowAge:68,aow:1558,pen:0,penAge:68,wr:2.5,terW:0.2,terR:0.3,leak:10};
+  aowAge:69,aow:1582,pen:0,penAge:69,wr:2.5,terW:0.2,terR:0.3,leak:10};
 // Monthly expense lines in the Costs section (today's money): c_… now, cr_… in retirement.
 // Cost lines are a list the viewer can add to, rename and remove: m = per month, y = per year.
 // R_COSTS keys are the fixed lines of an earlier version, kept to carry saved amounts over.
@@ -189,6 +189,8 @@ function loadInputs(){
   let o=null; try{ o=JSON.parse(localStorage.getItem("retire")||"null"); }catch(_){}
   // Saved 2025 defaults move to the 2026 figures; values the user changed are kept.
   if(o){ for(const [k,from,to] of [["oDeemed",5.88,6],["oFree",57684,59357],["mDed",37.48,37.56]]) if(o[k]===from) o[k]=to; }
+  // Nov 2026 check: AOW from the July 2026 amounts, and the projected AOW age for people born around 1990.
+  if(o){ for(const [k,from,to] of [["aow",1558,1582],["aowAge",68,69],["penAge",68,69]]) if(o[k]===from) o[k]=to; }
   // Before the Costs section there was one "monthly cost" field: keep that total as daily living.
   if(o&&o.living==null&&Number.isFinite(o.cost)){ o.living=o.livingR=o.cost; o.travel=o.travelR=0; }
   // Then one "daily living" total became expense lines: a total the user changed goes under "Other".

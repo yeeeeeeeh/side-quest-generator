@@ -9,7 +9,6 @@ Sizes are rough % of one session's usage.
 
 ## Next up
 
-- [ ] 🌐 **One backup for all tabs**: export/import everything (Java progress, Retire inputs, Visa visited/wishlist) as one JSON file. (2–4%)
 - [ ] 🛂 **Wishlist**: mark countries to visit with a note; filter the list and highlight them on the map; count them in Stats. (3–5%)
 - [ ] 🛂 **Travel advisory level** per country (GOV.UK), coloured on the list and the map, with an advisory map layer. Map-app: `TravelAdvisoryStore`. (5–8%)
 - [ ] 🛂 **Iconic attraction** per country on the detail sheet (text only, no photos). Map-app: `iconic_attractions.yaml`. (2–4%)
@@ -31,6 +30,7 @@ Sizes are rough % of one session's usage.
 
 ## Done
 
+- [x] 🌐 One backup for all tabs: export / restore everything as one JSON file, Quests home (2026-11-07, 64d80b0)
 - [x] ☕ Readiness planner: exam countdown, lessons a day, mock trend, lessons vs mocks (2026-11-07, 49bdb11)
 - [x] ☕ Compiles or not?: 325 yes/no snippets from the Fix-the-bug drill, misses go to review (2026-11-06, a439ebf)
 - [x] 🌐 Light mode for Quests and IKEA; light tokens now site-wide, 🌗 in every toolbar (2026-11-05, 1348beb)

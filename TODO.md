@@ -17,7 +17,6 @@ Sizes are rough % of one session's usage.
 - [ ] 🛂 **Travel finder**: "where next" filter over unvisited countries: visa-free/eTA, direct flight, low advisory, few health risks. Best after the advisory item. Map-app: `CountryTravelFacts` + Explore filters. (5–8%)
 - [ ] 🛂 **Capital quiz**: Kahoot-style "guess the capital" for countries you haven't visited. Map-app: `CapitalQuizView`. (4–6%)
 - [ ] ☕ **Answer log**: full answer history with filters and "copy as Markdown for AI chat" (also for saved items). (4–6%)
-- [ ] 💰 **New box 3 as in the latest plan (B)**: dividends taxed yearly, gains only on sale, €1,000 tax-free; tax hit when switching ETFs at retirement. (5–7%)
 - [ ] 💰 **Hillen rule and the higher forfait** for homes over ~€1.3M, for a more precise mortgage deduction. (2–4%)
 - [ ] 💰 **Gross → net salary**: enter gross pay, get Dutch net income (income tax, credits). (6–10%)
 - [ ] 🌐 **Works offline (PWA)**: installable on the home screen, usable without internet. (4–6%)
@@ -27,6 +26,12 @@ Sizes are rough % of one session's usage.
 - [ ] 🛂 **Dutch passport column**: side-by-side with Taiwan in the list and the detail sheet, plus a "Dutch is easier" filter. Data: map-app `dutch_visa_requirements.txt` + `DutchVisaDatabase`. (4–6%) Blocked (2026-11-06): the scheduled job can attach map-app but cloning it was refused by the permission check; allow the clone and move this back up.
 
 ## From the map app
+
+## On hold (do not build)
+
+Not picked by the daily job. Move back to "Next up" only when the condition is met.
+
+- 💰 **New box 3 as in the latest plan (B)**: dividends taxed yearly, gains only on sale, €1,000 tax-free; tax hit when switching ETFs at retirement. (5–7%) On hold (owner, 2026-11-07): not law yet; build only after both Kamers pass it, with the final figures.
 
 ## Done
 

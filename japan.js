@@ -154,12 +154,13 @@ function tipsCard() {
   return `<details class="jp-card jp-tips"><summary>ℹ️ Tax refund, customs and electronics tips</summary>
     <ul>
       <li><b>New tax-free rules from 1 Nov 2026:</b> you pay the full price with tax, show your passport at the till, and get the tax back at a customs kiosk at the airport before you leave, with the goods. No more sealed bags. Shops in a chain can combine your same-day purchases to reach ${yen(REFUND_MIN)}.</li>
+      <li><b>At the airport:</b> do the refund at a customs tax-free kiosk (or via Visit Japan Web) <b>before checking your bags</b>, with the goods, passport and receipts. Goods must leave Japan within 90 days of purchase. Kiosks can have queues, so arrive early; Haneda has counters before and after security. The refund goes to your card or account, or as yen cash, depending on the operator.</li>
       <li>Keep consumables (cosmetics, medicine, snacks) unused until you leave, and keep receipts.</li>
       <li><b>Dutch customs:</b> by air you can bring goods worth up to €${ALLOWANCE} tax-free. Above that, declare it: 21% VAT on the whole amount, plus duty for some goods.</li>
-      <li><b>Tourist coupons:</b> Bic Camera, Yodobashi, Matsukiyo, Sundrug and Don Quijote have coupons for foreign visitors (often 5–10% above a minimum spend). Search "<shop> tourist coupon" before you go.</li>
+      <li><b>Tourist coupons:</b> Bic Camera, Yodobashi, Matsukiyo, Sundrug and Don Quijote have coupons for foreign visitors (often 5–10% above a minimum spend). Search "&lt;shop name&gt; tourist coupon" before you go.</li>
       <li><b>Electronics:</b> Japan uses 100 V and type A plugs (most chargers are fine). Laptops have Japanese keyboards. Warranties are often Japan-only. iPhones sold in Japan always make the camera shutter sound.</li>
     </ul>
-    <p class="jp-note">Rules as reported by travel sources in Oct 2026; check the official Japan Tax-free Shop guidance before you shop.</p></details>`;
+    <p class="jp-note">Rules as reported by travel sources in Oct 2026 and the Japan Customs airport guide (Nov 2026); check the official Japan Tax-free Shop guidance before you shop.</p></details>`;
 }
 
 // ----- Backup: the shopping list as a JSON file -----

@@ -1,6 +1,6 @@
 {
- "updated": "2026-10-29",
- "source": "map-app SchipholDestinations.yaml",
+ "updated": "2026-11-07",
+ "source": "map-app SchipholDestinations.yaml + Transavia summer 2027 announcement (Sep 2026)",
  "destinations": [
   {
    "city": "Abu Dhabi",
@@ -387,6 +387,12 @@
    "lon": 72.8777
   },
   {
+   "city": "Murcia (summer 2027)",
+   "countryCode": "ES",
+   "lat": 37.9922,
+   "lon": -1.1307
+  },
+  {
    "city": "Muscat",
    "countryCode": "OM",
    "lat": 23.588,
@@ -453,6 +459,12 @@
    "lon": -122.675
   },
   {
+   "city": "Pula (summer 2027)",
+   "countryCode": "HR",
+   "lat": 44.8666,
+   "lon": 13.8496
+  },
+  {
    "city": "Punta Cana",
    "countryCode": "DO",
    "lat": 18.5601,
@@ -463,6 +475,12 @@
    "countryCode": "EC",
    "lat": -0.1807,
    "lon": -78.4678
+  },
+  {
+   "city": "Reus (summer 2027)",
+   "countryCode": "ES",
+   "lat": 41.1561,
+   "lon": 1.1069
   },
   {
    "city": "Rio de Janeiro",
@@ -571,6 +589,12 @@
    "countryCode": "CA",
    "lat": 43.6532,
    "lon": -79.3832
+  },
+  {
+   "city": "Trieste (summer 2027)",
+   "countryCode": "IT",
+   "lat": 45.6495,
+   "lon": 13.7768
   },
   {
    "city": "Tétouan",

@@ -32,12 +32,16 @@ function zhName(c) {
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[<>&'"]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&#39;", '"': "&quot;" }[c]));
 let D = null;
-let prefs = { visited: [], hideVisited: false, territories: true, type: "all", q: "", direct: false, amsLayer: true };
+let prefs = { visited: [], hideVisited: false, territories: true, type: "all", q: "", direct: false, amsLayer: true, wish: {}, wishOnly: false, wishLayer: true };
 try { prefs = Object.assign(prefs, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (_) {}
+if (!prefs.wish || typeof prefs.wish !== "object" || Array.isArray(prefs.wish)) prefs.wish = {};
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch (_) {} };
 
 const typeOf = c => c.code === "TW" ? "home" : c.visa ? c.visa.type : "visa";
 const isVisited = c => prefs.visited.includes(c.code);
+// Wishlist: countries to visit, each with an optional note ({ CODE: { note, at } }).
+const isWish = c => !!prefs.wish[c.code];
+const WISH_COLOR = "#F59E0B";
 const matches = (c, q) => !q || [c.name, c.zh, c.code, c.iso3].some(v => v && v.toLowerCase().includes(q));
 
 function shown() {
@@ -47,6 +51,7 @@ function shown() {
     && !(prefs.hideVisited && isVisited(c))
     && (prefs.type === "all" || typeOf(c) === prefs.type)
     && (!prefs.direct || c.ams)
+    && (!prefs.wishOnly || isWish(c))
     && matches(c, q));
 }
 
@@ -62,21 +67,23 @@ function render() {
       <label><input type="checkbox" id="v-hide" ${prefs.hideVisited ? "checked" : ""}> Hide visited (${prefs.visited.length})</label>
       <label><input type="checkbox" id="v-terr" ${prefs.territories ? "checked" : ""}> Include territories</label>
       <label><input type="checkbox" id="v-direct" ${prefs.direct ? "checked" : ""}> ✈️ Direct from Amsterdam</label>
+      <label><input type="checkbox" id="v-wish" ${prefs.wishOnly ? "checked" : ""}> ⭐ Wishlist (${Object.keys(prefs.wish).length})</label>
       ${prefs.type !== "all" ? `<button class="v-clear" id="v-all">Show all types ✕</button>` : ""}
     </div>
     <div class="v-colhead"><span>Country</span><span>Taiwan 🇹🇼</span></div>
     ${groups.length ? groups.map(([r, cs]) => `<h3 class="v-region">${esc(r)} <small>${cs.length}</small></h3>
       <div class="v-list">${cs.map(c => { const t = typeOf(c), x = TYPES[t];
         return `<button class="v-row${isVisited(c) ? " visited" : ""}" data-code="${c.code}"><span class="v-flag">${c.flag}</span>
-          <span class="v-name">${esc(c.name)}${c.zh ? ` <small>${esc(c.zh)}</small>` : ""}</span>${c.ams ? '<span class="v-plane" title="Direct flights from Amsterdam">✈️</span>' : ""}
+          <span class="v-name">${isWish(c) ? '<span class="v-star" title="On your wishlist">⭐</span> ' : ""}${esc(c.name)}${c.zh ? ` <small>${esc(c.zh)}</small>` : ""}${isWish(c) && prefs.wish[c.code].note ? `<span class="v-wnote">${esc(prefs.wish[c.code].note)}</span>` : ""}</span>${c.ams ? '<span class="v-plane" title="Direct flights from Amsterdam">✈️</span>' : ""}
           <span class="v-stay">${c.visa ? esc(c.visa.stay) : SPECIAL_NOTES[c.code] ? "see note" : ""}</span><span class="v-badge v-${x.cls}">${x.short}</span></button>`; }).join("")}</div>`).join("")
-      : `<p class="v-empty">No matching countries.</p>`}
+      : `<p class="v-empty">${prefs.wishOnly && !Object.keys(prefs.wish).length ? "Your wishlist is empty. Open a country and tick ⭐ Want to visit." : "No matching countries."}</p>`}
     <p class="v-foot">Taiwan passport rules from the <a href="${esc(D.sourceUrl)}" target="_blank" rel="noopener">Bureau of Consular Affairs</a> (as in the map app). Always check the official page before you travel. Country list from <a href="https://github.com/mledoze/countries" target="_blank" rel="noopener">mledoze/countries</a> (ODbL). Health risks from WHO/CDC lists, as in the map app; not medical advice.</p>`;
   const q = $("#v-q");
   q.oninput = () => { prefs.q = q.value; save(); const pos = q.selectionStart; render(); const n = $("#v-q"); n.focus(); n.setSelectionRange(pos, pos); };
   $("#v-hide").onchange = e => { prefs.hideVisited = e.target.checked; save(); render(); };
   $("#v-terr").onchange = e => { prefs.territories = e.target.checked; save(); render(); };
   $("#v-direct").onchange = e => { prefs.direct = e.target.checked; save(); render(); if (map) drawMap(); };
+  $("#v-wish").onchange = e => { prefs.wishOnly = e.target.checked; save(); render(); };
   const all2 = $("#v-all"); if (all2) all2.onclick = () => { prefs.type = "all"; save(); render(); };
   document.querySelectorAll("#v-body [data-type]").forEach(b => b.onclick = () => { prefs.type = prefs.type === b.dataset.type ? "all" : b.dataset.type; save(); render(); });
   document.querySelectorAll("#v-body [data-code]").forEach(b => b.onclick = () => detail(D.countries.find(c => c.code === b.dataset.code)));
@@ -106,6 +113,7 @@ function loadLeaflet() {
 function styleFor(c) {
   const t = typeOf(c), dim = (prefs.type !== "all" && t !== prefs.type && t !== "home") || (prefs.direct && !c.ams && t !== "home");
   const k = ink();
+  if (prefs.wishLayer && isWish(c)) return { fillColor: t === "home" ? k.home : COLORS[t], fillOpacity: dim ? 0.25 : 0.85, color: WISH_COLOR, weight: 2.5 };
   return { fillColor: t === "home" ? k.home : COLORS[t], fillOpacity: dim ? 0.08 : isVisited(c) ? 0.35 : 0.75, color: isVisited(c) ? k.visited : k.edge, weight: isVisited(c) ? 1.5 : 0.6 };
 }
 function drawMap() {
@@ -119,7 +127,8 @@ function drawMap() {
     onEachFeature: (f, layer) => {
       const c = byCode[f.properties.c]; if (!c) return;
       withShape.add(c.code);
-      layer.bindTooltip(`${c.flag} ${esc(c.name)} · ${TYPES[typeOf(c)] ? TYPES[typeOf(c)].short : "Home"}`, { sticky: true });
+      layer.bindTooltip(`${isWish(c) ? "⭐ " : ""}${c.flag} ${esc(c.name)} · ${TYPES[typeOf(c)] ? TYPES[typeOf(c)].short : "Home"}`, { sticky: true });
+      if (prefs.wishLayer && isWish(c)) layer.on("add", () => layer.bringToFront());
       layer.on("click", () => detail(c));
     },
   }).addTo(mapLayer);
@@ -129,7 +138,7 @@ function drawMap() {
   }));
   D.countries.filter(c => !withShape.has(c.code) && c.latlng && c.code !== "TW").forEach(c => {
     L.circleMarker(c.latlng, Object.assign(styleFor(c), { radius: 5, weight: 1, color: ink().edge }))
-      .bindTooltip(`${c.flag} ${esc(c.name)} · ${TYPES[typeOf(c)].short}`).on("click", () => detail(c)).addTo(mapLayer);
+      .bindTooltip(`${isWish(c) ? "⭐ " : ""}${c.flag} ${esc(c.name)} · ${TYPES[typeOf(c)].short}`).on("click", () => detail(c)).addTo(mapLayer);
   });
 }
 async function showMap() {
@@ -140,13 +149,14 @@ async function showMap() {
       await loadLeaflet();
       if (!world) { const r = await fetch("visa/world.json"); if (!r.ok) throw new Error(`HTTP ${r.status}`); world = await r.json(); }
     } catch (e) { box.innerHTML = `<p class="v-empty">Couldn't load the map: ${esc(e.message)}.</p>`; return; }
-    box.innerHTML = `<div id="v-map"></div><div class="v-legend">${Object.entries(TYPES).map(([t, x]) => `<button data-mtype="${t}" class="${prefs.type === t ? "on" : ""}"><i style="background:${COLORS[t]}"></i>${x.short}</button>`).join("")}<button data-ams class="${prefs.amsLayer ? "on" : ""}">✈️ AMS</button></div>`;
+    box.innerHTML = `<div id="v-map"></div><div class="v-legend">${Object.entries(TYPES).map(([t, x]) => `<button data-mtype="${t}" class="${prefs.type === t ? "on" : ""}"><i style="background:${COLORS[t]}"></i>${x.short}</button>`).join("")}<button data-ams class="${prefs.amsLayer ? "on" : ""}">✈️ AMS</button><button data-wishl class="${prefs.wishLayer ? "on" : ""}">⭐ Wish</button></div>`;
     map = L.map("v-map", { worldCopyJump: true, minZoom: 1, maxZoom: 7, zoomSnap: 0.5, attributionControl: false }).setView([25, 15], 1.5);
     box.querySelectorAll("[data-mtype]").forEach(b => b.onclick = () => {
       prefs.type = prefs.type === b.dataset.mtype ? "all" : b.dataset.mtype; save();
       box.querySelectorAll("[data-mtype]").forEach(x => x.classList.toggle("on", x.dataset.mtype === prefs.type));
       drawMap(); render();
     });
+    box.querySelector("[data-wishl]").onclick = e => { prefs.wishLayer = !prefs.wishLayer; save(); e.currentTarget.classList.toggle("on", prefs.wishLayer); drawMap(); };
     box.querySelector("[data-ams]").onclick = e => { prefs.amsLayer = !prefs.amsLayer; save(); e.currentTarget.classList.toggle("on", prefs.amsLayer); drawMap(); };
   }
   drawMap();
@@ -182,6 +192,7 @@ function stats() {
     <div class="v-big"><div><b>${n}</b><span>visited</span></div><div><b>${total}</b><span>${prefs.territories ? "countries &amp; territories" : "countries"}</span></div><div><b>${pctOf(n, total)}%</b><span>of the world</span></div></div>
     <h3 class="v-region">By continent</h3>
     <div class="v-conts">${regions.map(([r, v, a]) => `<div class="v-cont"><span>${esc(r)}</span><div class="v-cbar"><i style="width:${pctOf(v, a)}%"></i></div><b>${v}/${a}</b></div>`).join("")}</div>
+    ${wishStats(scope)}
     <h3 class="v-region">Still to visit, with a Taiwan passport</h3>
     <div class="v-summary">${Object.entries(TYPES).map(([t, x]) => `<button class="v-stat v-${x.cls}" data-left="${t}"><b>${byType(t)}</b><span>${x.icon} ${x.short}</span></button>`).join("")}</div>
     <h3 class="v-region">Easy next trips <small>${easy.length}</small></h3>
@@ -191,6 +202,14 @@ function stats() {
     ${n ? "" : `<p class="v-foot">Mark countries as visited from their detail sheet (tap any country in the list or on the map).</p>`}`;
   document.querySelectorAll("#v-stats [data-code]").forEach(b => b.onclick = () => detail(D.countries.find(c => c.code === b.dataset.code)));
   document.querySelectorAll("#v-stats [data-left]").forEach(b => b.onclick = () => { prefs.type = b.dataset.left; prefs.hideVisited = true; save(); render(); setView("list"); });
+}
+
+function wishStats(scope) {
+  const w = scope.filter(isWish), done = w.filter(isVisited), todo = w.filter(c => !isVisited(c)).sort((a, b) => a.name.localeCompare(b.name));
+  if (!w.length) return `<h3 class="v-region">⭐ Wishlist</h3><p class="v-note">Tick ⭐ Want to visit on a country's sheet to plan trips here.</p>`;
+  return `<h3 class="v-region">⭐ Wishlist <small>${done.length}/${w.length} visited</small></h3>
+    <div class="v-big"><div><b>${todo.length}</b><span>to go</span></div><div><b>${todo.filter(c => typeOf(c) === "free" || typeOf(c) === "eta").length}</b><span>visa-free or eTA</span></div><div><b>${todo.filter(c => c.ams).length}</b><span>direct from AMS</span></div></div>
+    ${todo.length ? `<div class="v-list v-wlist">${todo.map(c => `<button class="v-row" data-code="${c.code}"><span class="v-flag">${c.flag}</span><span class="v-name">${esc(c.name)}${prefs.wish[c.code].note ? `<span class="v-wnote">${esc(prefs.wish[c.code].note)}</span>` : ""}</span>${c.ams ? '<span class="v-plane">✈️</span>' : ""}<span class="v-badge v-${TYPES[typeOf(c)].cls}">${TYPES[typeOf(c)].short}</span></button>`).join("")}</div>` : `<p class="v-note">Every wishlist country is visited. Add some more!</p>`}`;
 }
 
 // Skyscanner search from Amsterdam to a country for next month (same link as the app: /ams/<cc>/<yymm>/<yymm>/).
@@ -226,12 +245,21 @@ function detail(c) {
       <a class="v-sky" href="${esc(skyscanner(c.code))}" target="_blank" rel="noopener">Search flights next month on Skyscanner ↗</a></div>` : ""}
     ${healthBox(c)}
     <label class="v-visit"><input type="checkbox" id="v-visited" ${isVisited(c) ? "checked" : ""}> I've visited ${esc(c.name)}</label>
+    <label class="v-visit"><input type="checkbox" id="v-wished" ${isWish(c) ? "checked" : ""}> ⭐ Want to visit</label>
+    <textarea class="gw-search v-wtext" id="v-wtext" rows="2" maxlength="300" placeholder="Note: when, why, with whom…" ${isWish(c) ? "" : "hidden"}>${esc(isWish(c) ? prefs.wish[c.code].note || "" : "")}</textarea>
     <div class="v-links">${links.map(([href, t2, sub]) => `<a href="${esc(href)}" target="_blank" rel="noopener"><b>${t2}</b><small>${esc(sub)}</small></a>`).join("")}</div>
   </div>`;
   sheet.hidden = false;
   const close = () => { sheet.hidden = true; sheet.innerHTML = ""; };
   $("#v-close").onclick = close;
   sheet.onclick = e => { if (e.target === sheet) close(); };
+  const wishChanged = () => { save(); render(); if (map) drawMap(); if (prefs.view === "stats") stats(); };
+  $("#v-wished").onchange = e => {
+    if (e.target.checked) prefs.wish[c.code] = { note: $("#v-wtext").value.trim(), at: Date.now() }; else delete prefs.wish[c.code];
+    $("#v-wtext").hidden = !e.target.checked; if (e.target.checked) $("#v-wtext").focus();
+    wishChanged();
+  };
+  $("#v-wtext").onchange = e => { if (prefs.wish[c.code]) { prefs.wish[c.code].note = e.target.value.trim(); wishChanged(); } };
   $("#v-visited").onchange = e => {
     prefs.visited = e.target.checked ? [...new Set([...prefs.visited, c.code])] : prefs.visited.filter(v => v !== c.code);
     save(); render(); if (map) drawMap(); if (prefs.view === "stats") stats();

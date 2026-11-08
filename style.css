@@ -1896,3 +1896,9 @@ body
 .backup-btns { display: flex; gap: 10px; margin-top: 10px; }
 .backup-btns .btn { flex: 1; justify-content: center; margin: 0; cursor: pointer; }
 .backup-btns .btn:hover { transform: none; }
+/* Visa: wishlist */
+.v-star { font-size: 0.85em; }
+.v-wnote { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.75rem; color: var(--primary); }
+.v-wtext { display: block; width: 100%; margin: -6px 0 14px; padding: 10px 12px; font: inherit; font-size: 0.9rem; resize: vertical; box-sizing: border-box; }
+.v-wtext[hidden] { display: none; }
+.v-wlist .v-name { white-space: normal; }

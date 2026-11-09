@@ -8,3 +8,4 @@
 - Map app data (github.com/yeeeeeeeh/map-app, private) is copied in as snapshots; credit the source and its date on the page.
 - Direct flights: edit `visa/ams-destinations.json`, then run `python3 visa/build-ams.py`.
 - Tax rules: only implement Dutch tax rules that are law. Proposals (e.g. the new box 3, Belastingplan figures not yet passed) may be mentioned as "proposed" in hints, never built into the calculator or used as defaults. Items under "On hold" in `TODO.md` are never picked.
+- Travel advice: `python3 visa/build-advisory.py` refreshes `visa/advisory.json` from the GOV.UK Content API (FCDO, OGL v3.0).

@@ -32,7 +32,7 @@ function zhName(c) {
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[<>&'"]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&#39;", '"': "&quot;" }[c]));
 let D = null;
-let prefs = { visited: [], hideVisited: false, territories: true, type: "all", q: "", direct: false, amsLayer: true, wish: {}, wishOnly: false, wishLayer: true };
+let prefs = { visited: [], hideVisited: false, territories: true, type: "all", q: "", direct: false, amsLayer: true, wish: {}, wishOnly: false, wishLayer: true, safeOnly: false, adviceMap: false };
 try { prefs = Object.assign(prefs, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (_) {}
 if (!prefs.wish || typeof prefs.wish !== "object" || Array.isArray(prefs.wish)) prefs.wish = {};
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch (_) {} };
@@ -42,6 +42,15 @@ const isVisited = c => prefs.visited.includes(c.code);
 // Wishlist: countries to visit, each with an optional note ({ CODE: { note, at } }).
 const isWish = c => !!prefs.wish[c.code];
 const WISH_COLOR = "#F59E0B";
+// UK FCDO travel advice levels (snapshot in visa/advisory.json, see visa/build-advisory.py).
+let A = null;
+const ADV = {
+  1: { label: "No FCDO warnings", short: "OK", color: "#10B981" },
+  2: { label: "Avoid some areas", short: "Parts", color: "#EAB308" },
+  3: { label: "Essential travel only", short: "Essential", color: "#F97316" },
+  4: { label: "Advise against all travel", short: "No travel", color: "#DC2626" },
+};
+const advOf = c => A && A.levels[c.code] ? A.levels[c.code] : null;
 const matches = (c, q) => !q || [c.name, c.zh, c.code, c.iso3].some(v => v && v.toLowerCase().includes(q));
 
 function shown() {
@@ -52,6 +61,7 @@ function shown() {
     && (prefs.type === "all" || typeOf(c) === prefs.type)
     && (!prefs.direct || c.ams)
     && (!prefs.wishOnly || isWish(c))
+    && (!prefs.safeOnly || !advOf(c) || advOf(c).level < 3)
     && matches(c, q));
 }
 
@@ -68,22 +78,24 @@ function render() {
       <label><input type="checkbox" id="v-terr" ${prefs.territories ? "checked" : ""}> Include territories</label>
       <label><input type="checkbox" id="v-direct" ${prefs.direct ? "checked" : ""}> ✈️ Direct from Amsterdam</label>
       <label><input type="checkbox" id="v-wish" ${prefs.wishOnly ? "checked" : ""}> ⭐ Wishlist (${Object.keys(prefs.wish).length})</label>
+      ${A ? `<label><input type="checkbox" id="v-safe" ${prefs.safeOnly ? "checked" : ""}> ⚠️ Hide UK "avoid travel"</label>` : ""}
       ${prefs.type !== "all" ? `<button class="v-clear" id="v-all">Show all types ✕</button>` : ""}
     </div>
     <div class="v-colhead"><span>Country</span><span>Taiwan 🇹🇼</span></div>
     ${groups.length ? groups.map(([r, cs]) => `<h3 class="v-region">${esc(r)} <small>${cs.length}</small></h3>
       <div class="v-list">${cs.map(c => { const t = typeOf(c), x = TYPES[t];
         return `<button class="v-row${isVisited(c) ? " visited" : ""}" data-code="${c.code}"><span class="v-flag">${c.flag}</span>
-          <span class="v-name">${isWish(c) ? '<span class="v-star" title="On your wishlist">⭐</span> ' : ""}${esc(c.name)}${c.zh ? ` <small>${esc(c.zh)}</small>` : ""}${isWish(c) && prefs.wish[c.code].note ? `<span class="v-wnote">${esc(prefs.wish[c.code].note)}</span>` : ""}</span>${c.ams ? '<span class="v-plane" title="Direct flights from Amsterdam">✈️</span>' : ""}
+          <span class="v-name">${isWish(c) ? '<span class="v-star" title="On your wishlist">⭐</span> ' : ""}${esc(c.name)}${c.zh ? ` <small>${esc(c.zh)}</small>` : ""}${isWish(c) && prefs.wish[c.code].note ? `<span class="v-wnote">${esc(prefs.wish[c.code].note)}</span>` : ""}</span>${advOf(c) && advOf(c).level > 1 ? `<span class="v-adv" style="--adv:${ADV[advOf(c).level].color}" title="UK advice: ${ADV[advOf(c).level].label}">${ADV[advOf(c).level].short}</span>` : ""}${c.ams ? '<span class="v-plane" title="Direct flights from Amsterdam">✈️</span>' : ""}
           <span class="v-stay">${c.visa ? esc(c.visa.stay) : SPECIAL_NOTES[c.code] ? "see note" : ""}</span><span class="v-badge v-${x.cls}">${x.short}</span></button>`; }).join("")}</div>`).join("")
       : `<p class="v-empty">${prefs.wishOnly && !Object.keys(prefs.wish).length ? "Your wishlist is empty. Open a country and tick ⭐ Want to visit." : "No matching countries."}</p>`}
-    <p class="v-foot">Taiwan passport rules from the <a href="${esc(D.sourceUrl)}" target="_blank" rel="noopener">Bureau of Consular Affairs</a> (as in the map app). Always check the official page before you travel. Country list from <a href="https://github.com/mledoze/countries" target="_blank" rel="noopener">mledoze/countries</a> (ODbL). Health risks from WHO/CDC lists, as in the map app; not medical advice.</p>`;
+    <p class="v-foot">Taiwan passport rules from the <a href="${esc(D.sourceUrl)}" target="_blank" rel="noopener">Bureau of Consular Affairs</a> (as in the map app). Always check the official page before you travel. Country list from <a href="https://github.com/mledoze/countries" target="_blank" rel="noopener">mledoze/countries</a> (ODbL). Health risks from WHO/CDC lists, as in the map app; not medical advice.${A ? ` Travel advice levels: UK FCDO via GOV.UK (OGL v3.0), snapshot ${esc(A.fetched)}.` : ""}</p>`;
   const q = $("#v-q");
   q.oninput = () => { prefs.q = q.value; save(); const pos = q.selectionStart; render(); const n = $("#v-q"); n.focus(); n.setSelectionRange(pos, pos); };
   $("#v-hide").onchange = e => { prefs.hideVisited = e.target.checked; save(); render(); };
   $("#v-terr").onchange = e => { prefs.territories = e.target.checked; save(); render(); };
   $("#v-direct").onchange = e => { prefs.direct = e.target.checked; save(); render(); if (map) drawMap(); };
   $("#v-wish").onchange = e => { prefs.wishOnly = e.target.checked; save(); render(); };
+  const safe = $("#v-safe"); if (safe) safe.onchange = e => { prefs.safeOnly = e.target.checked; save(); render(); };
   const all2 = $("#v-all"); if (all2) all2.onclick = () => { prefs.type = "all"; save(); render(); };
   document.querySelectorAll("#v-body [data-type]").forEach(b => b.onclick = () => { prefs.type = prefs.type === b.dataset.type ? "all" : b.dataset.type; save(); render(); });
   document.querySelectorAll("#v-body [data-code]").forEach(b => b.onclick = () => detail(D.countries.find(c => c.code === b.dataset.code)));
@@ -113,6 +125,10 @@ function loadLeaflet() {
 function styleFor(c) {
   const t = typeOf(c), dim = (prefs.type !== "all" && t !== prefs.type && t !== "home") || (prefs.direct && !c.ams && t !== "home");
   const k = ink();
+  if (prefs.adviceMap && A) {
+    const a = advOf(c), col = t === "home" ? k.home : a ? ADV[a.level].color : "#94A3B8";
+    return { fillColor: col, fillOpacity: a || t === "home" ? 0.75 : 0.25, color: prefs.wishLayer && isWish(c) ? WISH_COLOR : isVisited(c) ? k.visited : k.edge, weight: prefs.wishLayer && isWish(c) ? 2.5 : isVisited(c) ? 1.5 : 0.6 };
+  }
   if (prefs.wishLayer && isWish(c)) return { fillColor: t === "home" ? k.home : COLORS[t], fillOpacity: dim ? 0.25 : 0.85, color: WISH_COLOR, weight: 2.5 };
   return { fillColor: t === "home" ? k.home : COLORS[t], fillOpacity: dim ? 0.08 : isVisited(c) ? 0.35 : 0.75, color: isVisited(c) ? k.visited : k.edge, weight: isVisited(c) ? 1.5 : 0.6 };
 }
@@ -127,7 +143,7 @@ function drawMap() {
     onEachFeature: (f, layer) => {
       const c = byCode[f.properties.c]; if (!c) return;
       withShape.add(c.code);
-      layer.bindTooltip(`${isWish(c) ? "⭐ " : ""}${c.flag} ${esc(c.name)} · ${TYPES[typeOf(c)] ? TYPES[typeOf(c)].short : "Home"}`, { sticky: true });
+      layer.bindTooltip(`${isWish(c) ? "⭐ " : ""}${c.flag} ${esc(c.name)} · ${prefs.adviceMap && advOf(c) ? `UK: ${ADV[advOf(c).level].label}` : TYPES[typeOf(c)] ? TYPES[typeOf(c)].short : "Home"}`, { sticky: true });
       if (prefs.wishLayer && isWish(c)) layer.on("add", () => layer.bringToFront());
       layer.on("click", () => detail(c));
     },
@@ -149,13 +165,15 @@ async function showMap() {
       await loadLeaflet();
       if (!world) { const r = await fetch("visa/world.json"); if (!r.ok) throw new Error(`HTTP ${r.status}`); world = await r.json(); }
     } catch (e) { box.innerHTML = `<p class="v-empty">Couldn't load the map: ${esc(e.message)}.</p>`; return; }
-    box.innerHTML = `<div id="v-map"></div><div class="v-legend">${Object.entries(TYPES).map(([t, x]) => `<button data-mtype="${t}" class="${prefs.type === t ? "on" : ""}"><i style="background:${COLORS[t]}"></i>${x.short}</button>`).join("")}<button data-ams class="${prefs.amsLayer ? "on" : ""}">✈️ AMS</button><button data-wishl class="${prefs.wishLayer ? "on" : ""}">⭐ Wish</button></div>`;
+    box.innerHTML = `<div id="v-map"></div><div class="v-legend">${Object.entries(TYPES).map(([t, x]) => `<button data-mtype="${t}" class="${prefs.type === t ? "on" : ""}"><i style="background:${COLORS[t]}"></i>${x.short}</button>`).join("")}<button data-ams class="${prefs.amsLayer ? "on" : ""}">✈️ AMS</button><button data-wishl class="${prefs.wishLayer ? "on" : ""}">⭐ Wish</button>${A ? `<button data-advl class="${prefs.adviceMap ? "on" : ""}">⚠️ UK advice</button>` : ""}</div><div class="v-advkey" id="v-advkey" ${prefs.adviceMap ? "" : "hidden"}>${Object.values(ADV).map(x => `<span><i style="background:${x.color}"></i>${x.short}</span>`).join("")}</div>`;
     map = L.map("v-map", { worldCopyJump: true, minZoom: 1, maxZoom: 7, zoomSnap: 0.5, attributionControl: false }).setView([25, 15], 1.5);
     box.querySelectorAll("[data-mtype]").forEach(b => b.onclick = () => {
       prefs.type = prefs.type === b.dataset.mtype ? "all" : b.dataset.mtype; save();
       box.querySelectorAll("[data-mtype]").forEach(x => x.classList.toggle("on", x.dataset.mtype === prefs.type));
       drawMap(); render();
     });
+    const advl = box.querySelector("[data-advl]");
+    if (advl) advl.onclick = e => { prefs.adviceMap = !prefs.adviceMap; save(); e.currentTarget.classList.toggle("on", prefs.adviceMap); $("#v-advkey").hidden = !prefs.adviceMap; drawMap(); };
     box.querySelector("[data-wishl]").onclick = e => { prefs.wishLayer = !prefs.wishLayer; save(); e.currentTarget.classList.toggle("on", prefs.wishLayer); drawMap(); };
     box.querySelector("[data-ams]").onclick = e => { prefs.amsLayer = !prefs.amsLayer; save(); e.currentTarget.classList.toggle("on", prefs.amsLayer); drawMap(); };
   }
@@ -226,7 +244,7 @@ function detail(c) {
   const links = [
     [`https://www.google.com/search?q=${encodeURIComponent(zhQuery)}&hl=zh-TW`, "🔎 Search visa discussions", "背包客棧 and others, in Chinese"],
     [D.sourceUrl, "🏛 BOCA visa list", "Official Taiwan passport entry rules"],
-    [`https://www.gov.uk/foreign-travel-advice/${encodeURIComponent(c.govuk)}`, "⚠️ Travel advice", "GOV.UK safety, entry and local laws"],
+    [advOf(c) ? `https://www.gov.uk/foreign-travel-advice/${encodeURIComponent(advOf(c).slug)}` : "https://www.gov.uk/foreign-travel-advice", "⚠️ Travel advice", advOf(c) ? "GOV.UK safety, entry and local laws" : "GOV.UK has no separate page; see the country it belongs to"],
     ...(t === "visa" ? [[`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(EMBASSY_NL)}`, "🗺 Taipei office in The Hague", "For visa questions from the Netherlands"]] : []),
   ];
   const sheet = $("#v-sheet");
@@ -243,6 +261,7 @@ function detail(c) {
       <p class="v-note">${c.ams.map(a => esc(a.city)).join(" · ")}</p>
       ${D.amsSource ? `<p class="v-note v-src">Routes: ${esc(D.amsSource)}</p>` : ""}
       <a class="v-sky" href="${esc(skyscanner(c.code))}" target="_blank" rel="noopener">Search flights next month on Skyscanner ↗</a></div>` : ""}
+    ${adviceBox(c)}
     ${healthBox(c)}
     <label class="v-visit"><input type="checkbox" id="v-visited" ${isVisited(c) ? "checked" : ""}> I've visited ${esc(c.name)}</label>
     <label class="v-visit"><input type="checkbox" id="v-wished" ${isWish(c) ? "checked" : ""}> ⭐ Want to visit</label>
@@ -264,6 +283,16 @@ function detail(c) {
     prefs.visited = e.target.checked ? [...new Set([...prefs.visited, c.code])] : prefs.visited.filter(v => v !== c.code);
     save(); render(); if (map) drawMap(); if (prefs.view === "stats") stats();
   };
+}
+
+function adviceBox(c) {
+  const a = advOf(c); if (!a) return "";
+  const x = ADV[a.level];
+  return `<div class="v-pass v-advbox"><div class="v-passhead">⚠️ UK travel advice</div>
+    <div class="v-rule" style="color:${x.color};background:color-mix(in srgb, ${x.color} 15%, transparent)"><span>${x.label}${a.level === 2 ? " of the country" : ""}</span><b>${a.level}/4</b></div>
+    ${a.change ? `<p class="v-note">Latest change: ${esc(a.change)}</p>` : ""}
+    <p class="v-note v-src">UK Foreign Office (FCDO) via GOV.UK, page updated ${esc(a.updated)}; snapshot ${esc(A.fetched)}. The Dutch government's advice (NederlandWereldwijd) can differ, and travel insurance often follows it.</p>
+    <a class="v-sky" href="https://www.nederlandwereldwijd.nl/reisadvies" target="_blank" rel="noopener">Dutch travel advice (reisadvies) ↗</a></div>`;
 }
 
 // Health & vaccines, copied from map-app's country_risks.yaml (WHO/CDC lists, see visa/build-health.py).
@@ -296,6 +325,8 @@ window.visaInit = async function () {
     return;
   }
   fetch("visa/health.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(h => { H = h; }).catch(() => {});
+  // Travel advice is optional: without it the list, map and sheet just leave it out.
+  A = await fetch("visa/advisory.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null);
   render();
   document.querySelectorAll("[data-view]").forEach(b => b.onclick = () => setView(b.dataset.view));
   setView(["map", "stats"].includes(prefs.view) ? prefs.view : "list");

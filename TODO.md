@@ -9,7 +9,6 @@ Sizes are rough % of one session's usage.
 
 ## Next up
 
-- [ ] 🛂 **Travel advisory level** per country (GOV.UK), coloured on the list and the map, with an advisory map layer. Map-app: `TravelAdvisoryStore`. (5–8%)
 - [ ] 🛂 **Iconic attraction** per country on the detail sheet (text only, no photos). Map-app: `iconic_attractions.yaml`. (2–4%)
 - [ ] 🛂 **Ramadan note** for countries where it affects travel, with this year's dates. Map-app: `ramadan_facts.yaml`. (1–3%)
 - [ ] 🌐 **Tab bar "More" menu**: room for more tabs without squeezed labels on phones. (2–3%)
@@ -34,6 +33,7 @@ Not picked by the daily job. Move back to "Next up" only when the condition is m
 
 ## Done
 
+- [x] 🛂 Travel advisory level: UK FCDO levels from GOV.UK (snapshot + build script), list chips, filter, sheet, map layer (2026-11-09, 5865200)
 - [x] 🛂 Wishlist: ⭐ countries with notes, list filter, gold outline on the map, Stats section (2026-11-08, 8771b26)
 - [x] 🌐 One backup for all tabs: export / restore everything as one JSON file, Quests home (2026-11-07, 64d80b0)
 - [x] ☕ Readiness planner: exam countdown, lessons a day, mock trend, lessons vs mocks (2026-11-07, 49bdb11)
